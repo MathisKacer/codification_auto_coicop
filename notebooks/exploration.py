@@ -14,7 +14,8 @@ from src.evaluation import (
 )
 from src.cible_gagnant import ajouter_gagnant
 from src.modeling_tree import split_train_test, construire_pipeline_arbre, entrainer_arbre, visualiser_arbre_supertree
-
+from src.evaluation_arbre import evaluer_prediction_gagnant, evaluer_code_final
+from src.baseline import evaluer_baseline_vote
 
 # %%
 # Chargement des donnees
@@ -64,4 +65,15 @@ pipeline_arbre = entrainer_arbre(pipeline_arbre, X_train, y_train)
 
 # %%
 visualiser_arbre_supertree(pipeline_arbre, X_train, y_train)
+
+# %%
+# Evaluation niveau 1 : prediction du gagnant lui-meme
+y_pred_gagnant = evaluer_prediction_gagnant(pipeline_arbre, X_test, y_test)
+
+# %%
+# Evaluation niveau 2 : code final reconstitue + comparaison au LLM sur le meme jeu de test
+accuracy_arbre, accuracy_llm = evaluer_code_final(y_pred_gagnant, X_test, df_valide, niveau_max=4)
+
+# %%
+accuracy_baseline = evaluer_baseline_vote(X_test, df_valide, niveau_max=4)
 # %%
