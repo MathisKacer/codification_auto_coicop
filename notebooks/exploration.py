@@ -16,6 +16,7 @@ from src.cible_gagnant import ajouter_gagnant
 from src.modeling_tree import split_train_test, construire_pipeline_arbre, entrainer_arbre, visualiser_arbre_supertree
 from src.evaluation_arbre import evaluer_prediction_gagnant, evaluer_code_final
 from src.baseline import evaluer_baseline_vote
+from src.modeling_rf import construire_pipeline_rf, entrainer_rf, afficher_importance_features
 
 # %%
 # Chargement des donnees
@@ -76,4 +77,18 @@ accuracy_arbre, accuracy_llm = evaluer_code_final(y_pred_gagnant, X_test, df_val
 
 # %%
 accuracy_baseline = evaluer_baseline_vote(X_test, df_valide, niveau_max=4)
+
+# %%
+# Construction et entrainement du Random Forest (memes X_train, y_train que l'arbre)
+pipeline_rf = construire_pipeline_rf(n_estimators=300, max_depth=None, min_samples_leaf=5)
+pipeline_rf = entrainer_rf(pipeline_rf, X_train, y_train)
+
+# %%
+# Evaluation (memes fonctions que pour l'arbre)
+y_pred_gagnant_rf = evaluer_prediction_gagnant(pipeline_rf, X_test, y_test)
+accuracy_rf, _ = evaluer_code_final(y_pred_gagnant_rf, X_test, df_valide, niveau_max=4)
+
+# %%
+# Importance des features (utile pour interpretation, en bonus du visuel d'arbre)
+df_importance = afficher_importance_features(pipeline_rf, top_n=20)
 # %%

@@ -29,15 +29,13 @@ def construire_pipeline_arbre(
     max_depth: int = 5,
     min_samples_leaf: int = 20,
     random_state: int = 42,
+    colonnes_categorielles: list[str] = None,
 ) -> Pipeline:
-    """
-    Construit le pipeline complet : OneHotEncoder sur les categorielles + arbre de decision.
+    if colonnes_categorielles is None:
+        colonnes_categorielles = COLONNES_CATEGORIELLES
 
-    Le class_weight='balanced' compense le desequilibre entre les classes du gagnant
-    (typiquement beaucoup de 'aucun' et 'plusieurs_corrects', moins de cas a un seul gagnant).
-    """
     preprocesseur = ColumnTransformer([
-        ("cat", OneHotEncoder(handle_unknown="ignore"), COLONNES_CATEGORIELLES),
+        ("cat", OneHotEncoder(handle_unknown="ignore"), colonnes_categorielles),
     ], remainder="passthrough")
 
     pipeline = Pipeline([
@@ -50,7 +48,6 @@ def construire_pipeline_arbre(
         ))
     ])
     return pipeline
-
 
 def entrainer_arbre(pipeline: Pipeline, X_train: pd.DataFrame, y_train: pd.Series) -> Pipeline:
     """Entraine le pipeline sur les donnees de train."""

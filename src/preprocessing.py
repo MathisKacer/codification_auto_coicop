@@ -46,9 +46,17 @@ def preparer_features(df_valide: pd.DataFrame) -> pd.DataFrame:
     return df_valide
 
 
-def construire_X_y(df_valide: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+def construire_X_y(
+    df_valide: pd.DataFrame,
+    colonnes_categorielles_extra: list[str] = None,
+    colonnes_numeriques_extra: list[str] = None,
+) -> tuple[pd.DataFrame, pd.Series]:
     """
     Construit la matrice de features X et la cible y (le 'gagnant' a predire).
+
+    Les arguments extra permettent d'ajouter des features derivees (feature engineering)
+    aux colonnes de base. Sans les fournir, le comportement est identique a la version
+    originale (utilise uniquement COLONNES_CATEGORIELLES et COLONNES_NUMERIQUES).
 
     Prerequis : la colonne 'gagnant' doit avoir ete creee au prealable
     via ajouter_gagnant() (depuis src.cible_gagnant).
@@ -59,6 +67,9 @@ def construire_X_y(df_valide: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
             "Appelle ajouter_gagnant() avant construire_X_y()."
         )
 
-    X = df_valide[COLONNES_CATEGORIELLES + COLONNES_NUMERIQUES]
+    cat = COLONNES_CATEGORIELLES + (colonnes_categorielles_extra or [])
+    num = COLONNES_NUMERIQUES + (colonnes_numeriques_extra or [])
+
+    X = df_valide[cat + num]
     y = df_valide["gagnant"]
     return X, y
