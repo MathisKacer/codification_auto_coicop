@@ -5,7 +5,11 @@ designer le 'gagnant' parmi les classifieurs sur chaque produit.
 Les ex-aequo sont regroupes dans une classe 'plusieurs_corrects' pour eviter
 tout biais d'ordre artificiel dans l'apprentissage du meta-modele.
 """
+from collections import Counter
+
 import pandas as pd
+
+from src.correspondance_hierarchique import tronquer_a_niveau
 
 
 def determiner_gagnant(row: pd.Series) -> str:
@@ -39,7 +43,6 @@ def ajouter_gagnant(df_valide: pd.DataFrame) -> pd.DataFrame:
     return df_valide
 
 
-# Mapping pour reconvertir une prediction de gagnant en code final
 MAPPING_GAGNANT_VERS_COLONNE = {
     "LCS": "lcs_code",
     "RAG": "rag_code",
@@ -48,27 +51,29 @@ MAPPING_GAGNANT_VERS_COLONNE = {
 }
 
 
-def gagnant_vers_code(gagnant_predit: str, row: pd.Series) -> str:
+def gagnant_vers_code(gagnant_predit: str, row: pd.Series, niveau_max: int = 4) -> str:
     """
-    Reconvertit une prediction de gagnant en code final.
+    Reconvertit une prediction de gagnant en code final, SANS utiliser la verite terrain.
+
     - 'aucun' -> PREDICTION_IMPOSSIBLE
-    - 'plusieurs_corrects' -> code du premier classifieur correct trouve
-      (tous sont corrects jusqu'au niveau cible, donc l'ordre n'a pas d'impact
-       sur l'evaluation a ce niveau)
+    - 'plusieurs_corrects' -> vote majoritaire entre les 4 classifieurs au niveau cible
+      (en cas d'egalite, on prend le premier rencontre par Counter, qui depend
+       de l'ordre d'apparition dans la liste)
     - sinon -> code du classifieur designe
     """
     if gagnant_predit == "aucun":
         return "PREDICTION_IMPOSSIBLE"
 
     if gagnant_predit == "plusieurs_corrects":
-        for col_raison, col_code in [
-            ("lcs_raison", "lcs_code"),
-            ("rag_raison", "rag_code"),
-            ("ragann_raison", "ragann_code"),
-            ("ttc_raison", "ttc_code_1"),
-        ]:
-            if row[col_raison] == 1:
-                return row[col_code]
-        return "PREDICTION_IMPOSSIBLE"
+        codes = [
+            tronquer_a_niveau(row["lcs_code"], niveau_max),
+            tronquer_a_niveau(row["rag_code"], niveau_max),
+            tronquer_a_niveau(row["ragann_code"], niveau_max),
+            tronquer_a_niveau(row["ttc_code_1"], niveau_max),
+        ]
+        codes_valides = [c for c in codes if c is not None and pd.notna(c)]
+        if not codes_valides:
+            return "PREDICTION_IMPOSSIBLE"
+        return Counter(codes_valides).most_common(1)[0][0]
 
     return row[MAPPING_GAGNANT_VERS_COLONNE[gagnant_predit]]

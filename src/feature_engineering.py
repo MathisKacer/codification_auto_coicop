@@ -57,42 +57,21 @@ def ajouter_accords_par_niveau(df: pd.DataFrame, niveau_max: int = 4) -> pd.Data
     return df
 
 
-def ajouter_stats_scores(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Statistiques agregees sur les scores de confiance des classifieurs :
-    - score moyen, max, ecart-type
-    - dispersion specifique a TTC (top-3)
-    """
-    df = df.copy()
-    cols_score = ["rag_confidence", "ragann_confidence", "ttc_conf_1"]
-    # lcs_distance pas inclus car d'une nature differente (distance, pas confiance)
-
-    df["score_moyen"] = df[cols_score].mean(axis=1)
-    df["score_max"] = df[cols_score].max(axis=1)
-    df["score_std"] = df[cols_score].std(axis=1)
-
-    # Dispersion interne de TTC (top-3) : signal de calibration interne
-    cols_ttc = ["ttc_conf_1", "ttc_conf_2", "ttc_conf_3"]
-    df["ttc_dispersion"] = df["ttc_conf_1"] - df["ttc_conf_3"]
-    df["ttc_std_top3"] = df[cols_ttc].std(axis=1)
-
-    return df
-
-
 def appliquer_feature_engineering(df: pd.DataFrame, niveau_max: int = 4) -> pd.DataFrame:
     """
-    Pipeline complet de feature engineering : codes par niveau + accords + stats.
+    Pipeline de feature engineering simplifie : uniquement codes par niveau
+    et accords pairwise. Les statistiques sur les scores ne sont pas ajoutees,
+    le modele a deja acces aux scores bruts.
     """
     df = ajouter_codes_par_niveau(df, niveau_max=niveau_max)
     df = ajouter_accords_par_niveau(df, niveau_max=niveau_max)
-    df = ajouter_stats_scores(df)
     return df
 
 
 def lister_nouvelles_colonnes(niveau_max: int = 4) -> tuple[list[str], list[str]]:
     """
     Retourne (categorielles_nouvelles, numeriques_nouvelles) pour les ajouter
-    a COLONNES_CATEGORIELLES et COLONNES_NUMERIQUES.
+    aux features de base. Version simplifiee sans stats sur les scores.
     """
     noms = list(CLASSIFIEURS.keys())
 
@@ -103,12 +82,11 @@ def lister_nouvelles_colonnes(niveau_max: int = 4) -> tuple[list[str], list[str]
         for niveau in range(1, niveau_max + 1)
     ]
 
-    # Accords par niveau + agreges + stats scores : numeriques (binaires ou continus)
+    # Accords par niveau + nb_accords agrege : tous numeriques (binaires ou entiers)
     numeriques = []
     for niveau in range(1, niveau_max + 1):
         for nom_a, nom_b in combinations(noms, 2):
             numeriques.append(f"accord_{nom_a}_{nom_b}_n{niveau}")
         numeriques.append(f"nb_accords_n{niveau}")
-    numeriques += ["score_moyen", "score_max", "score_std", "ttc_dispersion", "ttc_std_top3"]
 
     return categorielles, numeriques

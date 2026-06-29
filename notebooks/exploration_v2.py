@@ -193,3 +193,87 @@ print(f"  Random Forest (sans FE)       : {accuracy_rf:.3f}")
 print(f"  Random Forest (avec FE)       : {accuracy_rf_fe:.3f}")
 print(f"  LLM-as-judge (reference)      : {accuracy_llm:.3f}")
 # %%
+print(X.columns.tolist())
+# %%
+X_transforme = pipeline_rf.named_steps["prep"].transform(X_train)
+print(f"Shape apres OneHot : {X_transforme.shape}")
+# %%
+from sklearn.metrics import accuracy_score
+
+acc_train = accuracy_score(y_train, pipeline_rf.predict(X_train))
+acc_test = accuracy_score(y_test, pipeline_rf.predict(X_test))
+print(f"Train: {acc_train:.3f} | Test: {acc_test:.3f}")
+
+# %%
+# %%
+from src.modeling_rf import construire_pipeline_rf_ordinal
+from sklearn.metrics import accuracy_score
+
+# Construction et entrainement
+pipeline_rf_ord = construire_pipeline_rf_ordinal(
+    n_estimators=300, max_depth=None, min_samples_leaf=5,
+)
+pipeline_rf_ord = entrainer_rf(pipeline_rf_ord, X_train, y_train)
+
+# %%
+# Verification du shape apres encodage
+X_t = pipeline_rf_ord.named_steps["prep"].transform(X_train)
+print(f"Shape apres OrdinalEncoder : {X_t.shape}")
+
+# Train vs Test (diagnostic sur/sous-apprentissage)
+acc_train = accuracy_score(y_train, pipeline_rf_ord.predict(X_train))
+acc_test = accuracy_score(y_test, pipeline_rf_ord.predict(X_test))
+print(f"Train: {acc_train:.3f} | Test: {acc_test:.3f}")
+
+# %%
+# Evaluation finale au niveau 4
+y_pred_rf_ord = evaluer_prediction_gagnant(pipeline_rf_ord, X_test, y_test)
+accuracy_rf_ord, _ = evaluer_code_final(y_pred_rf_ord, X_test, df_valide, niveau_max=4)
+
+# %%
+# Importance des features (utile pour interpretation)
+df_importance_ord = afficher_importance_features(pipeline_rf_ord, top_n=20)
+
+# %%
+# RF avec OrdinalEncoder + Feature Engineering
+df_valide_fe = appliquer_feature_engineering(df_valide, niveau_max=4)
+cat_extra, num_extra = lister_nouvelles_colonnes(niveau_max=4)
+print(f"Nouvelles features categorielles : {len(cat_extra)}")
+print(f"Nouvelles features numeriques : {len(num_extra)}")
+
+X_fe, y_fe = construire_X_y(
+    df_valide_fe,
+    colonnes_categorielles_extra=cat_extra,
+    colonnes_numeriques_extra=num_extra,
+)
+print(X_fe.shape, y_fe.shape)
+
+X_train_fe, X_test_fe, y_train_fe, y_test_fe = split_train_test(X_fe, y_fe)
+
+# %%
+# Pipeline RF avec OrdinalEncoder ET les nouvelles colonnes categorielles du FE
+pipeline_rf_ord_fe = construire_pipeline_rf_ordinal(
+    n_estimators=300, max_depth=None, min_samples_leaf=5,
+    colonnes_categorielles=COLONNES_CATEGORIELLES + cat_extra,
+)
+pipeline_rf_ord_fe = entrainer_rf(pipeline_rf_ord_fe, X_train_fe, y_train_fe)
+
+# %%
+# Diagnostic shape + train/test
+X_t = pipeline_rf_ord_fe.named_steps["prep"].transform(X_train_fe)
+print(f"Shape apres OrdinalEncoder + FE : {X_t.shape}")
+
+from sklearn.metrics import accuracy_score
+acc_train = accuracy_score(y_train_fe, pipeline_rf_ord_fe.predict(X_train_fe))
+acc_test = accuracy_score(y_test_fe, pipeline_rf_ord_fe.predict(X_test_fe))
+print(f"Train: {acc_train:.3f} | Test: {acc_test:.3f}")
+
+# %%
+# Evaluation finale au niveau 4
+y_pred_rf_ord_fe = evaluer_prediction_gagnant(pipeline_rf_ord_fe, X_test_fe, y_test_fe)
+accuracy_rf_ord_fe, _ = evaluer_code_final(y_pred_rf_ord_fe, X_test_fe, df_valide_fe, niveau_max=4)
+
+# %%
+# Importance des features
+df_importance_ord_fe = afficher_importance_features(pipeline_rf_ord_fe, top_n=25)
+# %%

@@ -7,7 +7,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
-
+from sklearn.preprocessing import OrdinalEncoder
 from src.preprocessing import COLONNES_CATEGORIELLES
 
 
@@ -71,3 +71,40 @@ def afficher_importance_features(pipeline: Pipeline, top_n: int = 20) -> pd.Data
     print(f"Top {top_n} features les plus importantes :")
     print(df_importance.head(top_n).to_string(index=False))
     return df_importance
+
+
+def construire_pipeline_rf_ordinal(
+    n_estimators: int = 300,
+    max_depth: int = None,
+    min_samples_leaf: int = 5,
+    random_state: int = 42,
+    n_jobs: int = -1,
+    colonnes_categorielles: list[str] = None,
+) -> Pipeline:
+    """
+    Random Forest avec OrdinalEncoder au lieu de OneHotEncoder.
+    Une seule colonne par feature categorielle au lieu de centaines,
+    ce qui evite la dilution du signal sur un tableau tres creux.
+    """
+    if colonnes_categorielles is None:
+        colonnes_categorielles = COLONNES_CATEGORIELLES
+
+    preprocesseur = ColumnTransformer([
+        ("cat", OrdinalEncoder(
+            handle_unknown="use_encoded_value",
+            unknown_value=-1,
+        ), colonnes_categorielles),
+    ], remainder="passthrough")
+
+    pipeline = Pipeline([
+        ("prep", preprocesseur),
+        ("clf", RandomForestClassifier(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_leaf=min_samples_leaf,
+            class_weight="balanced",
+            random_state=random_state,
+            n_jobs=n_jobs,
+        ))
+    ])
+    return pipeline
