@@ -8,10 +8,9 @@ Pipeline complet :
 4. Construction de la cible "gagnant"
 5. Baseline vote majoritaire (reference triviale)
 6. Arbre de decision simple
-7. Random Forest + OneHot (en sous-apprentissage)
+7. Random Forest + OneHot
 8. Random Forest + OrdinalEncoder (resout la dilution)
 9. Random Forest + OrdinalEncoder + Feature Engineering (configuration la plus aboutie)
-10. Recapitulatif comparatif
 
 """
 # %%
@@ -122,14 +121,11 @@ accuracy_arbre, _ = evaluer_code_final(y_pred_arbre, X_test, df_valide, niveau_m
 
 # %%
 visualiser_arbre_supertree(
-    pipeline_arbre, X_train, y_train,
-    save_html_path="/home/onyxia/work/codification_auto_coicop/outputs/arbre_simple.html",
-)
+    pipeline_arbre, X_train, y_train
+    )
 
 # %% [markdown]
 # ## 10. Random Forest + OneHot (sans FE)
-# Configuration historique : on observe le sous-apprentissage du a la dilution one-hot
-# (1655 colonnes creuses pour seulement 4665 lignes d'entrainement).
 
 # %%
 pipeline_rf_oh = construire_pipeline_rf(
@@ -226,8 +222,6 @@ print("=" * 60)
 # %% [markdown]
 # ## 14. Analyse sur les cas resolubles uniquement (sans 'aucun')
 # On exclut les lignes ou aucun classifieur n'avait raison au niveau 4 :
-# le meta-modele ne pouvait de toute facon pas les resoudre, et leur
-# inclusion masquait sa vraie performance d'arbitrage.
 
 # %%
 df_valide_resoluble = df_valide[df_valide["gagnant"] != "aucun"].copy()
@@ -306,21 +300,3 @@ correspondances_llm_test = df_test_resoluble.apply(
 )
 accuracy_llm_resoluble_test = correspondances_llm_test.mean()
 print(f"Accuracy LLM sur test set des resolubles : {accuracy_llm_resoluble_test:.3f}")
-
-# %%
-print("Distribution train :")
-print(y_train_r.value_counts(normalize=True))
-print("\nDistribution test :")
-print(y_test_r.value_counts(normalize=True))
-# %%
-print("Distribution gagnant sur df_valide complet :")
-print(df_valide["gagnant"].value_counts(normalize=True))
-# %%
-from src.correspondance_hierarchique import niveau_atteint
-
-profondeurs = df_valide["code"].apply(niveau_atteint)
-print("Profondeur des codes vrais :")
-print(profondeurs.value_counts().sort_index())
-print(f"\nPart au niveau 4 ou plus : {(profondeurs >= 4).mean():.1%}")
-print(f"Part au niveau 3 ou moins : {(profondeurs <= 3).mean():.1%}")
-# %%
