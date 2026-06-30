@@ -11,7 +11,7 @@ Convention de niveau (nombre de chiffres significatifs = niveau + 1) :
     niveau 1 → "XX"        (division)
     niveau 2 → "XX.X"      (groupe)
     niveau 3 → "XX.X.X"    (classe)
-    niveau 4 → "XX.X.X.X"  (sous-classe, granularité max)
+    niveau 4 → "XX.X.X.X"  (sous-classe)
 """
 import pandas as pd
 import matplotlib.pyplot as plt
