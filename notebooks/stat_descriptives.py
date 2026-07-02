@@ -150,16 +150,21 @@ df_acc_n3 = res_complet[3]["df_acc"]
 df_seul_n2 = res_seul[2]
 # %%
 res_seul[4]
-# %%
-# %% Export du rapport HTML complet
-from src.stats_accord import rapport_html
 
-rapport_html(
-    df, cols_base, col_llm, col_vrai, cols_tous,
-    niveaux=(1, 2, 3, 4),
-    top_n=10,
-    col_libelle="l_pr_product",
-    chemin_sortie="outputs/rapport_stats_accord.html",
-)
+# %% [markdown]
+# ## 5. Rapport final
+#
+# Ce notebook est un espace d'exploration : les affichages ci-dessus
+# dépendent de l'ordre d'exécution des cellules et de sorties texte
+# imprimées par les fonctions de `src/stats_accord.py`.
+#
+# Le rapport final, lui, est généré indépendamment avec Quarto à partir de
+# `notebooks/rapport_stats_accord.py`, qui rejoue les mêmes analyses en mode
+# silencieux (`verbose=False`) et affiche directement les tableaux/graphiques
+# produits — sans dépendre de sorties console capturées. Pour le régénérer :
+#
+# ```bash
+# quarto render notebooks/rapport_stats_accord.py --to html --output-dir ../outputs
+# ```
 
 # %%
