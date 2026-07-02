@@ -50,7 +50,9 @@ from src.stats_accord import (
     stats_accord_avec_llm,
     stats_classifieur_seul_correct,
     stats_seul_multi_niveaux,
+    stats_majorite_3_1,
     recap_multi_niveaux,
+    recap_3_1_multi_niveaux,
     stats_seul_par_division,
 )
 
@@ -91,6 +93,13 @@ LIBELLES_COLONNES = {
     "n_fp_5_5": "FP partagés (+LLM)", "n_llm_sauve": "LLM rattrape",
     "n_seul_correct": "Un seul correct", "pct_seul_correct": "% un seul correct",
     "classifieur": "Classifieur", "classifieur_seul": "Classifieur seul correct",
+    "n_3_1": "Cas 3 contre 1", "pct_3_1": "% cas 3 contre 1",
+    "classifieur_dissident": "Classifieur dissident",
+    "code_majorite": "Code majorité", "code_minoritaire": "Code dissident",
+    "majorite_correcte": "Majorité correcte", "minorite_correcte": "Dissident correct",
+    "n_majorite_correcte": "Majorité correcte", "pct_majorite_correcte": "% majorité correcte",
+    "n_minorite_correcte": "Dissident correct", "pct_minorite_correcte": "% dissident correct",
+    "n_aucun_correct": "Personne correct", "pct_aucun_correct": "% personne correct",
     "n": "Effectif", "pct": "%", "code": "Code",
     "vrai_tronq": "Code vrai", "code_consensus": "Consensus",
     "vrai_div": "Division vraie", "pred_div": "Division prédite",
@@ -239,7 +248,54 @@ df_seul_1 = afficher_seul_niveau(1)
 # :::
 
 # %% [markdown]
-# ## 4. Zoom niveau 4 : lignes concernées
+# ## 4. Cas où 3 classifieurs de base sont d'accord contre 1
+#
+# Parmi les 4 classifieurs de base, cas où 3 votent le même code et le 4e
+# diverge : répartition du classifieur dissident, et fréquence à laquelle
+# la majorité (les 3 d'accord) a raison plutôt que le dissident. Le niveau 4
+# est affiché par défaut.
+#
+# ::: {.panel-tabset}
+
+
+# %%
+def afficher_3_1_niveau(n):
+    df_31 = stats_majorite_3_1(df, cols_base, col_vrai, niveau=n, verbose=False)
+    display(joli(df_31.attrs["resume"]))
+    display(Markdown("**Répartition par classifieur dissident**"))
+    display(joli(df_31.attrs["repart_dissident"]))
+    return df_31
+
+
+# %% [markdown]
+# ### Niveau 4 — sous-classe
+
+# %%
+df_31_4 = afficher_3_1_niveau(4)
+
+# %% [markdown]
+# ### Niveau 3 — classe
+
+# %%
+df_31_3 = afficher_3_1_niveau(3)
+
+# %% [markdown]
+# ### Niveau 2 — groupe
+
+# %%
+df_31_2 = afficher_3_1_niveau(2)
+
+# %% [markdown]
+# ### Niveau 1 — division
+
+# %%
+df_31_1 = afficher_3_1_niveau(1)
+
+# %% [markdown]
+# :::
+
+# %% [markdown]
+# ## 5. Zoom niveau 4 : lignes concernées
 #
 # Détail ligne à ligne, pour le niveau de granularité maximale.
 
@@ -271,7 +327,23 @@ display(HTML(
 ))
 
 # %% [markdown]
-# ## 5. Ventilation par division COICOP — cas "un seul correct" (niveau 4)
+# ### Cas où 3 classifieurs de base sont d'accord contre 1
+
+# %%
+df_31_only_4 = df_31_4[df_31_4["cas_3_1"]]
+cols_31 = [c for c in [col_libelle, "code", "vrai_tronq", "classifieur_dissident",
+                       "code_majorite", "code_minoritaire",
+                       "majorite_correcte", "minorite_correcte",
+                       *[f"{c}_tronq" for c in cols_base]] if c in df_31_only_4.columns]
+display(Markdown(f"{len(df_31_only_4)} lignes."))
+display(HTML(
+    f'<div style="max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px;">'
+    f'{joli(df_31_only_4[cols_31]).to_html(classes="table table-sm table-striped", index=False)}'
+    f'</div>'
+))
+
+# %% [markdown]
+# ## 6. Ventilation par division COICOP — cas "un seul correct" (niveau 4)
 #
 # Pour chaque classifieur, dans quelles divisions COICOP se concentrent ses
 # "sauvetages" (cas où lui seul trouve le bon code) ?

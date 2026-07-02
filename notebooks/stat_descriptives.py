@@ -9,7 +9,9 @@
 #    qui a raison dans chaque cas ?
 # 3. **Cas où un seul classifieur a raison** contre tous les autres
 #    (focus sur la valeur ajoutée du LLM-judge)
-# 4. **Évolution selon le niveau de troncature COICOP** (niveaux 1 à 4)
+# 4. **Cas où 3 classifieurs de base sont d'accord contre 1** : qui est le
+#    dissident, et la majorité a-t-elle raison ?
+# 5. **Évolution selon le niveau de troncature COICOP** (niveaux 1 à 4)
 
 # %% Imports
 import sys
@@ -29,11 +31,14 @@ from src.stats_accord import (
     stats_accord_avec_llm,
     stats_classifieur_seul_correct,
     analyse_classifieur_seul,
+    stats_majorite_3_1,
     # Multi-niveaux
     stats_accord_multi_niveaux,
     stats_seul_multi_niveaux,
+    stats_majorite_3_1_multi_niveaux,
     rapport_complet_multi_niveaux,
     recap_multi_niveaux,
+    recap_3_1_multi_niveaux,
     plot_recap_multi_niveaux,
 )
 
@@ -114,7 +119,29 @@ df_seul[df_seul["seul_correct"]][cols_seul_a_voir].head(30)
 df_seul[df_seul["classifieur_seul"] == col_llm][cols_seul_a_voir].head(20)
 
 # %% [markdown]
-# ## 3. Évolution selon le niveau de troncature COICOP
+# ## 3. Cas où 3 classifieurs de base sont d'accord contre 1 (niveau 4)
+#
+# Parmi les 4 classifieurs de base (LCS, RAG, RAG-ANN, TTC), cas où 3 votent
+# le même code et le 4e diverge : qui est le dissident, et la majorité a-t-elle
+# raison plus souvent que lui ?
+
+# %% 3a) Stats globales
+df_31 = stats_majorite_3_1(df, cols_base, col_vrai, niveau=4)
+
+# %% 3b) Répartition par classifieur dissident
+df_31.attrs["repart_dissident"]
+
+# %% 3c) Vue des lignes concernées
+cols_31_a_voir = [
+    "l_pr_product", "code", "vrai_tronq",
+    "classifieur_dissident", "code_majorite", "code_minoritaire",
+    "majorite_correcte", "minorite_correcte",
+    *[f"{c}_tronq" for c in cols_base],
+]
+df_31[df_31["cas_3_1"]][cols_31_a_voir].head(30)
+
+# %% [markdown]
+# ## 4. Évolution selon le niveau de troncature COICOP
 #
 # On reproduit les analyses précédentes pour les 4 niveaux de troncature
 # (division → sous-classe) afin de voir comment évoluent les taux d'accord
@@ -135,24 +162,30 @@ res_complet = rapport_complet_multi_niveaux(
 # %% 3d) Cas "un seul correct" pour chaque niveau
 res_seul = stats_seul_multi_niveaux(df, cols_tous, col_vrai, niveaux=(1, 2, 3, 4))
 
+# %% 3e) Cas "3 contre 1" pour chaque niveau
+recap_31 = recap_3_1_multi_niveaux(df, cols_base, col_vrai, niveaux=(1, 2, 3, 4))
+res_31 = stats_majorite_3_1_multi_niveaux(df, cols_base, col_vrai, niveaux=(1, 2, 3, 4))
+
 # %% [markdown]
-# ## 4. Récupération des dataframes par niveau
+# ## 5. Récupération des dataframes par niveau
 #
-# Les dictionnaires `res_complet` et `res_seul` permettent de récupérer
-# les dataframes complets pour creuser un niveau particulier.
+# Les dictionnaires `res_complet`, `res_seul` et `res_31` permettent de
+# récupérer les dataframes complets pour creuser un niveau particulier.
 
 
 recap   # tableau récap synthétique
+recap_31   # tableau récap synthétique des cas "3 contre 1"
 # %% Exemples de récupération
 df_stats_n3 = res_complet[3]["df_stats"]
 df_fp_n3 = res_complet[3]["df_fp"]
 df_acc_n3 = res_complet[3]["df_acc"]
 df_seul_n2 = res_seul[2]
+df_31_n2 = res_31[2]
 # %%
 res_seul[4]
 
 # %% [markdown]
-# ## 5. Rapport final
+# ## 6. Rapport final
 #
 # Ce notebook est un espace d'exploration : les affichages ci-dessus
 # dépendent de l'ordre d'exécution des cellules et de sorties texte

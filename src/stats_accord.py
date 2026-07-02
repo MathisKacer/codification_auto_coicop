@@ -13,6 +13,8 @@ Convention de niveau (nombre de chiffres significatifs = niveau + 1) :
     niveau 3 → "XX.X.X"    (classe)
     niveau 4 → "XX.X.X.X"  (sous-classe)
 """
+from collections import Counter
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -319,6 +321,126 @@ def analyse_classifieur_seul(df_seul, classifieur, top_n=15, verbose=True):
 
 
 # =============================================================================
+# Cas où une majorité (n-1) de classifieurs est d'accord contre 1 dissident
+# =============================================================================
+
+def stats_majorite_3_1(df, cols_pred, col_vrai, niveau=4, verbose=True):
+    """
+    Pour chaque ligne, identifie les cas où tous les classifieurs de
+    `cols_pred` votent (aucun NaN) et se répartissent en un groupe majoritaire
+    de taille `len(cols_pred) - 1` et un dissident isolé (ex. 3 contre 1 pour
+    4 classifieurs), une fois les codes tronqués au niveau demandé.
+
+    Returns
+    -------
+    pd.DataFrame enrichi des colonnes :
+        - vrai_tronq          : vrai code tronqué
+        - {col}_tronq         : version tronquée de chaque prédiction
+        - code_majorite       : code partagé par la majorité (NaN si pas de cas 3v1)
+        - code_minoritaire    : code du dissident (NaN si pas de cas 3v1)
+        - classifieur_dissident : nom du classifieur isolé (NaN sinon)
+        - cas_3_1             : booléen
+        - majorite_correcte   : la majorité a-t-elle raison ? (NaN hors cas 3v1)
+        - minorite_correcte   : le dissident a-t-il raison ? (NaN hors cas 3v1)
+    Le résumé chiffré est disponible en `.attrs["resume"]`. La répartition
+    par classifieur dissident est disponible en `.attrs["repart_dissident"]`
+    (colonnes `classifieur`, `n`, `pct` pour la part de chaque classifieur
+    parmi les dissidents, puis `n_majorite_correcte`/`pct_majorite_correcte`,
+    `n_minorite_correcte`/`pct_minorite_correcte`,
+    `n_aucun_correct`/`pct_aucun_correct` pour la répartition, propre à ce
+    classifieur, des cas où la majorité/lui/personne a raison).
+    """
+    out = df.copy()
+    out["vrai_tronq"] = out[col_vrai].map(lambda x: tronquer_niveau(x, niveau))
+
+    tronq = df[cols_pred].apply(lambda col: col.map(lambda x: tronquer_niveau(x, niveau)))
+    for c in cols_pred:
+        out[f"{c}_tronq"] = tronq[c]
+
+    taille_majorite = len(cols_pred) - 1
+
+    def _analyse_ligne(row):
+        votes = {c: v for c, v in row.items() if pd.notna(v)}
+        if len(votes) != len(cols_pred):
+            return pd.Series([False, None, None, None])
+        compteur = Counter(votes.values())
+        if sorted(compteur.values()) != sorted([1] + [taille_majorite]):
+            return pd.Series([False, None, None, None])
+        code_maj = [code for code, n in compteur.items() if n == taille_majorite][0]
+        code_min = [code for code, n in compteur.items() if n == 1][0]
+        dissident = [c for c, v in votes.items() if v == code_min][0]
+        return pd.Series([True, code_maj, code_min, dissident])
+
+    resultats = tronq.apply(_analyse_ligne, axis=1)
+    resultats.columns = ["cas_3_1", "code_majorite", "code_minoritaire", "classifieur_dissident"]
+    out = pd.concat([out, resultats], axis=1)
+
+    df_31 = out[out["cas_3_1"]]
+    out["majorite_correcte"] = pd.NA
+    out["minorite_correcte"] = pd.NA
+    out.loc[df_31.index, "majorite_correcte"] = df_31["code_majorite"] == df_31["vrai_tronq"]
+    out.loc[df_31.index, "minorite_correcte"] = df_31["code_minoritaire"] == df_31["vrai_tronq"]
+
+    n_total = len(out)
+    n_3_1 = int(out["cas_3_1"].sum())
+    df_31 = out[out["cas_3_1"]]
+    n_maj_ok = int(df_31["majorite_correcte"].sum())
+    n_min_ok = int(df_31["minorite_correcte"].sum())
+    n_aucun_ok = n_3_1 - n_maj_ok - n_min_ok
+
+    resume = pd.DataFrame([{
+        "niveau": niveau,
+        "n_total": n_total,
+        "n_3_1": n_3_1,
+        "pct_3_1": n_3_1 / n_total,
+        "n_majorite_correcte": n_maj_ok,
+        "pct_majorite_correcte": n_maj_ok / max(n_3_1, 1),
+        "n_minorite_correcte": n_min_ok,
+        "pct_minorite_correcte": n_min_ok / max(n_3_1, 1),
+        "n_aucun_correct": n_aucun_ok,
+        "pct_aucun_correct": n_aucun_ok / max(n_3_1, 1),
+    }])
+    out.attrs["resume"] = resume
+
+    repart = df_31["classifieur_dissident"].value_counts()
+    repart_pct = repart / max(n_3_1, 1)
+    repart_df = pd.DataFrame({"n": repart, "pct": repart_pct}).reset_index(names="classifieur")
+
+    # Pour chaque classifieur dissident, qui a raison quand c'est lui qui diverge ?
+    par_dissident = df_31.groupby("classifieur_dissident")
+    n_par_dissident = par_dissident.size()
+    n_maj_par_dissident = par_dissident["majorite_correcte"].sum().astype(int)
+    n_min_par_dissident = par_dissident["minorite_correcte"].sum().astype(int)
+    n_aucun_par_dissident = n_par_dissident - n_maj_par_dissident - n_min_par_dissident
+
+    detail = pd.DataFrame({
+        "n_majorite_correcte": n_maj_par_dissident,
+        "pct_majorite_correcte": n_maj_par_dissident / n_par_dissident,
+        "n_minorite_correcte": n_min_par_dissident,
+        "pct_minorite_correcte": n_min_par_dissident / n_par_dissident,
+        "n_aucun_correct": n_aucun_par_dissident,
+        "pct_aucun_correct": n_aucun_par_dissident / n_par_dissident,
+    }).reindex(repart_df["classifieur"]).reset_index(drop=True)
+
+    repart_df = pd.concat([repart_df, detail], axis=1)
+    out.attrs["repart_dissident"] = repart_df
+
+    if verbose:
+        print(f"=== Cas {taille_majorite} contre 1 parmi {len(cols_pred)} classifieurs (niveau {niveau}) ===")
+        print(f"Total observations           : {n_total}")
+        print(f"Cas {taille_majorite} vs 1                 : {n_3_1}  ({n_3_1/n_total:.1%})\n")
+        print(f"  ├─ majorité a raison       : {n_maj_ok:>6}  ({n_maj_ok/max(n_3_1,1):.1%})")
+        print(f"  ├─ dissident a raison      : {n_min_ok:>6}  ({n_min_ok/max(n_3_1,1):.1%})")
+        print(f"  └─ personne n'a raison     : {n_aucun_ok:>6}  ({n_aucun_ok/max(n_3_1,1):.1%})\n")
+        print("→ Répartition par classifieur dissident (et qui a raison quand c'est lui) :")
+        print(repart_df.to_string(index=False, formatters={
+            c: "{:.1%}".format for c in repart_df.columns if str(c).startswith("pct")
+        }))
+
+    return out
+
+
+# =============================================================================
 # Wrappers multi-niveaux
 # =============================================================================
 
@@ -350,6 +472,46 @@ def stats_seul_multi_niveaux(df, cols_tous, col_vrai, niveaux=(1, 2, 3, 4), verb
     for n in niveaux:
         resultats[n] = stats_classifieur_seul_correct(df, cols_tous, col_vrai, niveau=n, verbose=verbose)
     return resultats
+
+
+def stats_majorite_3_1_multi_niveaux(df, cols_pred, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
+    """
+    Lance stats_majorite_3_1 pour chaque niveau.
+
+    Returns
+    -------
+    dict {niveau: df_31}
+    """
+    resultats = {}
+    for n in niveaux:
+        resultats[n] = stats_majorite_3_1(df, cols_pred, col_vrai, niveau=n, verbose=verbose)
+    return resultats
+
+
+def recap_3_1_multi_niveaux(df, cols_pred, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
+    """
+    DataFrame récap synthétique des stats de majorité (n-1 vs 1) à plusieurs niveaux.
+
+    Colonnes :
+      - n_3_1                 : nb de cas n-1 vs 1
+      - pct_3_1               : part sur le total
+      - pct_majorite_correcte : parmi les cas n-1 vs 1, part où la majorité a raison
+      - pct_minorite_correcte : parmi les cas n-1 vs 1, part où le dissident a raison
+    """
+    rows = []
+    for n in niveaux:
+        resume = stats_majorite_3_1(df, cols_pred, col_vrai, niveau=n, verbose=False).attrs["resume"]
+        rows.append(resume.iloc[0].to_dict())
+
+    recap = pd.DataFrame(rows).set_index("niveau")
+    if verbose:
+        print(recap.to_string(formatters={
+            "pct_3_1": "{:.1%}".format,
+            "pct_majorite_correcte": "{:.1%}".format,
+            "pct_minorite_correcte": "{:.1%}".format,
+            "pct_aucun_correct": "{:.1%}".format,
+        }))
+    return recap
 
 
 def rapport_complet_multi_niveaux(df, cols_base, col_llm, col_vrai,
