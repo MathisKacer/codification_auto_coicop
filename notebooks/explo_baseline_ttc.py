@@ -17,9 +17,9 @@ sys.path.append(os.path.abspath(".."))  # accès aux modules src/ et data/
 
 import pandas as pd
 import numpy as np
-from src.correspondance_hierarchique import tronquer_a_niveau
+from src.coicop import tronquer_niveau
 from data.load_data import charger_donnees
-from src.baseline_ttc import baseline_majorite_ttc, evaluer_baseline
+from src.baseline import baseline_majorite_ttc, evaluer_baseline
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
@@ -49,7 +49,7 @@ acc_baseline = evaluer_baseline(df, y_pred_baseline, col_vrai, niveau=4)
 # ## Test en ne prenant que le code de TTC
 
 # %% Accuracy si on suit TTC seul (baseline dégradée de référence)
-y_pred_ttc = df[col_ttc].map(lambda x: tronquer_a_niveau(x, niveau=4))
+y_pred_ttc = df[col_ttc].map(lambda x: tronquer_niveau(x, niveau=4))
 acc_ttc = evaluer_baseline(df, y_pred_ttc, col_vrai, niveau=4)
 
 print(f"\nComparaison :")

@@ -13,42 +13,20 @@ Convention de niveau (nombre de chiffres significatifs = niveau + 1) :
     niveau 3 → "XX.X.X"    (classe)
     niveau 4 → "XX.X.X.X"  (sous-classe)
 """
+import io
+from contextlib import redirect_stdout
+from datetime import datetime
+from pathlib import Path
+
 import pandas as pd
 import matplotlib.pyplot as plt
+
+from src.coicop import tronquer_niveau
 
 
 # =============================================================================
 # Utilitaires de base
 # =============================================================================
-
-def tronquer_niveau(code, niveau=4):
-    """
-    Tronque un code COICOP au niveau demandé.
-
-    Gère les NaN et les sentinels du preprocessing
-    ("AUCUNE_SUGGESTION", "NON_CODABLE") qui sont préservés tels quels.
-    """
-    if pd.isna(code):
-        return code
-    s = str(code)
-    if s in ("AUCUNE_SUGGESTION", "NON_CODABLE"):
-        return s
-
-    n_chiffres_cible = niveau + 1
-
-    chiffres = 0
-    out = []
-    for c in s:
-        if c.isdigit():
-            if chiffres == n_chiffres_cible:
-                break
-            chiffres += 1
-            out.append(c)
-        else:
-            if chiffres < n_chiffres_cible:
-                out.append(c)
-    return "".join(out)
-
 
 def accord_classifieurs(df, cols_pred, niveau=4):
     """
@@ -451,12 +429,6 @@ def plot_recap_multi_niveaux(recap, n_total):
     plt.show()
 
 
-import io
-from contextlib import redirect_stdout
-from datetime import datetime
-from pathlib import Path
-
-
 def stats_seul_par_division(df_seul, cols_pred, niveau_analyse=4, top_n=None):
     """
     Pour chaque classifieur, ventile les cas où il est seul à avoir raison
@@ -526,14 +498,24 @@ def stats_seul_par_division(df_seul, cols_pred, niveau_analyse=4, top_n=None):
     return cross
 
 
+RACINE_PROJET = Path(__file__).resolve().parent.parent
+
+
 def rapport_html(df, cols_base, col_llm, col_vrai, cols_tous,
                  niveaux=(1, 2, 3, 4), top_n=10,
                  col_libelle="l_pr_product",
-                 chemin_sortie="outputs/rapport_stats_accord.html"):
+                 chemin_sortie=None):
     """
     Génère un rapport HTML des stats descriptives.
+
+    Par défaut, écrit dans <racine du projet>/outputs/rapport_stats_accord.html,
+    quel que soit le répertoire de travail courant (évite de créer un dossier
+    outputs/ à côté du notebook si celui-ci n'est pas lancé depuis la racine).
     """
-    Path(chemin_sortie).parent.mkdir(parents=True, exist_ok=True)
+    if chemin_sortie is None:
+        chemin_sortie = RACINE_PROJET / "outputs" / "rapport_stats_accord.html"
+    chemin_sortie = Path(chemin_sortie)
+    chemin_sortie.parent.mkdir(parents=True, exist_ok=True)
 
     # --- Capture des fonctions verbeuses ---
     buf_complet = io.StringIO()

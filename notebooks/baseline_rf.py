@@ -13,9 +13,7 @@ sys.path.append(os.path.abspath(".."))
 import pandas as pd
 
 from data.load_data import charger_donnees
-from src.baseline_ttc import baseline_majorite_ttc
-from src.preprocessing_baseline import preparer_donnees
-from src.modeling_baseline import entrainer_evaluer
+from src.baseline import baseline_majorite_ttc, preparer_donnees, entrainer_evaluer
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
