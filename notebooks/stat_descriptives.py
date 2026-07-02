@@ -149,3 +149,17 @@ df_fp_n3 = res_complet[3]["df_fp"]
 df_acc_n3 = res_complet[3]["df_acc"]
 df_seul_n2 = res_seul[2]
 # %%
+res_seul[4]
+# %%
+# %% Export du rapport HTML complet
+from src.stats_accord import rapport_html
+
+rapport_html(
+    df, cols_base, col_llm, col_vrai, cols_tous,
+    niveaux=(1, 2, 3, 4),
+    top_n=10,
+    col_libelle="l_pr_product",
+    chemin_sortie="outputs/rapport_stats_accord.html",
+)
+
+# %%

@@ -449,3 +449,217 @@ def plot_recap_multi_niveaux(recap, n_total):
     ax.set_ylim(0, 100)
     plt.tight_layout()
     plt.show()
+
+
+import io
+from contextlib import redirect_stdout
+from datetime import datetime
+from pathlib import Path
+
+
+def stats_seul_par_division(df_seul, cols_pred, niveau_analyse=4, top_n=None):
+    """
+    Pour chaque classifieur, ventile les cas où il est seul à avoir raison
+    (au niveau `niveau_analyse`) par division COICOP (niveau 1, les 2 premiers
+    chiffres du vrai code).
+
+    Parameters
+    ----------
+    df_seul : pd.DataFrame
+        Sortie de stats_classifieur_seul_correct(niveau=niveau_analyse).
+    cols_pred : list[str]
+        Liste des classifieurs à analyser.
+    niveau_analyse : int
+        Niveau de troncature utilisé pour construire df_seul (pour l'affichage).
+    top_n : int, optional
+        Nombre de divisions à afficher par classifieur (les plus fréquentes).
+        None = toutes.
+
+    Returns
+    -------
+    pd.DataFrame croisé (divisions × classifieurs) avec effectifs et parts.
+    """
+    df_only = df_seul[df_seul["seul_correct"]].copy()
+    df_only["division"] = df_only["vrai_tronq"].map(
+        lambda x: tronquer_niveau(x, niveau=1) if pd.notna(x) else None
+    )
+
+    # Tableau croisé effectifs : divisions × classifieur seul correct
+    cross = pd.crosstab(df_only["division"], df_only["classifieur_seul"])
+    # Réordonne les colonnes selon cols_pred (au cas où certains n'apparaissent pas)
+    cross = cross.reindex(columns=cols_pred, fill_value=0)
+
+    # Ajout des totaux
+    cross["TOTAL"] = cross.sum(axis=1)
+    cross.loc["TOTAL"] = cross.sum(axis=0)
+
+    print(f"=== Répartition par division COICOP des cas 'un seul correct' (niveau {niveau_analyse}) ===\n")
+    print("Effectifs :")
+    print(cross.to_string())
+
+    # Parts en colonne : pour chaque classifieur, quelle part de ses "sauvetages"
+    # concerne chaque division ?
+    parts_col = cross.drop(index="TOTAL").div(cross.loc["TOTAL"]).drop(columns="TOTAL") * 100
+    print("\nParts par classifieur (colonne, en %) :")
+    print(parts_col.round(1).to_string())
+
+    # Parts en ligne : pour chaque division, quel classifieur sauve le plus ?
+    parts_lig = cross.drop(columns="TOTAL").div(cross["TOTAL"], axis=0).drop(index="TOTAL") * 100
+    print("\nParts par division (ligne, en %) — 'qui sauve dans cette division ?' :")
+    print(parts_lig.round(1).to_string())
+
+    # Détail par classifieur avec libellés indicatifs
+    print(f"\n=== Détail par classifieur ===")
+    for c in cols_pred:
+        sub = df_only[df_only["classifieur_seul"] == c]
+        if len(sub) == 0:
+            print(f"\n{c} : aucun cas")
+            continue
+        print(f"\n{c} — {len(sub)} cas au total :")
+        repart = sub["division"].value_counts()
+        if top_n is not None:
+            repart = repart.head(top_n)
+        pct = (repart / len(sub) * 100).round(1)
+        tab = pd.DataFrame({"n": repart, "pct": pct.astype(str) + "%"})
+        print(tab.to_string())
+
+    return cross
+
+
+def rapport_html(df, cols_base, col_llm, col_vrai, cols_tous,
+                 niveaux=(1, 2, 3, 4), top_n=10,
+                 col_libelle="l_pr_product",
+                 chemin_sortie="outputs/rapport_stats_accord.html"):
+    """
+    Génère un rapport HTML des stats descriptives.
+    """
+    Path(chemin_sortie).parent.mkdir(parents=True, exist_ok=True)
+
+    # --- Capture des fonctions verbeuses ---
+    buf_complet = io.StringIO()
+    with redirect_stdout(buf_complet):
+        res_complet = rapport_complet_multi_niveaux(
+            df, cols_base, col_llm, col_vrai, niveaux=niveaux, top_n=top_n,
+        )
+    txt_complet = buf_complet.getvalue()
+
+    buf_seul = io.StringIO()
+    with redirect_stdout(buf_seul):
+        res_seul = stats_seul_multi_niveaux(df, cols_tous, col_vrai, niveaux=niveaux)
+    txt_seul = buf_seul.getvalue()
+
+    buf_division = io.StringIO()
+    with redirect_stdout(buf_division):
+        stats_seul_par_division(res_seul[4], cols_tous, niveau_analyse=4, top_n=None)
+    txt_division = buf_division.getvalue()
+
+    # --- Récap synthétique ---
+    recap = recap_multi_niveaux(df, cols_base, col_llm, col_vrai, niveaux=niveaux)
+    recap_fmt = recap.copy()
+    recap_fmt["pct_accord"] = recap_fmt["pct_accord"].map("{:.1%}".format)
+    recap_fmt["pct_correct"] = recap_fmt["pct_correct"].map("{:.1%}".format)
+    html_recap = recap_fmt.to_html(classes="pandas", border=0)
+
+    # --- Focus niveau 4 ---
+    df_stats_n4 = res_complet[4]["df_stats"]
+    df_fp_n4 = df_stats_n4[
+        df_stats_n4["tous_accord"]
+        & (df_stats_n4["code_consensus"] != df_stats_n4["vrai_tronq"])
+    ]
+    cols_fp = [c for c in [col_libelle, "code", "vrai_tronq", "code_consensus",
+                            *[f"{c}_tronq" for c in cols_base]] if c in df_fp_n4.columns]
+    html_fp = df_fp_n4[cols_fp].to_html(classes="pandas", border=0, index=False)
+
+    df_seul_n4 = res_seul[4]
+    df_seul_only = df_seul_n4[df_seul_n4["seul_correct"]]
+    cols_seul = [c for c in [col_libelle, "code", "vrai_tronq", "classifieur_seul",
+                             *[f"{c}_tronq" for c in cols_tous]] if c in df_seul_only.columns]
+    html_seul = df_seul_only[cols_seul].to_html(classes="pandas", border=0, index=False)
+
+    # --- Assemblage HTML ---
+    date = datetime.now().strftime("%d/%m/%Y %H:%M")
+    html = f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport stats accord — codification COICOP</title>
+<style>
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    max-width: 1200px; margin: 2em auto; padding: 0 2em;
+    color: #222; line-height: 1.5;
+  }}
+  h1 {{ border-bottom: 2px solid #333; padding-bottom: 0.3em; }}
+  h2 {{ color: #1f4e79; margin-top: 2em;
+        border-bottom: 1px solid #ccc; padding-bottom: 0.2em; }}
+  h3 {{ color: #555; }}
+  pre {{
+    font-family: "SF Mono", Menlo, Monaco, Consolas, monospace;
+    background: #f5f5f5; padding: 1em; border-radius: 6px;
+    overflow-x: auto; font-size: 0.85em; line-height: 1.3;
+    white-space: pre;
+  }}
+  table.pandas {{
+    border-collapse: collapse; margin: 1em 0; font-size: 0.9em;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }}
+  table.pandas th, table.pandas td {{
+    padding: 6px 12px; text-align: left; border-bottom: 1px solid #eee;
+  }}
+  table.pandas th {{ background: #1f4e79; color: white; }}
+  table.pandas tr:hover {{ background: #f9f9f9; }}
+  .meta {{ color: #888; font-size: 0.9em; }}
+  .toc {{ background: #f0f4f8; padding: 1em 2em; border-radius: 6px; }}
+  .toc a {{ text-decoration: none; color: #1f4e79; }}
+  .table-wrapper {{ max-height: 500px; overflow-y: auto;
+                    border: 1px solid #ddd; border-radius: 6px; }}
+</style>
+</head>
+<body>
+
+<h1>Rapport stats accord — codification COICOP</h1>
+<p class="meta">Généré le {date} — {len(df)} observations — niveaux : {list(niveaux)}</p>
+
+<div class="toc">
+  <strong>Sommaire</strong>
+  <ul>
+    <li><a href="#recap">1. Récap synthétique multi-niveaux</a></li>
+    <li><a href="#detail">2. Rapport détaillé par niveau</a></li>
+    <li><a href="#seul">3. Cas où un seul classifieur a raison (par niveau)</a></li>
+    <li><a href="#focus4">4. Focus niveau 4 : lignes concernées</a></li>
+    <li><a href="#division">5. Ventilation par division COICOP (niveau 4)</a></li>
+  </ul>
+</div>
+
+<h2 id="recap">1. Récap synthétique multi-niveaux</h2>
+{html_recap}
+
+<h2 id="detail">2. Rapport détaillé par niveau</h2>
+<pre>{txt_complet}</pre>
+
+<h2 id="seul">3. Cas où un seul classifieur a raison (par niveau)</h2>
+<pre>{txt_seul}</pre>
+
+<h2 id="focus4">4. Focus niveau 4 : lignes concernées</h2>
+
+<h3>Faux positifs unanimes (les 4 base d'accord mais code faux) — {len(df_fp_n4)} lignes</h3>
+<div class="table-wrapper">
+{html_fp}
+</div>
+
+<h3>Un seul classifieur a raison — {len(df_seul_only)} lignes</h3>
+<div class="table-wrapper">
+{html_seul}
+</div>
+
+<h2 id="division">5. Ventilation par division COICOP — cas 'un seul correct' au niveau 4</h2>
+<pre>{txt_division}</pre>
+
+</body>
+</html>"""
+
+    with open(chemin_sortie, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"Rapport écrit : {chemin_sortie}")
+    return chemin_sortie
