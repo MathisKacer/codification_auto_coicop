@@ -91,21 +91,22 @@ def construire_features(df, y_pred_baseline):
 
 def imputer_valeurs_manquantes(X):
     """
-    Traite les NaN :
-    - lcs_distance : max * 1.5 (sentinelle "tres loin")
+    Traite les NaN pour les colonnes dont la sentinelle est une constante
+    connue a priori (donc sans risque de fuite train/test) :
+    - lcs_distance : 1.5 (distance normalisee bornee a 1 -> hors intervalle = "tres loin")
     - confidences : -1 (sentinelle hors intervalle [0, 1])
-    - budget : mediane
     - categorielles : "INCONNU"
+
+    `budget` (mediane, dependante des donnees) n'est PAS imputee ici : elle est geree
+    par un SimpleImputer dans le pipeline (cf. modeling.construire_pipeline), fitte
+    uniquement sur le train pour eviter toute fuite train/test.
     """
     X = X.copy()
 
-    if X["lcs_distance"].notna().any():
-        X["lcs_distance"] = X["lcs_distance"].fillna(X["lcs_distance"].max() * 1.5)
+    X["lcs_distance"] = X["lcs_distance"].fillna(1.5)
 
     for c in ["rag_confidence", "ragann_confidence", "ttc_conf_1"]:
         X[c] = X[c].fillna(-1)
-
-    X["budget"] = X["budget"].fillna(X["budget"].median())
 
     for c in COLS_CATEGORIELLES:
         X[c] = X[c].fillna("INCONNU").astype(str)

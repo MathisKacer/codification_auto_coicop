@@ -45,11 +45,13 @@ from src.stats_accord import (
     recap_multi_niveaux,
     recap_3_1_multi_niveaux,
     stats_seul_par_division,
+    accuracy_par_division,
+    precision_par_division_llm,
 )
 
 pd.set_option("display.max_columns", None)
 
-CHEMIN_S3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-18/codif-lvqfj/decide-coicop/predictions.parquet"
+CHEMIN_S3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
 df = charger_donnees(CHEMIN_S3)
 
 cols_base = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
@@ -87,6 +89,11 @@ LIBELLES_COLONNES = {
     "vrai_div": "Division vraie", "pred_div": "Division prédite",
     "division": "Division", "cas": "Cas",
     "l_pr_product": "Libellé produit",
+    "accuracy": "Accuracy", "accuracy_hors_exclus": "Accuracy (hors 98/99)",
+    "n_exclus": "Exclus (98/99)", "n_hors_exclus": "Total (hors 98/99)",
+    "n_correct_hors_exclus": "Corrects (hors 98/99)",
+    "n_erreurs": "Erreurs", "precision": "Précision",
+    "pred_division": "Division prédite (LLM)",
     **LIBELLES_CLASSIFIEURS,
     **{f"{k}_tronq": v for k, v in LIBELLES_CLASSIFIEURS.items()},
 }
@@ -96,7 +103,7 @@ def joli(tableau):
     """Renomme colonnes/classifieurs et formate les % pour l'affichage."""
     out = tableau.copy()
     for c in out.columns:
-        if str(c).startswith("pct") and pd.api.types.is_numeric_dtype(out[c]):
+        if str(c).startswith(("pct", "accuracy", "precision")) and pd.api.types.is_numeric_dtype(out[c]):
             out[c] = out[c].map(lambda x: f"{x:.1%}" if pd.notna(x) else x)
     for c in out.select_dtypes(include="object").columns:
         out[c] = out[c].replace(LIBELLES_CLASSIFIEURS)
@@ -128,6 +135,57 @@ def sous_titre(texte):
 # %%
 recap = recap_multi_niveaux(df, cols_base, col_llm, col_vrai, niveaux=niveaux, verbose=False)
 joli(recap)
+
+# %% [markdown]
+# ## 1bis. Accuracy du LLM-judge vs vérité terrain, par division (niveau 1)
+#
+# Accuracy de `llm_code` contre `code` au niveau 4 (granularité max), ventilée
+# par division COICOP (niveau 1 du vrai code). En regard, l'accuracy obtenue
+# en excluant les lignes où le LLM classe en division "98" (indéterminé /
+# illisible) ou "99" (hors COICOP : dons, impôts, opérations bancaires...).
+#
+# NB : pour les divisions vraies 98 et 99 elles-mêmes, l'accuracy "hors
+# exclusion" tombe mécaniquement à 0 % — on exclut alors précisément les
+# prédictions qui pourraient être correctes. Ces deux lignes ne sont donc pas
+# interprétables comme une performance ; seule la ligne TOTAL et les
+# divisions standards 01-13 le sont.
+
+# %%
+recap_accuracy_llm = accuracy_par_division(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=("98", "99"), verbose=False,
+)
+joli(recap_accuracy_llm)
+
+# %% [markdown]
+# ## 1ter. Précision du LLM-judge par division PRÉDITE
+#
+# Vue complémentaire de la section précédente : au lieu de partir de la
+# division vraie (rappel), on part ici de la division que le LLM a prédite,
+# et on regarde quelle part de ces prédictions est effectivement correcte
+# (précision). Répond à la question « quand le LLM annonce telle division,
+# a-t-il raison ? ». Le regroupement par ligne (division annoncée par le LLM)
+# est le même dans les deux tableaux ci-dessous ; seul le niveau auquel on
+# juge une prédiction "correcte" change.
+#
+# - **Niveau 1** : la division vraie correspond à la division prédite.
+# - **Niveau 4** : le code est exactement correct à la granularité maximale.
+#   Permet de chiffrer, pour chaque division annoncée par le LLM, le volume
+#   `n_erreurs` réellement à reprendre — utile pour prioriser une relecture
+#   manuelle par division prédite (le plus d'erreurs captées pour le moins
+#   d'effectifs à revoir).
+
+# %%
+sous_titre("Correction jugée au niveau 1 (division)")
+recap_precision_llm_n1 = precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, codes_exclus=("98", "99"), verbose=False,
+)
+display(joli(recap_precision_llm_n1))
+
+sous_titre("Correction jugée au niveau 4 (granularité max)")
+recap_precision_llm_n4 = precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=("98", "99"), verbose=False,
+)
+display(joli(recap_precision_llm_n4))
 
 # %% [markdown]
 # ## 2. Rapport sur les accords unanimes des 4 classifieurs

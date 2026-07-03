@@ -4,7 +4,7 @@
 # Objectif : predire si la baseline (vote majoritaire, TTC en cas d'egalite)
 # donne le bon code COICOP au niveau 4. Une bonne prediction de ce modele
 # permettrait de savoir *quand* faire confiance a la baseline et quand
-# escalader vers un traitement plus couteux (ex : LLM).
+# envoyer au LLM (traitement plus couteux).
 
 # %% Imports
 import sys, os
@@ -13,7 +13,10 @@ sys.path.append(os.path.abspath(".."))
 import pandas as pd
 
 from data.load_data import charger_donnees
-from src.baseline import baseline_majorite_ttc, preparer_donnees, entrainer_evaluer
+from src.baseline import (
+    baseline_majorite_ttc, preparer_donnees, entrainer_evaluer, entrainer_evaluer_cv,
+    courbe_precision_rappel,
+)
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
@@ -35,6 +38,12 @@ y_pred_baseline = baseline_majorite_ttc(df, cols_base, col_ttc, niveau=4)
 X, y = preparer_donnees(df, y_pred_baseline, col_vrai, niveau=4)
 X.head()
 
-# %% Entrainement + evaluation
+# %% Entrainement + evaluation (split unique, pour les importances de features)
 res = entrainer_evaluer(X, y, test_size=0.2, random_state=42)
+
+# %% Validation croisee (estimation plus robuste des metriques)
+res_cv = entrainer_evaluer_cv(X, y, n_splits=5, random_state=42)
+
+# %% Compromis precision/rappel sur la detection des erreurs de baseline
+df_seuils = courbe_precision_rappel(res["y_test"], res["y_proba"])
 # %%

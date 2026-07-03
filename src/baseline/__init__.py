@@ -4,7 +4,9 @@ en cas d'égalité, et modèle binaire pour prédire si la baseline a raison.
 """
 from src.baseline.ttc import baseline_majorite_ttc, evaluer_baseline
 from src.baseline.preprocessing import preparer_donnees
-from src.baseline.modeling import construire_pipeline, entrainer_evaluer
+from src.baseline.modeling import (
+    construire_pipeline, entrainer_evaluer, entrainer_evaluer_cv, courbe_precision_rappel,
+)
 
 __all__ = [
     "baseline_majorite_ttc",
@@ -12,4 +14,6 @@ __all__ = [
     "preparer_donnees",
     "construire_pipeline",
     "entrainer_evaluer",
+    "entrainer_evaluer_cv",
+    "courbe_precision_rappel",
 ]

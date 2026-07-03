@@ -241,6 +241,143 @@ def stats_accord_avec_llm(df, cols_base, col_llm, col_vrai, niveau=4, verbose=Tr
 
 
 # =============================================================================
+# Accuracy LLM vs vérité, ventilée par division (niveau 1)
+# =============================================================================
+
+def accuracy_par_division(df, col_pred, col_vrai, niveau=4,
+                           codes_exclus=("98", "99"), verbose=True):
+    """
+    Accuracy de `col_pred` (typiquement le LLM-judge) contre `col_vrai` au
+    niveau de troncature demandé, ventilée par division COICOP (niveau 1 du
+    vrai code). Calcule aussi l'accuracy en excluant les lignes où `col_pred`,
+    tronqué au niveau 1, tombe dans `codes_exclus` (par défaut les divisions
+    hors nomenclature "98" - indéterminé/illisible - et "99" - hors COICOP :
+    dons, impôts, opérations bancaires...).
+
+    Returns
+    -------
+    pd.DataFrame indexé par division (+ une ligne "TOTAL"), colonnes :
+        - n                    : nb d'observations de la division
+        - n_correct            : nb correctes au niveau demandé
+        - accuracy             : n_correct / n
+        - n_exclus             : nb de lignes exclues (col_pred classé 98/99)
+        - n_hors_exclus        : n - n_exclus
+        - n_correct_hors_exclus
+        - accuracy_hors_exclus : n_correct_hors_exclus / n_hors_exclus
+    """
+    out = df.copy()
+    out["vrai_tronq"] = out[col_vrai].map(lambda x: tronquer_niveau(x, niveau))
+    out["pred_tronq"] = out[col_pred].map(lambda x: tronquer_niveau(x, niveau))
+    out["division"] = out[col_vrai].map(lambda x: tronquer_niveau(x, niveau=1))
+    out["pred_division"] = out[col_pred].map(lambda x: tronquer_niveau(x, niveau=1))
+
+    out["correct"] = out["pred_tronq"] == out["vrai_tronq"]
+    out["exclu"] = out["pred_division"].isin(codes_exclus)
+
+    def _resume(g):
+        hors = g[~g["exclu"]]
+        return pd.Series({
+            "n": len(g),
+            "n_correct": int(g["correct"].sum()),
+            "accuracy": g["correct"].mean(),
+            "n_exclus": int(g["exclu"].sum()),
+            "n_hors_exclus": len(hors),
+            "n_correct_hors_exclus": int(hors["correct"].sum()),
+            "accuracy_hors_exclus": hors["correct"].mean() if len(hors) else float("nan"),
+        })
+
+    recap = out.groupby("division").apply(_resume, include_groups=False)
+    recap.loc["TOTAL"] = _resume(out)
+    recap[["n", "n_correct", "n_exclus", "n_hors_exclus", "n_correct_hors_exclus"]] = (
+        recap[["n", "n_correct", "n_exclus", "n_hors_exclus", "n_correct_hors_exclus"]].astype(int)
+    )
+
+    if verbose:
+        print(f"=== Accuracy {col_pred} vs {col_vrai} au niveau {niveau}, "
+              "par division (niveau 1) ===")
+        print(f"(exclusion des lignes où {col_pred} est classé en "
+              f"{' ou '.join(codes_exclus)})\n")
+        print(recap.to_string(formatters={
+            "accuracy": "{:.1%}".format,
+            "accuracy_hors_exclus": "{:.1%}".format,
+        }))
+
+    return recap
+
+
+def precision_par_division_llm(df, col_pred, col_vrai, niveau=1, codes_exclus=("98", "99"),
+                                verbose=True):
+    """
+    Précision de `col_pred` (typiquement le LLM-judge), ventilée par division
+    PRÉDITE (niveau 1 de `col_pred`, et non par division vraie comme dans
+    `accuracy_par_division`) : pour chaque division que le LLM a prédite,
+    quelle part des cas est correcte, au niveau de comparaison `niveau` ?
+
+    Répond à la question « quand le LLM prédit telle division, a-t-il
+    raison ? » (précision), à distinguer de « pour telle division vraie, le
+    LLM la retrouve-t-il ? » (rappel, cf. `accuracy_par_division`).
+
+    Le regroupement (lignes du tableau) se fait toujours sur la division
+    prédite au niveau 1. Le critère de correction, lui, est paramétrable via
+    `niveau` :
+        - niveau=1 (défaut) : la division vraie correspond à la division
+          prédite (erreur "grossière", changement de division).
+        - niveau=4 : le code prédit est exactement correct à la granularité
+          maximale (sous-classe). Permet, une fois qu'on a groupé les cas par
+          division annoncée par le LLM, de mesurer combien d'entre eux sont
+          réellement bons de bout en bout (et pas seulement dans la bonne
+          division) — utile pour chiffrer le volume d'erreurs à reprendre par
+          division prédite.
+
+    Parameters
+    ----------
+    niveau : int
+        Niveau de troncature utilisé pour juger un cas correct ou non
+        (1 à 4). Le regroupement par division prédite reste toujours au
+        niveau 1, quel que soit `niveau`.
+    codes_exclus : tuple[str]
+        Divisions prédites à afficher séparément (par défaut "98"
+        indéterminé/illisible et "99" hors COICOP), pour ne pas polluer la
+        lecture des divisions standards 01-13.
+
+    Returns
+    -------
+    pd.DataFrame indexé par division prédite (+ une ligne "TOTAL"), colonnes :
+        - n         : nb de fois où le LLM a prédit cette division
+        - n_correct : nb de fois où le code est correct au niveau demandé
+        - n_erreurs : n - n_correct
+        - precision : n_correct / n
+    """
+    out = df.copy()
+    out["pred_division"] = out[col_pred].map(lambda x: tronquer_niveau(x, niveau=1))
+    out["pred_tronq"] = out[col_pred].map(lambda x: tronquer_niveau(x, niveau))
+    out["vrai_tronq"] = out[col_vrai].map(lambda x: tronquer_niveau(x, niveau))
+    out["correct"] = out["pred_tronq"] == out["vrai_tronq"]
+
+    def _resume(g):
+        n, n_correct = len(g), int(g["correct"].sum())
+        return pd.Series({
+            "n": n,
+            "n_correct": n_correct,
+            "n_erreurs": n - n_correct,
+            "precision": g["correct"].mean(),
+        })
+
+    recap = out.groupby("pred_division").apply(_resume, include_groups=False)
+    recap.loc["TOTAL"] = _resume(out)
+    recap[["n", "n_correct", "n_erreurs"]] = recap[["n", "n_correct", "n_erreurs"]].astype(int)
+
+    if verbose:
+        print(f"=== Précision de {col_pred} par division prédite (niveau 1), "
+              f"correction jugée au niveau {niveau} ===")
+        if codes_exclus:
+            print(f"(divisions {' et '.join(codes_exclus)} = hors nomenclature standard)\n")
+        print(recap.to_string(formatters={"precision": "{:.1%}".format}))
+
+    return recap
+
+
+# =============================================================================
 # Cas où un seul classifieur a raison contre tous les autres
 # =============================================================================
 

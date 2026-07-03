@@ -4,12 +4,17 @@ donne le bon code au niveau 4.
 """
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
-    accuracy_score, classification_report, confusion_matrix, roc_auc_score,
+    accuracy_score, classification_report, confusion_matrix,
+    precision_recall_curve, roc_auc_score,
 )
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import (
+    StratifiedKFold, cross_val_predict, cross_validate, train_test_split,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
 
@@ -31,13 +36,15 @@ def construire_pipeline(random_state=42, **rf_kwargs):
     )
     defaults.update(rf_kwargs)
 
+    cols_num_sans_budget = [c for c in COLS_NUMERIQUES if c != "budget"]
     preprocess = ColumnTransformer(
         transformers=[
             ("cat", OrdinalEncoder(
                 handle_unknown="use_encoded_value",
                 unknown_value=-1,
             ), COLS_CATEGORIELLES),
-            ("num", "passthrough", COLS_NUMERIQUES),
+            ("num", "passthrough", cols_num_sans_budget),
+            ("budget", SimpleImputer(strategy="median"), ["budget"]),
         ]
     )
     return Pipeline([
@@ -109,3 +116,122 @@ def entrainer_evaluer(X, y, test_size=0.2, random_state=42, **rf_kwargs):
         "accuracy": acc,
         "auc": auc,
     }
+
+
+def entrainer_evaluer_cv(X, y, n_splits=5, random_state=42, **rf_kwargs):
+    """
+    Validation croisee stratifiee : reentraine le pipeline complet (preprocessing
+    inclus) sur chaque fold, pour une estimation plus robuste que le split unique
+    de `entrainer_evaluer`.
+
+    Ne renvoie pas d'importances de features : il n'y a pas un seul modele final
+    mais un par fold. Pour les importances, utiliser `entrainer_evaluer`.
+
+    Returns
+    -------
+    dict : {scores, y_pred, accuracy_mean, accuracy_std, auc_mean, auc_std}
+    """
+    pipe = construire_pipeline(random_state=random_state, **rf_kwargs)
+    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+
+    scores = cross_validate(
+        pipe, X, y, cv=cv,
+        scoring=["accuracy", "roc_auc"],
+        return_train_score=False,
+    )
+    acc_mean, acc_std = scores["test_accuracy"].mean(), scores["test_accuracy"].std()
+    auc_mean, auc_std = scores["test_roc_auc"].mean(), scores["test_roc_auc"].std()
+
+    print(f"=== RF binaire : validation croisee ({n_splits} folds) ===")
+    print(f"Accuracy : {acc_mean:.3f} ± {acc_std:.3f}")
+    print(f"ROC AUC  : {auc_mean:.3f} ± {auc_std:.3f}")
+
+    # Predictions out-of-fold : chaque ligne est predite par le fold ou elle etait en test
+    y_pred = cross_val_predict(pipe, X, y, cv=cv)
+    cm = confusion_matrix(y, y_pred)
+
+    print(f"\nMatrice de confusion out-of-fold (lignes = vrai, colonnes = predit) :")
+    print(pd.DataFrame(
+        cm,
+        index=["vrai=baseline_fausse (0)", "vrai=baseline_correcte (1)"],
+        columns=["pred=0", "pred=1"],
+    ).to_string())
+
+    print("\nRapport detaille out-of-fold :")
+    print(classification_report(
+        y, y_pred,
+        target_names=["baseline_fausse", "baseline_correcte"],
+        digits=3,
+    ))
+
+    return {
+        "scores": scores,
+        "y_pred": y_pred,
+        "accuracy_mean": acc_mean,
+        "accuracy_std": acc_std,
+        "auc_mean": auc_mean,
+        "auc_std": auc_std,
+    }
+
+
+def courbe_precision_rappel(y_test, y_proba, seuils=(0.99, 0.95, 0.90, 0.80, 0.5)):
+    """
+    Compromis precision/rappel sur les deux classes selon le seuil applique a
+    y_proba = P(baseline_correcte).
+
+    Regle : on envoie au LLM (predit 0, 'fausse') quand y_proba < seuil. Le pipeline
+    (`predict`) utilise implicitement seuil=0.5. Monter le seuil augmente le
+    rappel sur 'fausse' (moins d'erreurs manquees) au prix de plus d'envois au LLM.
+
+    Deux lectures possibles du tableau retourne :
+    - precision/recall_fausse : parmi ce qu'on envoie au LLM, part vraiment fausse
+      (precision), et part des vraies erreurs effectivement captees (recall).
+    - precision/recall_correcte : parmi ce a quoi on fait confiance, part vraiment
+      correcte (precision = 1 - taux d'erreur residuelle -> LA metrique a suivre si
+      on veut etre sur de ce qu'on accepte comme correct), et part des vraies baselines
+      correctes qu'on n'envoie pas au LLM inutilement (recall).
+
+    Returns
+    -------
+    pd.DataFrame indexe par seuil, avec effectifs (n) et taux pour les deux classes.
+    """
+    precision_c0, recall_c0, _ = precision_recall_curve(y_test, 1 - y_proba, pos_label=0)
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(recall_c0[:-1], precision_c0[:-1])
+    ax.set_xlabel("Rappel (baseline_fausse detectee)")
+    ax.set_ylabel("Precision (parmi les envois au LLM)")
+    ax.set_title("Precision / rappel — detection des erreurs de baseline")
+    ax.grid(alpha=0.3)
+    plt.show()
+
+    y_test = pd.Series(y_test).reset_index(drop=True)
+    y_proba = pd.Series(y_proba).reset_index(drop=True)
+    vrai0 = (y_test == 0)
+
+    lignes = []
+    for seuil in seuils:
+        envoi_llm = y_proba < seuil   # predit 0 : "fausse", a verifier
+        confiance = ~envoi_llm        # predit 1 : "correcte", on fait confiance
+
+        tp = int((envoi_llm & vrai0).sum())    # envoi au LLM justifie
+        fp = int((envoi_llm & ~vrai0).sum())   # envoi au LLM inutile
+        fn = int((confiance & vrai0).sum())    # erreur manquee (risque)
+        tn = int((confiance & ~vrai0).sum())   # confiance justifiee
+
+        lignes.append({
+            "seuil": seuil,
+            "n_envoi_llm": tp + fp,
+            "n_confiance": tn + fn,
+            "envois_llm_justifies": tp,
+            "envois_llm_inutiles": fp,
+            "erreurs_manquees": fn,
+            "confiances_justifiees": tn,
+            "precision_fausse": tp / (tp + fp) if (tp + fp) else float("nan"),
+            "recall_fausse": tp / (tp + fn) if (tp + fn) else float("nan"),
+            "precision_correcte": tn / (tn + fn) if (tn + fn) else float("nan"),
+            "recall_correcte": tn / (tn + fp) if (tn + fp) else float("nan"),
+        })
+    df_seuils = pd.DataFrame(lignes).set_index("seuil")
+    print(df_seuils.round(3).to_string())
+    return df_seuils

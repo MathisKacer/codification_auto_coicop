@@ -32,6 +32,7 @@ from src.stats_accord import (
     stats_classifieur_seul_correct,
     analyse_classifieur_seul,
     stats_majorite_3_1,
+    accuracy_par_division,
     # Multi-niveaux
     stats_accord_multi_niveaux,
     stats_seul_multi_niveaux,
@@ -92,6 +93,23 @@ print(f"  ├─ LLM suit (FP 5/5)        : {len(fp_llm_suit)}")
 print(f"  └─ LLM diverge              : {len(fp_llm_diverge)}")
 print(f"       ├─ LLM correct (sauve) : {(~df_fp['llm_suit'] & df_fp['llm_correct']).sum()}")
 print(f"       └─ LLM faux aussi      : {(~df_fp['llm_suit'] & ~df_fp['llm_correct']).sum()}")
+
+# %% [markdown]
+# ## 1bis. Accuracy du LLM-judge vs vérité terrain, par division (niveau 1)
+#
+# Accuracy de `llm_code` contre `code` au niveau 4, ventilée par division
+# COICOP (niveau 1 du vrai code), avec en regard l'accuracy obtenue en
+# excluant les lignes où le LLM classe en division "98" (indéterminé /
+# illisible) ou "99" (hors COICOP : dons, impôts, opérations bancaires...).
+# NB : pour les divisions vraies 98/99 elles-mêmes, l'accuracy "hors
+# exclusion" tombe mécaniquement à 0 % (on exclut justement les prédictions
+# qui pourraient être correctes) ; elle n'est interprétable que pour les
+# divisions standards 01-13.
+
+# %%
+recap_accuracy_llm = accuracy_par_division(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=("98", "99"),
+)
 
 # %% [markdown]
 # ## 2. Cas où un seul classifieur a raison (niveau 4)
