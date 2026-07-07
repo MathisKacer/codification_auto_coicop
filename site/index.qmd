@@ -1,0 +1,29 @@
+---
+title: "Codification automatique de la nomenclature COICOP"
+subtitle: "Rapport de stage"
+date: today
+---
+
+## Contexte
+
+_(à compléter : organisme d'accueil, équipe, cadre du stage — enquête Budget
+de famille, pourquoi la codification COICOP est un enjeu, etc.)_
+
+## Sujet du stage
+
+_(à compléter : objectif du stage, problématique précise, méthode générale —
+classifieurs de base LCS/RAG/RAG-ANN/TTC, rôle du LLM-judge, etc.)_
+
+## Contenu de ce site
+
+Ce site présente l'avancement des travaux en deux temps :
+
+- **[Statistiques descriptives](stats-descriptives.qmd)** : analyse de
+  l'accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN, TTC) et
+  de l'apport du LLM-judge — taux d'accord, faux positifs, cas de désaccord,
+  et évolution selon le niveau de granularité de la nomenclature COICOP
+  (division à sous-classe).
+- **[Modélisation](modelisation.qmd)** : premiers travaux de modélisation
+  (Random Forest) visant à prédire automatiquement si la baseline (vote
+  majoritaire des classifieurs) a raison, afin de décider quand un contrôle
+  supplémentaire (LLM) est nécessaire — puis pistes d'analyses futures.

@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: ../outputs/site
+
+website:
+  title: "Codification automatique COICOP"
+  page-footer:
+    left: "Rapport de stage — codification automatique COICOP"
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - index.qmd
+      - section: "Statistiques descriptives"
+        contents:
+          - stats-descriptives.qmd
+      - section: "Modélisation"
+        contents:
+          - modelisation.qmd
+
+format:
+  html:
+    theme: flatly
+    toc: true
+    toc-depth: 3
+    df-print: default
+
+jupyter: python3
+
+execute:
+  echo: false
+  warning: false
+  freeze: auto

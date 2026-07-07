@@ -1,0 +1,108 @@
+---
+title: "Modélisation"
+subtitle: "Détecter automatiquement les erreurs de la baseline (Random Forest)"
+date: today
+---
+
+## Objectif
+
+La *baseline* désigne ici le vote majoritaire des quatre classifieurs de
+base (LCS, RAG, RAG-ANN, TTC), l'égalité étant arbitrée par TTC. Elle est
+rapide mais pas toujours correcte ; le LLM-judge, plus fiable, est en
+revanche plus coûteux à faire tourner sur l'ensemble des observations.
+
+L'objectif de ce premier modèle est de **prédire si la baseline donne le
+bon code COICOP** (au niveau 4, la granularité maximale) à partir de
+caractéristiques disponibles sans appel au LLM. Une bonne prédiction
+permettrait de savoir *quand* faire confiance à la baseline et quand
+envoyer l'observation au LLM-judge — un compromis entre coût et fiabilité.
+
+> _(à compléter : features utilisées, choix du Random Forest, limites
+> actuelles de l'approche)_
+
+
+```{python}
+import sys, os
+sys.path.append(os.path.abspath(".."))
+
+import pandas as pd
+from IPython.display import display
+
+from data.load_data import charger_donnees
+from src.baseline import (
+    baseline_majorite_ttc, preparer_donnees, entrainer_evaluer, entrainer_evaluer_cv,
+    courbe_precision_rappel,
+)
+
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 200)
+```
+
+## Chargement et préparation des données
+
+
+```{python}
+chemin_s3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+df = charger_donnees(chemin_s3)
+df.head()
+```
+
+```{python}
+cols_base = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
+col_ttc = "ttc_code_1"
+col_vrai = "code"
+```
+
+```{python}
+y_pred_baseline = baseline_majorite_ttc(df, cols_base, col_ttc, niveau=4)
+```
+
+```{python}
+X, y = preparer_donnees(df, y_pred_baseline, col_vrai, niveau=4)
+X.head()
+```
+
+## Entraînement et évaluation
+
+Un premier split train/test sert à obtenir des métriques et les
+importances de features ; la validation croisée donne une estimation plus
+robuste.
+
+
+```{python}
+res = entrainer_evaluer(X, y, test_size=0.2, random_state=42)
+```
+
+```{python}
+res_cv = entrainer_evaluer_cv(X, y, n_splits=5, random_state=42)
+```
+
+> _(Interprétation à compléter : niveau de performance, features les plus
+> importantes, écart split unique / validation croisée)_
+
+
+## Compromis précision/rappel
+
+En faisant varier le seuil de probabilité à partir duquel on décide
+d'envoyer une observation au LLM plutôt que de faire confiance à la
+baseline, on peut arbitrer entre le nombre d'erreurs manquées et le volume
+envoyé au LLM.
+
+
+```{python}
+df_seuils = courbe_precision_rappel(res["y_test"], res["y_proba"])
+display(df_seuils)
+```
+
+> _(Interprétation à compléter : seuil retenu et pourquoi, coût estimé
+> du volume envoyé au LLM à ce seuil)_
+
+
+## Pistes d'analyses futures
+
+_(à compléter, par exemple :)_
+
+- _(comparaison à d'autres modèles que le Random Forest)_
+- _(feature importance plus détaillée / SHAP)_
+- _(analyse des erreurs du modèle par division COICOP)_
+- _(lien avec les résultats de la page [Statistiques descriptives](stats-descriptives.qmd))_
