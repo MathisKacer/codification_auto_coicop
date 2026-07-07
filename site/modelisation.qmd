@@ -1,84 +1,244 @@
 ---
 title: "Modélisation"
-subtitle: "Détecter automatiquement les erreurs de la baseline (Random Forest)"
+subtitle: "Détecter automatiquement les erreurs d'un classifier simple via une Random Forest"
 date: today
 ---
 
 ## Objectif
 
-La *baseline* désigne ici le vote majoritaire des quatre classifieurs de
-base (LCS, RAG, RAG-ANN, TTC), l'égalité étant arbitrée par TTC. Elle est
-rapide mais pas toujours correcte ; le LLM-judge, plus fiable, est en
-revanche plus coûteux à faire tourner sur l'ensemble des observations.
+Un nouveau classifieur simple a été mis en place, avec comme objectif de compléter le LLM-as-a-judge, voire de la concurrencer. Celui-ci s'appuie sur une idée simple : suivre l'avis majoritaire des classifieurs (cf. [Accords unanimes des 4 classifieurs](stats-descriptives/accords-unanimes.qmd) et [3 classifieurs contre 1 dissident](stats-descriptives/trois-contre-un.qmd)) et TorchTextClassifier en cas d'égalité (cf. [classifieurs seuls](stats-descriptives/seul-correct.qmd)).
 
-L'objectif de ce premier modèle est de **prédire si la baseline donne le
-bon code COICOP** (au niveau 4, la granularité maximale) à partir de
-caractéristiques disponibles sans appel au LLM. Une bonne prédiction
-permettrait de savoir *quand* faire confiance à la baseline et quand
-envoyer l'observation au LLM-judge — un compromis entre coût et fiabilité.
+Le but est ensuite d'en étudier les performances, notamment via une Random Forest, afin d'établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l'intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.
 
-> _(à compléter : features utilisées, choix du Random Forest, limites
-> actuelles de l'approche)_
 
 
 ```{python}
 import sys, os
 sys.path.append(os.path.abspath(".."))
 
+import io
+from contextlib import redirect_stdout
+
 import pandas as pd
-from IPython.display import display
+from IPython.display import display, Markdown
+
+from sklearn.metrics import classification_report
 
 from data.load_data import charger_donnees
+from src.coicop import tronquer_niveau
 from src.baseline import (
-    baseline_majorite_ttc, preparer_donnees, entrainer_evaluer, entrainer_evaluer_cv,
-    courbe_precision_rappel,
+    baseline_majorite_ttc, evaluer_baseline, preparer_donnees, entrainer_evaluer,
+    entrainer_evaluer_cv, courbe_precision_rappel,
 )
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
 ```
 
-## Chargement et préparation des données
-
-
 ```{python}
 chemin_s3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
 df = charger_donnees(chemin_s3)
-df.head()
-```
 
-```{python}
 cols_base = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
 col_ttc = "ttc_code_1"
+col_llm = "llm_code"
 col_vrai = "code"
 ```
 
+## Performance de la baseline
+
+Avant d'entraîner un modèle pour détecter ses erreurs, on mesure la
+performance brute de la baseline (vote majoritaire, TTC arbitre en cas
+d'égalité), au niveau 4 (granularité maximale). En comparaison : l'accuracy
+obtenue en suivant TTC seul permet de chiffrer l'apport du vote majoritaire,
+et l'accuracy du LLM-judge donne la référence haute (plus coûteuse) à
+laquelle la baseline est comparée.
+
 ```{python}
+
+
+def accuracy(y_pred, niveau=4):
+    """Accuracy silencieuse (masque les print() de evaluer_baseline)."""
+    with redirect_stdout(io.StringIO()):
+        return evaluer_baseline(df, y_pred, col_vrai, niveau=niveau)
+
+
 y_pred_baseline = baseline_majorite_ttc(df, cols_base, col_ttc, niveau=4)
+y_pred_ttc = df[col_ttc].map(lambda x: tronquer_niveau(x, niveau=4))
+y_pred_llm = df[col_llm].map(lambda x: tronquer_niveau(x, niveau=4))
+
+acc_baseline = accuracy(y_pred_baseline)
+acc_ttc = accuracy(y_pred_ttc)
+acc_llm = accuracy(y_pred_llm)
+
+recap_baseline = pd.DataFrame({
+    "Méthode": ["Vote majoritaire (baseline)", "TTC seul", "LLM-judge"],
+    "Accuracy": [acc_baseline, acc_ttc, acc_llm],
+})
+recap_baseline["Accuracy"] = recap_baseline["Accuracy"].map(lambda x: f"{x:.1%}")
+recap_baseline
 ```
 
 ```{python}
-X, y = preparer_donnees(df, y_pred_baseline, col_vrai, niveau=4)
-X.head()
+display(Markdown(
+    f"**Gain du vote majoritaire vs TTC seul : "
+    f"{(acc_baseline - acc_ttc) * 100:+.2f} points**\n\n"
+    f"**Écart baseline vs LLM-judge : "
+    f"{(acc_baseline - acc_llm) * 100:+.2f} points**"
+))
+```
+
+## Préparation des données pour le modèle
+
+La cible du modèle est binaire : **la baseline a-t-elle trouvé le bon code
+au niveau 4 ?** (1 = correcte, 0 = fausse). Les features excluent
+volontairement tout ce qui viendrait du LLM-judge, puisque l'objectif est
+justement de prédire sans l'appeler.
+
+**Features catégorielles** (encodées par `OrdinalEncoder`, valeur inconnue
+→ -1) :
+
+| Colonne | Description | Valeurs manquantes |
+|---|---|---|
+| `lcs_code_n1`, `rag_code_n1`, `ragann_code_n1`, `ttc_code_1_n1` | Code prédit par chaque classifieur de base, tronqué au niveau 1 (division) | → `"INCONNU"` |
+| `pred_baseline_n1` | Code choisi par la baseline (vote majoritaire), tronqué au niveau 1 | → `"INCONNU"` |
+| `shop_type_name` | Type d'enseigne | → `"INCONNU"` |
+| `source` | Source de l'observation | → `"INCONNU"` |
+
+**Features numériques** (passées telles quelles au modèle) :
+
+| Colonne | Description | Valeurs manquantes |
+|---|---|---|
+| `nb_accords_max` | Taille du plus gros groupe de classifieurs d'accord, au niveau 4 | — |
+| `unanimite` | 1 si les 4 classifieurs de base sont d'accord au niveau 4, 0 sinon | — |
+| `lcs_distance` | Distance de similarité du classifieur LCS | → 1.5 (hors de [0, 1], équivaut à "très loin") |
+| `rag_confidence`, `ragann_confidence`, `ttc_conf_1` | Scores de confiance des classifieurs RAG, RAG-ANN et TTC | → -1 (hors de [0, 1]) |
+| `budget` | Montant de la dépense | → médiane du train, dans le pipeline d'entraînement (évite toute fuite train/test) |
+
+
+```{python}
+with redirect_stdout(io.StringIO()):
+    X, y = preparer_donnees(df, y_pred_baseline, col_vrai, niveau=4)
+
+n_cat = len(X.select_dtypes(include="object").columns)
+n_num = X.shape[1] - n_cat
+display(Markdown(
+    f"**{X.shape[1]} features** ({n_cat} catégorielles, {n_num} numériques) "
+    f"pour **{len(X)} observations**, dont **{y.mean():.1%}** de baseline correcte."
+))
 ```
 
 ## Entraînement et évaluation
 
+Le modèle produit une probabilité `P(baseline correcte)` pour chaque
+observation. Cette probabilité est l'élément central de l'articulation
+avec le reste du projet : c'est elle qui sera seuillée dans la section
+[Compromis précision/rappel](#compromis-précisionrappel) pour décider, au
+cas par cas, si l'on fait confiance à la baseline (rapide, gratuite) ou si
+l'on envoie l'observation au LLM-judge (plus fiable, plus coûteux).
+L'évaluation ci-dessous sert donc à vérifier que cette probabilité est
+suffisamment fiable avant d'en faire une règle de décision opérationnelle.
+
 Un premier split train/test sert à obtenir des métriques et les
-importances de features ; la validation croisée donne une estimation plus
-robuste.
+importances de features ; la validation croisée donne ensuite une
+estimation plus robuste, en réentraînant le pipeline complet (encodage
+compris) sur chaque fold.
 
+### Split train/test
 
 ```{python}
-res = entrainer_evaluer(X, y, test_size=0.2, random_state=42)
+with redirect_stdout(io.StringIO()):
+    res = entrainer_evaluer(X, y, test_size=0.2, random_state=42)
+
+display(Markdown(
+    f"Train : **{len(res['X_train'])}** lignes — Test : **{len(res['X_test'])}** lignes "
+    f"(taux de baseline correcte dans le train : {res['y_train'].mean():.1%})\n\n"
+    f"**Accuracy (test)** : {res['accuracy']:.1%} — **ROC AUC** : {res['auc']:.3f}"
+))
 ```
 
 ```{python}
-res_cv = entrainer_evaluer_cv(X, y, n_splits=5, random_state=42)
+pd.crosstab(
+    res["y_test"].map({0: "baseline fausse", 1: "baseline correcte"}),
+    pd.Series(res["y_pred"], index=res["y_test"].index)
+      .map({0: "baseline fausse", 1: "baseline correcte"}),
+    rownames=["Vrai"], colnames=["Prédit"],
+)
 ```
 
-> _(Interprétation à compléter : niveau de performance, features les plus
-> importantes, écart split unique / validation croisée)_
+```{python}
+rapport = classification_report(
+    res["y_test"], res["y_pred"],
+    target_names=["baseline_fausse", "baseline_correcte"],
+    output_dict=True,
+)
+pd.DataFrame(rapport).T.round(3)
+```
+
+### Importances des features
+
+```{python}
+(res["importances"] * 100).round(1).to_frame("Importance (%)")
+```
+
+### Validation croisée (estimation plus robuste)
+
+```{python}
+with redirect_stdout(io.StringIO()):
+    res_cv = entrainer_evaluer_cv(X, y, n_splits=5, random_state=42)
+
+display(Markdown(
+    f"**Accuracy** : {res_cv['accuracy_mean']:.1%} ± {res_cv['accuracy_std']:.1%} — "
+    f"**ROC AUC** : {res_cv['auc_mean']:.3f} ± {res_cv['auc_std']:.3f} (5 folds)"
+))
+```
+
+```{python}
+pd.crosstab(
+    y.map({0: "baseline fausse", 1: "baseline correcte"}),
+    pd.Series(res_cv["y_pred"], index=y.index)
+      .map({0: "baseline fausse", 1: "baseline correcte"}),
+    rownames=["Vrai"], colnames=["Prédit (out-of-fold)"],
+)
+```
+
+### Interprétation
+
+**Niveau de performance.** Avec le seuil par défaut de 0.5 (on prédit
+"baseline correcte" dès que `P(baseline correcte) > 0.5`), le modèle
+atteint 86.0 % d'accuracy sur le test (ROC AUC 0.946), contre 84.6 % ± 0.6
+en validation croisée (AUC 0.935 ± 0.005). L'écart entre les deux est
+faible : le résultat n'est pas un coup de chance lié au découpage
+train/test.
+
+L'accuracy globale masque cependant une asymétrie importante entre les
+deux classes : sur les erreurs réelles de la baseline (263 cas du test),
+le modèle en repère 87 % (rappel), mais avec une précision de seulement
+64 % — environ un tiers de ce qu'il signale comme "fausse" est en réalité
+correct. Sur les baselines réellement correctes (902 cas), 86 % sont bien
+reconnues comme telles, mais 128 sont signalées à tort comme fausses.
+
+**Le seuil de 0.5 n'a rien d'obligatoire** : c'est simplement la valeur
+par défaut de `.predict()`. Rien n'empêche de le faire varier selon ce
+qu'on cherche à privilégier dans notre cas :
+
+- un seuil plus **bas** envoie plus d'observations au LLM (meilleur
+  rappel sur "baseline fausse", donc moins d'erreurs manquées), au prix
+  d'un volume, donc d'un coût, plus élevé
+- un seuil plus **haut** limite le volume envoyé au LLM (économie), mais
+  laisse passer davantage d'erreurs de baseline non détectées.
+
+C'est exactement l'arbitrage étudié dans la section suivante, avec
+`courbe_precision_rappel`, qui fait varier ce seuil pour chiffrer ce
+compromis.
+
+**Features les plus importantes.** `nb_accords_max` (taille du plus gros
+groupe d'accord entre classifieurs) domine largement (34.5 % de
+l'importance), suivi de `ttc_conf_1` (14.9 %) et `unanimite` (9.1 %) :
+sans surprise, le signal principal du modèle est le niveau de consensus
+entre les classifieurs de base. Les scores de confiance individuels
+(`rag_confidence`, `lcs_distance`...) et `budget` pèsent chacun autour de
+5-6 %. `shop_type_name` et `source` sont les moins utiles (< 2 % chacune).
 
 
 ## Compromis précision/rappel
@@ -105,4 +265,4 @@ _(à compléter, par exemple :)_
 - _(comparaison à d'autres modèles que le Random Forest)_
 - _(feature importance plus détaillée / SHAP)_
 - _(analyse des erreurs du modèle par division COICOP)_
-- _(lien avec les résultats de la page [Statistiques descriptives](stats-descriptives.qmd))_
+- _(lien avec les résultats de la page [Statistiques descriptives](stats-descriptives/index.qmd))_

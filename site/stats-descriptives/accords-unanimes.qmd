@@ -1,0 +1,81 @@
+---
+title: "Accords unanimes des 4 classifieurs"
+subtitle: "Faux positifs partagés et comportement du LLM-judge face au consensus"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+## 2. Rapport sur les accords unanimes des 4 classifieurs
+
+Pour chaque niveau : accord unanime des classifieurs de base, faux positifs
+associés, et dissocie les cas où le LLM-judge suit ou non le consensus.
+Un tableau avec tous les cas est donné pour le niveau 4.
+
+::: {.panel-tabset}
+
+```{python}
+def afficher_detail_niveau(n, top_n=10):
+    df_stats = stats_accord(df, cols_base, col_vrai, niveau=n, verbose=False)
+    titre("Accord unanime des classifieurs de base")
+    display(joli(df_stats.attrs["resume"]))
+
+    df_fp = analyse_faux_positifs(df_stats, niveau=n, top_n=top_n, verbose=False)
+    if len(df_fp):
+        titre(f"Faux positifs unanimes — {len(df_fp)} cas")
+        sous_titre("Top vrais codes concernés :")
+        display(joli(df_fp.attrs["top_vrais"]))
+        sous_titre("Top codes prédits à tort :")
+        display(joli(df_fp.attrs["top_predits"]))
+        sous_titre("Top confusions (vrai → prédit) :")
+        display(joli(df_fp.attrs["confusions"]))
+        if "confusions_division" in df_fp.attrs:
+            sous_titre("Confusions agrégées au niveau 1 (division) :")
+            display(joli(df_fp.attrs["confusions_division"]))
+    else:
+        display(Markdown("*Aucun faux positif unanime à ce niveau.*"))
+
+    df_acc = stats_accord_avec_llm(df, cols_base, col_llm, col_vrai, niveau=n, verbose=False)
+    titre("Dissociation selon le comportement du LLM-judge")
+    display(joli(df_acc.attrs["recap"]))
+    return df_stats, df_fp, df_acc
+```
+
+### Niveau 4 — sous-classe
+
+```{python}
+df_stats_4, df_fp_4, df_acc_4 = afficher_detail_niveau(4)
+```
+
+```{python}
+cols_fp = [c for c in [col_libelle, "code", "vrai_tronq", "code_consensus",
+                       *[f"{c}_tronq" for c in cols_base]] if c in df_fp_4.columns]
+titre(f"Lignes concernées — {len(df_fp_4)} faux positifs unanimes")
+display(HTML(
+    f'<div style="max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px;">'
+    f'{joli(df_fp_4[cols_fp]).to_html(classes="table table-sm table-striped", index=False)}'
+    f'</div>'
+))
+```
+
+### Niveau 3 — classe
+
+```{python}
+df_stats_3, df_fp_3, df_acc_3 = afficher_detail_niveau(3)
+```
+
+### Niveau 2 — groupe
+
+```{python}
+df_stats_2, df_fp_2, df_acc_2 = afficher_detail_niveau(2)
+```
+
+### Niveau 1 — division
+
+```{python}
+df_stats_1, df_fp_1, df_acc_1 = afficher_detail_niveau(1)
+```
+
+:::
+
+> _(Interprétation à compléter)_

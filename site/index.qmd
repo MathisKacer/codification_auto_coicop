@@ -18,7 +18,7 @@ classifieurs de base LCS/RAG/RAG-ANN/TTC, rôle du LLM-judge, etc.)_
 
 Ce site présente l'avancement des travaux en deux temps :
 
-- **[Statistiques descriptives](stats-descriptives.qmd)** : analyse de
+- **[Statistiques descriptives](stats-descriptives/index.qmd)** : analyse de
   l'accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN, TTC) et
   de l'apport du LLM-judge — taux d'accord, faux positifs, cas de désaccord,
   et évolution selon le niveau de granularité de la nomenclature COICOP

@@ -1,0 +1,33 @@
+---
+title: "Aperçu des données"
+subtitle: "Jeu de données utilisé et statistiques descriptives de base"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+## Jeu de données
+
+```{python}
+display(Markdown(f"**{len(df)} observations** — classifieurs de base : `{', '.join(cols_base)}` — LLM-judge : `{col_llm}`"))
+display(Markdown(f"Source : `{CHEMIN_S3}`"))
+```
+
+## Aperçu des premières lignes
+
+```{python}
+df[[col_libelle, col_vrai, *cols_base, col_llm]].head()
+```
+
+## Répartition par division COICOP (niveau 1, vrai code)
+
+```{python}
+repartition = (
+    df[col_vrai].astype(str).str[:2]
+    .value_counts().sort_index()
+    .rename_axis("division").reset_index(name="n")
+)
+repartition["%"] = (repartition["n"] / len(df) * 100).round(1)
+repartition
+```
+

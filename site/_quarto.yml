@@ -13,7 +13,12 @@ website:
       - index.qmd
       - section: "Statistiques descriptives"
         contents:
-          - stats-descriptives.qmd
+          - stats-descriptives/apercu-donnees.qmd
+          - stats-descriptives/index.qmd
+          - stats-descriptives/accords-unanimes.qmd
+          - stats-descriptives/trois-contre-un.qmd
+          - stats-descriptives/seul-correct.qmd
+          - stats-descriptives/ventilation-division.qmd
       - section: "Modélisation"
         contents:
           - modelisation.qmd

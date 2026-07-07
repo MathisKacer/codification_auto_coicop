@@ -1,0 +1,64 @@
+---
+title: "3 classifieurs contre 1 dissident"
+subtitle: "Répartition du classifieur dissident et fréquence à laquelle la majorité a raison"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+## 3. Cas où 3 classifieurs de base sont d'accord contre 1 dissident
+
+Parmi les 4 classifieurs de base, cas où 3 votent le même code et le 4e
+diverge : répartition du classifieur dissident, et fréquence à laquelle
+la majorité (les 3 d'accord) a raison plutôt que le dissident.
+
+::: {.panel-tabset}
+
+```{python}
+def afficher_3_1_niveau(n):
+    df_31 = stats_majorite_3_1(df, cols_base, col_vrai, niveau=n, verbose=False)
+    display(joli(df_31.attrs["resume"]))
+    titre("Répartition par classifieur dissident")
+    display(joli(df_31.attrs["repart_dissident"]))
+    return df_31
+```
+
+### Niveau 4 — sous-classe
+
+```{python}
+df_31_4 = afficher_3_1_niveau(4)
+```
+
+```{python}
+df_31_only_4 = df_31_4[df_31_4["cas_3_1"]]
+cols_31 = [c for c in [col_libelle, "code", "vrai_tronq", "classifieur_dissident",
+                       "code_majorite", "code_minoritaire",
+                       "majorite_correcte", "minorite_correcte",
+                       *[f"{c}_tronq" for c in cols_base]] if c in df_31_only_4.columns]
+titre(f"Lignes concernées — {len(df_31_only_4)} cas")
+display(HTML(
+    f'<div style="max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px;">'
+    f'{joli(df_31_only_4[cols_31]).to_html(classes="table table-sm table-striped", index=False)}'
+    f'</div>'
+))
+```
+
+### Niveau 3 — classe
+
+```{python}
+df_31_3 = afficher_3_1_niveau(3)
+```
+
+### Niveau 2 — groupe
+
+```{python}
+df_31_2 = afficher_3_1_niveau(2)
+```
+
+### Niveau 1 — division
+
+```{python}
+df_31_1 = afficher_3_1_niveau(1)
+```
+
+:::
