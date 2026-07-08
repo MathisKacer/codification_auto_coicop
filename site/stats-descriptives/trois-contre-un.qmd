@@ -6,7 +6,7 @@ date: today
 
 {{< include _setup.qmd >}}
 
-## 3. Cas où 3 classifieurs de base sont d'accord contre 1 dissident
+## Cas où 3 classifieurs de base sont d'accord contre 1 dissident
 
 Parmi les 4 classifieurs de base, cas où 3 votent le même code et le 4e
 diverge : répartition du classifieur dissident, et fréquence à laquelle
@@ -17,6 +17,7 @@ la majorité (les 3 d'accord) a raison plutôt que le dissident.
 ```{python}
 def afficher_3_1_niveau(n):
     df_31 = stats_majorite_3_1(df, cols_base, col_vrai, niveau=n, verbose=False)
+    titre("Vue d'ensemble")
     display(joli(df_31.attrs["resume"]))
     titre("Répartition par classifieur dissident")
     display(joli(df_31.attrs["repart_dissident"]))

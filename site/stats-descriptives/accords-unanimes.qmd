@@ -6,7 +6,7 @@ date: today
 
 {{< include _setup.qmd >}}
 
-## 2. Rapport sur les accords unanimes des 4 classifieurs
+## Rapport sur les accords unanimes des 4 classifieurs
 
 Pour chaque niveau : accord unanime des classifieurs de base, faux positifs
 associés, et dissocie les cas où le LLM-judge suit ou non le consensus.

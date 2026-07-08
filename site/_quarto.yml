@@ -6,22 +6,25 @@ website:
   title: "Codification automatique COICOP"
   page-footer:
     left: "Rapport de stage — codification automatique COICOP"
-  sidebar:
-    style: docked
+  navbar:
     search: true
-    contents:
-      - index.qmd
-      - section: "Fiabilité des classifieurs"
-        contents:
-          - stats-descriptives/apercu-donnees.qmd
-          - stats-descriptives/index.qmd
-          - stats-descriptives/accords-unanimes.qmd
-          - stats-descriptives/trois-contre-un.qmd
-          - stats-descriptives/seul-correct.qmd
-          - stats-descriptives/ventilation-division.qmd
-      - section: "Modélisation"
-        contents:
-          - modelisation.qmd
+    left:
+      - href: index.qmd
+        text: Accueil
+      - href: stats-descriptives/index.qmd
+        text: "Fiabilité des classifieurs"
+      - href: modelisation.qmd
+        text: Modélisation
+  sidebar:
+    - id: fiabilite-classifieurs
+      title: "Fiabilité des classifieurs"
+      style: docked
+      contents:
+        - stats-descriptives/apercu-donnees.qmd
+        - stats-descriptives/index.qmd
+        - stats-descriptives/accords-unanimes.qmd
+        - stats-descriptives/trois-contre-un.qmd
+        - stats-descriptives/seul-correct.qmd
 
 format:
   html:

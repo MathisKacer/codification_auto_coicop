@@ -18,9 +18,7 @@ division, on le suit directement"). Différents axes sont étudiés :
   contre un dissident, la majorité l'emporte-t-elle à raison ?
 - **[Un seul classifieur a raison](seul-correct.qmd)** : quels classifieurs
   apportent une valeur ajoutée dans les cas les plus difficiles (dont le
-  LLM-judge) ?
-- **[Ventilation par division](ventilation-division.qmd)** : où (dans
-  quelles divisions COICOP) ces cas se concentrent-ils ?
+  LLM-judge), et dans quelles divisions COICOP ces cas se concentrent-ils ?
 
 > _(Interprétation générale à compléter)_
 
@@ -53,33 +51,37 @@ comme n'importe quelle autre division, sans exclusion.
 ### Niveau 4 — sous-classe
 
 ```{python}
-joli(accuracy_par_division(
+titre("Accuracy par division (niveau 4)")
+display(joli(accuracy_par_division(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]])
+)[["n", "n_correct", "accuracy"]]))
 ```
 
 ### Niveau 3 — classe
 
 ```{python}
-joli(accuracy_par_division(
+titre("Accuracy par division (niveau 3)")
+display(joli(accuracy_par_division(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=3, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]])
+)[["n", "n_correct", "accuracy"]]))
 ```
 
 ### Niveau 2 — groupe
 
 ```{python}
-joli(accuracy_par_division(
+titre("Accuracy par division (niveau 2)")
+display(joli(accuracy_par_division(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=2, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]])
+)[["n", "n_correct", "accuracy"]]))
 ```
 
 ### Niveau 1 — division
 
 ```{python}
-joli(accuracy_par_division(
+titre("Accuracy par division (niveau 1)")
+display(joli(accuracy_par_division(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]])
+)[["n", "n_correct", "accuracy"]]))
 ```
 
 :::
@@ -99,33 +101,37 @@ auquel on juge une prédiction "correcte" change.
 ### Niveau 4 — sous-classe
 
 ```{python}
-joli(precision_par_division_llm(
+titre("Précision par division prédite (niveau 4)")
+display(joli(precision_par_division_llm(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, verbose=False,
-))
+)))
 ```
 
 ### Niveau 3 — classe
 
 ```{python}
-joli(precision_par_division_llm(
+titre("Précision par division prédite (niveau 3)")
+display(joli(precision_par_division_llm(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=3, verbose=False,
-))
+)))
 ```
 
 ### Niveau 2 — groupe
 
 ```{python}
-joli(precision_par_division_llm(
+titre("Précision par division prédite (niveau 2)")
+display(joli(precision_par_division_llm(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=2, verbose=False,
-))
+)))
 ```
 
 ### Niveau 1 — division
 
 ```{python}
-joli(precision_par_division_llm(
+titre("Précision par division prédite (niveau 1)")
+display(joli(precision_par_division_llm(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, verbose=False,
-))
+)))
 ```
 
 :::
