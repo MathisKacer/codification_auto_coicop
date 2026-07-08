@@ -246,23 +246,45 @@ entre les classifieurs de base. Les scores de confiance individuels
 En faisant varier le seuil de probabilité à partir duquel on décide
 d'envoyer une observation au LLM plutôt que de faire confiance à la
 baseline, on peut arbitrer entre le nombre d'erreurs manquées et le volume
-envoyé au LLM.
-
+envoyé au LLM. Concrètement : on envoie au LLM les observations pour
+lesquelles `P(baseline correcte) < seuil` ; plus le seuil est haut, plus
+on envoie d'observations au LLM, mais moins on en laisse passer par
+erreur.
 
 ```{python}
-df_seuils = courbe_precision_rappel(res["y_test"], res["y_proba"])
-display(df_seuils)
+with redirect_stdout(io.StringIO()):
+    df_seuils = courbe_precision_rappel(res["y_test"], res["y_proba"])
+
+n_test = len(res["y_test"])
+recap_seuils = pd.DataFrame({
+    "Envoyés au LLM (n)": df_seuils["n_envoi_llm"],
+    "% du volume envoyé au LLM": (df_seuils["n_envoi_llm"] / n_test).map(lambda x: f"{x:.0%}"),
+    "Erreurs manquées (n)": df_seuils["erreurs_manquees"],
+    "% erreurs détectées": df_seuils["recall_fausse"].map(lambda x: f"{x:.1%}"),
+    "Fiabilité de ce qu'on garde": df_seuils["precision_correcte"].map(lambda x: f"{x:.1%}"),
+})
+recap_seuils
 ```
 
-> _(Interprétation à compléter : seuil retenu et pourquoi, coût estimé
-> du volume envoyé au LLM à ce seuil)_
+### Interprétation
 
+Sur les 1165 observations du test, 263 (22.6 %) sont de vraies erreurs de
+baseline. C'est ce que ce compromis cherche à intercepter avant qu'elles
+ne passent inaperçues.
+
+- **Seuil 0.99 / 0.95** : détecte 100 % des erreurs, mais au prix
+  d'envoyer 86 % / 71 % du volume au LLM — cela annule une grande partie
+  de l'intérêt économique de la baseline.
+- **Seuil 0.90** : ne manque qu'**1 erreur sur 263** (99.6 % détectées),
+  en envoyant 61 % du volume au LLM (39 % d'appels évités par rapport à
+  tout envoyer).
+- **Seuil 0.80** : manque 6 erreurs (97.7 % détectées), pour 51 % du
+  volume envoyé.
+- **Seuil 0.50 (par défaut de `.predict()`)** : le plus économique (31 %
+  du volume envoyé), mais laisse passer 35 erreurs non détectées (13 %
+  des erreurs de baseline), et parmi ce qu'on garde sans LLM, 4.3 % sont
+  en réalité fausses (précision sur "correcte" = 95.7 %).
 
 ## Pistes d'analyses futures
 
-_(à compléter, par exemple :)_
-
-- _(comparaison à d'autres modèles que le Random Forest)_
-- _(feature importance plus détaillée / SHAP)_
-- _(analyse des erreurs du modèle par division COICOP)_
-- _(lien avec les résultats de la page [Statistiques descriptives](stats-descriptives/index.qmd))_
+_(à compléter)_
