@@ -1,29 +1,96 @@
 ---
 title: "Codification automatique de la nomenclature COICOP"
-subtitle: "Rapport de stage"
+subtitle: "Travaux de stage de Mathis Kacer"
 date: today
 ---
 
 ## Contexte
 
-_(à compléter : organisme d'accueil, équipe, cadre du stage — enquête Budget
-de famille, pourquoi la codification COICOP est un enjeu, etc.)_
+L'enquête **Budget de Famille** (BDF, INSEE) collecte les dépenses des
+ménages sous forme de libellés textuels bruts et hétérogènes (tickets de
+caisse, déclarations...). Chaque libellé doit être rattaché à la
+nomenclature **COICOP** (*Classification of Individual Consumption
+According to Purpose*), utilisée pour produire des statistiques de
+consommation comparables au niveau international et transmises à
+Eurostat.
+
+Cette codification est difficile à automatiser : les libellés sont
+bruités, sémantiquement variables et fragmentés, et la coder à la main
+n'est pas soutenable à l'échelle de l'enquête. Ce travail s'inscrit dans
+la collaboration entre la Maîtrise d'Ouvrage de l'enquête BDF, la
+division IPC et le SSPLab (INSEE) ; les résultats de l'édition 2026 de
+l'enquête doivent être transmis à Eurostat en 2028, ce qui rend le
+sujet critique pour la prochaine édition de BDF en 2030.
+
+_(à compléter : organisme d'accueil, équipe, cadre précis du stage)_
+
+## Pipeline actuel
+
+Le pipeline de codification automatique — développé en amont de ce stage
+et documenté en détail sur
+[inseefrlab.github.io/codif-coicop-bdf](https://inseefrlab.github.io/codif-coicop-bdf/) —
+enchaîne les étapes suivantes :
+
+> Prétraitement → Regex (cas évidents) → 4 classifieurs en parallèle (LCS,
+> RAG sur notices, RAG sur annotations, TTC) → arbitrage final par un
+> LLM-as-a-judge
+
+- **Regex** : code par règles les libellés évidents, en amont des
+  classifieurs plus coûteux.
+- **LCS** : similarité de chaînes (*Longest Common Subsequence*) sur un
+  référentiel de libellés déjà codés.
+- **RAG (notices)** : recherche sémantique dans les notices officielles de
+  la nomenclature COICOP.
+- **RAG (annotations)** : apprentissage à partir d'exemples déjà codés.
+- **TTC** : classifieur neuronal fine-tuné sur les tickets de caisse BDF.
+- **LLM-as-a-judge** : arbitre entre ces quatre avis pour trancher un code
+  final (étape *decide-coicop*), un jugement plus fiable, mais plus
+  coûteux à faire tourner sur l'ensemble des observations de l'enquête.
 
 ## Sujet du stage
 
-_(à compléter : objectif du stage, problématique précise, méthode générale —
-classifieurs de base LCS/RAG/RAG-ANN/TTC, rôle du LLM-judge, etc.)_
+Le sujet du stage est d'**améliorer la codification automatique de la
+nomenclature COICOP**, et en particulier l'étape d'arbitrage par
+LLM-as-a-judge — que ce soit pour la fiabiliser ou pour en réduire le
+coût opérationnel (chaque appel a un coût et une latence, à répéter sur
+l'ensemble des observations de l'enquête).
+
+_(à compléter : cadre précis et périmètre donnés par l'organisme d'accueil)_
+
+## Piste explorée jusqu'ici : une alternative moins coûteuse au LLM-as-a-judge
+
+Le travail présenté sur ce site explore une piste dans ce cadre : proposer
+une alternative moins coûteuse au LLM-as-a-judge, à ne solliciter que
+lorsque c'est vraiment nécessaire.
+
+1. **Une baseline simple** : le vote majoritaire des 4 classifieurs de
+   base, TTC arbitrant les égalités — rapide et gratuite, mais pas
+   toujours correcte (cf. [Fiabilité des classifieurs](stats-descriptives/index.qmd)).
+2. **Un modèle pour savoir quand lui faire confiance** : une Random Forest
+   entraînée à prédire si cette baseline a trouvé le bon code, à partir de
+   caractéristiques disponibles sans appel au LLM (accords entre
+   classifieurs, scores de confiance...) — cf. [Modélisation](modelisation.qmd).
+3. **Une analyse de fiabilité pour en tirer des règles métier** : repérer
+   des situations où un classifieur (ou un type d'accord/désaccord entre
+   eux) est quasi systématiquement fiable ou au contraire à risque, selon
+   la division COICOP ou le cas de figure — pour coder directement ces cas
+   par une règle simple, sans passer par le LLM — cf.
+   [Fiabilité des classifieurs](stats-descriptives/index.qmd).
+
 
 ## Contenu de ce site
 
 Ce site présente l'avancement des travaux en deux temps :
 
-- **[Statistiques descriptives](stats-descriptives/index.qmd)** : analyse de
-  l'accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN, TTC) et
-  de l'apport du LLM-judge — taux d'accord, faux positifs, cas de désaccord,
-  et évolution selon le niveau de granularité de la nomenclature COICOP
-  (division à sous-classe).
-- **[Modélisation](modelisation.qmd)** : premiers travaux de modélisation
-  (Random Forest) visant à prédire automatiquement si la baseline (vote
-  majoritaire des classifieurs) a raison, afin de décider quand un contrôle
-  supplémentaire (LLM) est nécessaire — puis pistes d'analyses futures.
+- **[Fiabilité des classifieurs](stats-descriptives/index.qmd)** : à partir
+  de l'accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN,
+  TTC) et de l'apport du LLM-judge — taux d'accord, faux positifs, cas de
+  désaccord — identifie où l'on peut leur faire confiance, selon le niveau
+  de granularité de la nomenclature COICOP (division à sous-classe).
+- **[Modélisation](modelisation.qmd)** : mise en place et évaluation de la
+  baseline (vote majoritaire + TTC), puis d'une Random Forest visant à
+  prédire quand lui faire confiance plutôt que de solliciter le LLM-judge.
+
+> Pour la documentation complète du pipeline de codification (au-delà de
+> ce travail de stage), voir
+> [inseefrlab.github.io/codif-coicop-bdf](https://inseefrlab.github.io/codif-coicop-bdf/).

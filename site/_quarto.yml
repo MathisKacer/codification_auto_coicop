@@ -11,7 +11,7 @@ website:
     search: true
     contents:
       - index.qmd
-      - section: "Statistiques descriptives"
+      - section: "Fiabilité des classifieurs"
         contents:
           - stats-descriptives/apercu-donnees.qmd
           - stats-descriptives/index.qmd

@@ -1,20 +1,32 @@
 ---
-title: "Statistiques descriptives"
-subtitle: "Accord des classifieurs de base, faux positifs et valeur ajoutée du LLM-judge"
+title: "Fiabilité des classifieurs"
+subtitle: "Où peut-on faire confiance aux classifieurs de base, et où faut-il le LLM-judge ?"
 date: today
 ---
 
-Rapport donnant des statistiques descriptives jusqu'au niveau 4 sur les
-résultats de la classification automatique de la COICOP. Il permet
-notamment d'établir des situations précises et de voir les performances de
-chaque classifieur dans celles-ci. Il est reproductible pour chaque
-nouveau run.
+Cette section cherche, à partir de l'accord et du désaccord entre les
+quatre classifieurs de base (LCS, RAG, RAG-ANN, TTC), les situations où
+l'on peut leur faire confiance sans passer par le LLM-as-ajudge, et celles où
+il reste nécessaire. L'objectif final est de tirer des règles
+métier simples (par exemple : "si tel classifieur tranche seul dans telle
+division, on le suit directement"). Différents axes sont étudiés :
+
+- **[Accords unanimes](accords-unanimes.qmd)** : quand les 4 classifieurs
+  de base sont d'accord, ont-ils raison ? Quels sont les faux positifs
+  partagés ?
+- **[3 contre 1](trois-contre-un.qmd)** : quand 3 classifieurs s'accordent
+  contre un dissident, la majorité l'emporte-t-elle à raison ?
+- **[Un seul classifieur a raison](seul-correct.qmd)** : quels classifieurs
+  apportent une valeur ajoutée dans les cas les plus difficiles (dont le
+  LLM-judge) ?
+- **[Ventilation par division](ventilation-division.qmd)** : où (dans
+  quelles divisions COICOP) ces cas se concentrent-ils ?
 
 > _(Interprétation générale à compléter)_
 
 {{< include _setup.qmd >}}
 
-## 1. Vue synthétique multi-niveaux
+## Vue synthétique multi-niveaux
 
 Décomposition, pour chaque niveau de troncature COICOP, de la part des
 observations en accord correct unanime, faux positif partagé par tous les
@@ -27,53 +39,149 @@ joli(recap)
 
 > _(Interprétation à compléter)_
 
-## 1bis. Accuracy du LLM-judge vs vérité terrain, par division (niveau 1)
+## Accuracy du LLM-judge par division (vérité terrain)
 
-Accuracy de `llm_code` contre `code` au niveau 4 (granularité max), ventilée
-par division COICOP (niveau 1 du vrai code). En regard, l'accuracy obtenue
-en excluant les lignes où le LLM classe en division "98" (indéterminé /
-illisible) ou "99" (hors COICOP : dons, impôts, opérations bancaires...).
+Accuracy de `llm_code` contre `code`, ventilée par division COICOP (niveau
+1 du vrai code), pour chaque niveau de troncature de comparaison. Les
+divisions "98" (indéterminé / illisible) et "99" (hors COICOP : dons,
+impôts, opérations bancaires...) sont des codes à part entière, que les
+classifieurs doivent aussi savoir détecter — elles sont donc traitées ici
+comme n'importe quelle autre division, sans exclusion.
 
-NB : pour les divisions vraies 98 et 99 elles-mêmes, l'accuracy "hors
-exclusion" tombe mécaniquement à 0 % — on exclut alors précisément les
-prédictions qui pourraient être correctes. Ces deux lignes ne sont donc pas
-interprétables comme une performance ; seule la ligne TOTAL et les
-divisions standards 01-13 le sont.
+::: {.panel-tabset}
+
+### Niveau 4 — sous-classe
 
 ```{python}
-recap_accuracy_llm = accuracy_par_division(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=("98", "99"), verbose=False,
-)
-joli(recap_accuracy_llm)
+joli(accuracy_par_division(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=(), verbose=False,
+)[["n", "n_correct", "accuracy"]])
 ```
 
-## 1ter. Précision du LLM-judge par division PRÉDITE
+### Niveau 3 — classe
+
+```{python}
+joli(accuracy_par_division(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=3, codes_exclus=(), verbose=False,
+)[["n", "n_correct", "accuracy"]])
+```
+
+### Niveau 2 — groupe
+
+```{python}
+joli(accuracy_par_division(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=2, codes_exclus=(), verbose=False,
+)[["n", "n_correct", "accuracy"]])
+```
+
+### Niveau 1 — division
+
+```{python}
+joli(accuracy_par_division(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, codes_exclus=(), verbose=False,
+)[["n", "n_correct", "accuracy"]])
+```
+
+:::
+
+## Précision du LLM-judge par division prédite
 
 Vue complémentaire de la section précédente : au lieu de partir de la
 division vraie (rappel), on part ici de la division que le LLM a prédite,
 et on regarde quelle part de ces prédictions est effectivement correcte
 (précision). Répond à la question « quand le LLM annonce telle division,
-a-t-il raison ? ». Le regroupement par ligne (division annoncée par le LLM)
-est le même dans les deux tableaux ci-dessous ; seul le niveau auquel on
-juge une prédiction "correcte" change.
+a-t-il raison ? ». Le regroupement par ligne (division annoncée par le
+LLM) est le même dans tous les tableaux ci-dessous ; seul le niveau
+auquel on juge une prédiction "correcte" change.
 
-- **Niveau 1** : la division vraie correspond à la division prédite.
-- **Niveau 4** : le code est exactement correct à la granularité maximale.
-  Permet de chiffrer, pour chaque division annoncée par le LLM, le volume
-  `n_erreurs` réellement à reprendre — utile pour prioriser une relecture
-  manuelle par division prédite (le plus d'erreurs captées pour le moins
-  d'effectifs à revoir).
+::: {.panel-tabset}
+
+### Niveau 4 — sous-classe
 
 ```{python}
-sous_titre("Correction jugée au niveau 1 (division)")
-recap_precision_llm_n1 = precision_par_division_llm(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, codes_exclus=("98", "99"), verbose=False,
-)
-display(joli(recap_precision_llm_n1))
-
-sous_titre("Correction jugée au niveau 4 (granularité max)")
-recap_precision_llm_n4 = precision_par_division_llm(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=("98", "99"), verbose=False,
-)
-display(joli(recap_precision_llm_n4))
+joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, verbose=False,
+))
 ```
+
+### Niveau 3 — classe
+
+```{python}
+joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=3, verbose=False,
+))
+```
+
+### Niveau 2 — groupe
+
+```{python}
+joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=2, verbose=False,
+))
+```
+
+### Niveau 1 — division
+
+```{python}
+joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, verbose=False,
+))
+```
+
+:::
+
+## Confusion par division COICOP
+
+Les deux tableaux ci-dessus se lisent en fait sur une seule et même
+matrice de confusion (division vraie × division prédite par le LLM) : une
+ligne redonne l'accuracy par division vraie (section précédente), une
+colonne redonne la précision par division prédite. La diagonale
+concentre les accords ; les cellules hors diagonale montrent où se
+concentrent les confusions.
+
+```{python}
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+
+vrai_div = df[col_vrai].astype(str).str[:2]
+pred_div = df[col_llm].map(lambda x: x[:2] if pd.notna(x) else "N/A")
+
+categories = sorted(set(vrai_div) | set(pred_div) - {"N/A"}) + (
+    ["N/A"] if "N/A" in set(pred_div) else []
+)
+confusion = pd.crosstab(vrai_div, pred_div).reindex(
+    index=categories, columns=categories, fill_value=0,
+)
+totaux = confusion.sum(axis=1)
+confusion_pct = confusion.div(totaux, axis=0).fillna(0) * 100
+
+seq_bleu = LinearSegmentedColormap.from_list("seq_bleu", [
+    "#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b",
+])
+
+fig, ax = plt.subplots(figsize=(9, 8))
+im = ax.imshow(confusion_pct.values, cmap=seq_bleu, vmin=0, vmax=100)
+
+ax.set_xticks(range(len(categories)))
+ax.set_yticks(range(len(categories)))
+ax.set_xticklabels(categories)
+ax.set_yticklabels([f"{c} (n={totaux[c]})" for c in categories])
+ax.set_xlabel("Division prédite (LLM)")
+ax.set_ylabel("Division vraie (n = effectif de la division)")
+ax.set_title("Confusion par division COICOP — % de la division vraie")
+
+for i in range(len(categories)):
+    for j in range(len(categories)):
+        val = confusion_pct.values[i, j]
+        if val > 0.5:
+            couleur_texte = "white" if val > 55 else "#1a1a1a"
+            ax.text(j, i, f"{val:.0f}", ha="center", va="center",
+                    color=couleur_texte, fontsize=7)
+
+fig.colorbar(im, ax=ax, shrink=0.8, label="% de la division vraie")
+plt.tight_layout()
+plt.show()
+```
+
+> _(Interprétation à compléter : divisions les plus fiables, confusions
+> récurrentes)_
