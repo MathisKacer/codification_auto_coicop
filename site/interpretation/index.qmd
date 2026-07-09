@@ -1,0 +1,12 @@
+---
+title: "Interprétation"
+subtitle: "Lecture des résultats, run par run — pages figées, mises à jour à la main"
+---
+
+Chaque page ci-dessous documente l'interprétation des résultats de
+[modelisation.qmd](../modelisation.qmd) pour un run donné. Contrairement à
+`modelisation.qmd`, ces pages ne sont pas régénérées automatiquement : elles
+restent valables pour le run cité, même quand `modelisation.qmd` pointera
+vers des données plus récentes.
+
+- [Run du 2026-06-29 (codif-vvkv9)](2026-06-29.qmd)

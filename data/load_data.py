@@ -4,6 +4,22 @@ import s3fs
 
 ENDPOINT_URL = "https://minio.lab.sspcloud.fr"
 
+# Run utilise par modelisation.qmd et ses notebooks miroir (baseline_rf,
+# explo_baseline_ttc). Changer cette valeur ne touche pas les stats descriptives.
+CHEMIN_S3_MODELISATION = (
+    "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9"
+    "/decide-coicop/predictions.parquet"
+)
+
+# Run utilise par les pages/notebooks de stats descriptives (_setup.qmd,
+# stat_descriptives, rapport_stats_accord). Changer cette valeur pour
+# reproduire les stats descriptives sur un nouveau run, independamment
+# de CHEMIN_S3_MODELISATION.
+CHEMIN_S3_STATS_DESCRIPTIVES = (
+    "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9"
+    "/decide-coicop/predictions.parquet"
+)
+
 
 def charger_donnees(chemin_s3, format=None, **kwargs):
     """

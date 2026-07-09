@@ -34,7 +34,7 @@ sys.path.append(os.path.abspath(".."))  # accès aux modules src/ et data/
 import pandas as pd
 from IPython.display import display, Markdown, HTML
 
-from data.load_data import charger_donnees
+from data.load_data import charger_donnees, CHEMIN_S3_STATS_DESCRIPTIVES
 from src.stats_accord import (
     stats_accord,
     analyse_faux_positifs,
@@ -51,7 +51,7 @@ from src.stats_accord import (
 
 pd.set_option("display.max_columns", None)
 
-CHEMIN_S3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+CHEMIN_S3 = CHEMIN_S3_STATS_DESCRIPTIVES
 df = charger_donnees(CHEMIN_S3)
 
 cols_base = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]

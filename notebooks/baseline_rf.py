@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(".."))
 import numpy as np
 import pandas as pd
 
-from data.load_data import charger_donnees
+from data.load_data import charger_donnees, CHEMIN_S3_MODELISATION
 from src.baseline import (
     baseline_majorite_ttc, preparer_donnees, entrainer_evaluer, entrainer_evaluer_cv,
     courbe_precision_rappel,
@@ -23,7 +23,7 @@ pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
 
 # %% Chargement des donnees
-chemin_s3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+chemin_s3 = CHEMIN_S3_MODELISATION
 df = charger_donnees(chemin_s3)
 df.head()
 

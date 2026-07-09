@@ -18,14 +18,14 @@ sys.path.append(os.path.abspath(".."))  # accès aux modules src/ et data/
 import pandas as pd
 import numpy as np
 from src.coicop import tronquer_niveau
-from data.load_data import charger_donnees
+from data.load_data import charger_donnees, CHEMIN_S3_MODELISATION
 from src.baseline import baseline_majorite_ttc, evaluer_baseline
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
 
 # %% Chargement des données
-chemin_s3 = "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+chemin_s3 = CHEMIN_S3_MODELISATION
 df = charger_donnees(chemin_s3)
 df.head()
 

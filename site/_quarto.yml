@@ -15,6 +15,8 @@ website:
         text: "Fiabilité des classifieurs"
       - href: modelisation.qmd
         text: Modélisation
+      - href: interpretation/index.qmd
+        text: Interprétation
   sidebar:
     - id: fiabilite-classifieurs
       title: "Fiabilité des classifieurs"

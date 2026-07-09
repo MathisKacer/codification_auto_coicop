@@ -1,0 +1,92 @@
+---
+title: "Interprétation — run du 2026-06-29"
+subtitle: "codif-vvkv9 — notes figées, à mettre à jour manuellement pour un nouveau run"
+date: today
+---
+
+Cette page documente la lecture des résultats du run
+`s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet`
+(voir [résultats bruts](../modelisation.qmd) — qui peuvent refléter un run plus
+récent si `CHEMIN_S3_MODELISATION` a changé depuis).
+
+## Analyse des erreurs de la baseline
+
+_(à compléter)_
+
+## Performance du modèle
+
+**Niveau de performance.** Avec le seuil par défaut de 0.5 (on prédit
+"baseline correcte" dès que `P(baseline correcte) > 0.5`), le modèle
+atteint 86.0 % d'accuracy sur le test (ROC AUC 0.946), contre 84.6 % ± 0.6
+en validation croisée (AUC 0.935 ± 0.005). L'écart entre les deux est
+faible : le résultat n'est pas un coup de chance lié au découpage
+train/test.
+
+L'accuracy globale masque cependant une asymétrie importante entre les
+deux classes : sur les erreurs réelles de la baseline (263 cas du test),
+le modèle en repère 87 % (rappel), mais avec une précision de seulement
+64 % — environ un tiers de ce qu'il signale comme "fausse" est en réalité
+correct. Sur les baselines réellement correctes (902 cas), 86 % sont bien
+reconnues comme telles, mais 128 sont signalées à tort comme fausses.
+
+**Features les plus importantes.** `nb_accords_max` (taille du plus gros
+groupe d'accord entre classifieurs) domine largement (34.5 % de
+l'importance), suivi de `ttc_conf_1` (14.9 %) et `unanimite` (9.1 %) :
+sans surprise, le signal principal du modèle est le niveau de consensus
+entre les classifieurs de base. Les scores de confiance individuels
+(`rag_confidence`, `lcs_distance`...) et `budget` pèsent chacun autour de
+5-6 %. `shop_type_name` et `source` sont les moins utiles (< 2 % chacune).
+
+## Erreurs manquées par le modèle
+
+**Le signal le plus trompeur : la confiance de TTC.** La médiane de
+`ttc_conf_1` est nettement plus haute pour les erreurs manquées (0.99) que
+pour celles bien détectées (0.78) : dans les cas manqués, TTC (l'arbitre
+de la baseline) est confiant *à tort*, et cette confiance abusive
+contamine la probabilité prédite par la RF — cohérent avec le fait que
+`ttc_conf_1` soit la 2ᵉ feature la plus importante du modèle. `nb_accords_max`
+suit la même logique, dans une moindre mesure (médiane 2 vs 1.5) : même un
+accord entre deux classifieurs, quand il est fortuit, suffit à faire
+pencher le modèle vers "correcte" à tort. `rag_confidence`,
+`ragann_confidence` et `budget` ne distinguent en revanche pas les deux
+groupes.
+
+**Par division COICOP**, la division 01 (Alimentation, boissons) concentre
+20 des 35 erreurs manquées (57 %), avec un taux de erreurs manquées parmi
+ses propres erreurs (20 %) supérieur à la moyenne globale (13.3 %). Cet
+effet reste cependant surtout un effet de volume : la division 01
+représente déjà 38 % de toutes les erreurs de baseline du test. Aucune
+autre division ne se détache nettement, la plupart affichant des taux
+comparables ou nuls, souvent sur de faibles effectifs.
+
+**Limite du modèle actuel.** Ces cas manqués partagent un profil commun :
+un signal de confiance élevé (accord entre classifieurs et/ou confiance
+TTC) qui s'avère malgré tout faux. Le modèle actuel n'a pas accès à
+d'information capable de distinguer un consensus fiable d'un consensus
+biaisé — améliorer sa détection nécessiterait probablement une feature
+capturant *pourquoi* les classifieurs sont d'accord (ex. proximité
+lexicale du texte à coder avec des cas ambigus connus), plutôt qu'un simple
+comptage d'accords.
+
+## Compromis précision/rappel
+
+Sur les 1165 observations du test, 263 (22.6 %) sont de vraies erreurs de
+baseline. C'est ce que ce compromis cherche à intercepter avant qu'elles
+ne passent inaperçues.
+
+- **Seuil 0.99 / 0.95** : détecte 100 % des erreurs, mais au prix
+  d'envoyer 86 % / 71 % du volume au LLM — cela annule une grande partie
+  de l'intérêt économique de la baseline.
+- **Seuil 0.90** : ne manque qu'**1 erreur sur 263** (99.6 % détectées),
+  en envoyant 61 % du volume au LLM (39 % d'appels évités par rapport à
+  tout envoyer).
+- **Seuil 0.80** : manque 6 erreurs (97.7 % détectées), pour 51 % du
+  volume envoyé.
+- **Seuil 0.50 (par défaut de `.predict()`)** : le plus économique (31 %
+  du volume envoyé), mais laisse passer 35 erreurs non détectées (13 %
+  des erreurs de baseline), et parmi ce qu'on garde sans LLM, 4.3 % sont
+  en réalité fausses (précision sur "correcte" = 95.7 %).
+
+## Pistes d'analyses futures
+
+_(à compléter)_
