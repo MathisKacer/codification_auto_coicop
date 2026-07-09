@@ -88,6 +88,53 @@ display(Markdown(
 ))
 ```
 
+## Analyse des erreurs de la baseline
+
+Avant d'entraîner un modèle, on regarde directement ce qui distingue les
+cas où la baseline trouve le bon code de ceux où elle se trompe — une
+lecture plus directement interprétable que les importances de features
+du modèle entraîné plus loin.
+
+```{python}
+with redirect_stdout(io.StringIO()):
+    X, y = preparer_donnees(df, y_pred_baseline, col_vrai, niveau=4)
+```
+
+### Par division COICOP
+
+```{python}
+division = df[col_vrai].astype(str).str[:2]
+acc_division = pd.DataFrame({
+    "n": division.value_counts(),
+    "baseline_correcte (%)": (y.groupby(division).mean() * 100).round(1),
+}).sort_index()
+acc_division
+```
+
+### Par niveau d'accord entre classifieurs
+
+```{python}
+X.assign(baseline_correcte=y).groupby("nb_accords_max")["baseline_correcte"].agg(
+    n="count", taux_correct="mean",
+).assign(taux_correct=lambda d: (d["taux_correct"] * 100).round(1))
+```
+
+### Scores de confiance : cas corrects vs incorrects
+
+Médiane de chaque score, calculée sur les valeurs brutes (avant
+imputation des NaN), pour ne pas fausser la comparaison avec les
+sentinelles utilisées par le modèle.
+
+```{python}
+cols_num_comparaison = ["lcs_distance", "rag_confidence", "ragann_confidence", "ttc_conf_1", "budget"]
+comparaison = df[cols_num_comparaison].groupby(
+    y.map({0: "Baseline fausse", 1: "Baseline correcte"})
+).median()
+comparaison.T
+```
+
+> _(Interprétation à compléter)_
+
 ## Préparation des données pour le modèle
 
 La cible du modèle est binaire : **la baseline a-t-elle trouvé le bon code
@@ -117,9 +164,6 @@ justement de prédire sans l'appeler.
 
 
 ```{python}
-with redirect_stdout(io.StringIO()):
-    X, y = preparer_donnees(df, y_pred_baseline, col_vrai, niveau=4)
-
 n_cat = len(X.select_dtypes(include="object").columns)
 n_num = X.shape[1] - n_cat
 display(Markdown(
