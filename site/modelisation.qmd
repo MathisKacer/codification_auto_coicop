@@ -19,6 +19,7 @@ sys.path.append(os.path.abspath(".."))
 import io
 from contextlib import redirect_stdout
 
+import numpy as np
 import pandas as pd
 from IPython.display import display, Markdown
 
@@ -284,6 +285,116 @@ entre les classifieurs de base. Les scores de confiance individuels
 (`rag_confidence`, `lcs_distance`...) et `budget` pèsent chacun autour de
 5-6 %. `shop_type_name` et `source` sont les moins utiles (< 2 % chacune).
 
+### Analyse des erreurs manquées par le modèle
+
+L'accuracy et les importances de features restent agrégées : elles ne
+disent rien de ce qui distingue, *parmi les vraies erreurs de baseline*,
+celles que le modèle détecte de celles qu'il laisse passer à tort (au
+seuil par défaut 0.5). C'est cette seconde catégorie — un faux négatif du
+modèle — qui est la plus coûteuse : la baseline a faux, mais on lui fait
+confiance sans envoyer au LLM.
+
+```{python}
+X_test, y_test = res["X_test"], res["y_test"]
+y_pred_rf = pd.Series(res["y_pred"], index=y_test.index)
+y_proba_rf = pd.Series(res["y_proba"], index=y_test.index)
+
+erreurs_baseline = X_test[y_test == 0].copy()
+erreurs_baseline["statut"] = np.where(
+    y_pred_rf[y_test == 0] == 1, "Manquée (RF dit correcte)", "Détectée par la RF",
+)
+erreurs_baseline["proba_correcte"] = y_proba_rf[y_test == 0]
+
+n_manquees = (erreurs_baseline["statut"] == "Manquée (RF dit correcte)").sum()
+display(Markdown(
+    f"Sur les **{len(erreurs_baseline)}** erreurs réelles de baseline du test, la RF "
+    f"(seuil 0.5) en **manque {n_manquees}** : elle leur attribue "
+    f"`P(baseline correcte) > 0.5` alors que la baseline a bel et bien faux."
+))
+```
+
+```{python}
+erreurs_baseline.groupby("statut").agg(
+    n=("nb_accords_max", "count"),
+    nb_accords_max_median=("nb_accords_max", "median"),
+    ttc_conf_1_median=("ttc_conf_1", "median"),
+    rag_confidence_median=("rag_confidence", "median"),
+    ragann_confidence_median=("ragann_confidence", "median"),
+    budget_median=("budget", "median"),
+    proba_correcte_median=("proba_correcte", "median"),
+).round(3).T
+```
+
+```{python}
+division_erreurs = df.loc[erreurs_baseline.index, col_vrai].astype(str).str[:2]
+tab_division = erreurs_baseline.assign(division=division_erreurs).groupby(
+    ["division", "statut"]
+).size().unstack(fill_value=0)
+tab_division["taux_manquee (%)"] = (
+    tab_division.get("Manquée (RF dit correcte)", 0) / tab_division.sum(axis=1) * 100
+).round(1)
+tab_division.sort_values("taux_manquee (%)", ascending=False)
+```
+
+**Le signal le plus trompeur : la confiance de TTC.** La médiane de
+`ttc_conf_1` est nettement plus haute pour les erreurs manquées (0.99) que
+pour celles bien détectées (0.78) : dans les cas manqués, TTC (l'arbitre
+de la baseline) est confiant *à tort*, et cette confiance abusive
+contamine la probabilité prédite par la RF — cohérent avec le fait que
+`ttc_conf_1` soit la 2ᵉ feature la plus importante du modèle. `nb_accords_max`
+suit la même logique, dans une moindre mesure (médiane 2 vs 1.5) : même un
+accord entre deux classifieurs, quand il est fortuit, suffit à faire
+pencher le modèle vers "correcte" à tort. `rag_confidence`,
+`ragann_confidence` et `budget` ne distinguent en revanche pas les deux
+groupes.
+
+**Par division COICOP**, la division 01 (Alimentation, boissons) concentre
+20 des 35 erreurs manquées (57 %), avec un taux de erreurs manquées parmi
+ses propres erreurs (20 %) supérieur à la moyenne globale (13.3 %). Cet
+effet reste cependant surtout un effet de volume : la division 01
+représente déjà 38 % de toutes les erreurs de baseline du test. Aucune
+autre division ne se détache nettement, la plupart affichant des taux
+comparables ou nuls, souvent sur de faibles effectifs.
+
+**Limite du modèle actuel.** Ces cas manqués partagent un profil commun :
+un signal de confiance élevé (accord entre classifieurs et/ou confiance
+TTC) qui s'avère malgré tout faux. Le modèle actuel n'a pas accès à
+d'information capable de distinguer un consensus fiable d'un consensus
+biaisé — améliorer sa détection nécessiterait probablement une feature
+capturant *pourquoi* les classifieurs sont d'accord (ex. proximité
+lexicale du texte à coder avec des cas ambigus connus), plutôt qu'un simple
+comptage d'accords.
+
+#### Détail des cas manqués
+
+Les 35 erreurs manquées elles-mêmes, triées par `proba_rf` décroissante
+(les cas où le modèle est le plus confiant à tort en premier).
+
+::: {style="max-height: 420px; overflow: auto;"}
+
+```{python}
+manquees_idx = erreurs_baseline[
+    erreurs_baseline["statut"] == "Manquée (RF dit correcte)"
+].index
+
+table_manquees = pd.DataFrame({
+    "produit": df.loc[manquees_idx, "l_pr_product"],
+    "enseigne": df.loc[manquees_idx, "shop_type_name"],
+    "code_vrai": df.loc[manquees_idx, col_vrai],
+    "code_baseline": y_pred_baseline.loc[manquees_idx],
+    "lcs_code": df.loc[manquees_idx, "lcs_code"],
+    "rag_code": df.loc[manquees_idx, "rag_code"],
+    "ragann_code": df.loc[manquees_idx, "ragann_code"],
+    "ttc_code_1": df.loc[manquees_idx, "ttc_code_1"],
+    "ttc_conf_1": df.loc[manquees_idx, "ttc_conf_1"],
+    "nb_accords_max": erreurs_baseline.loc[manquees_idx, "nb_accords_max"],
+    "proba_rf": erreurs_baseline.loc[manquees_idx, "proba_correcte"],
+}).sort_values("proba_rf", ascending=False)
+
+table_manquees.round(3)
+```
+
+:::
 
 ## Compromis précision/rappel
 
