@@ -4,8 +4,8 @@ project:
 
 website:
   title: "Codification automatique COICOP"
-  site-url: "https://{Owner}.github.io/{Name}/"
-  repo-url: "https://github.com/{Owner}/{Name}"
+  site-url: "https://MathisKacer.github.io/codification_auto_coicop.git/"
+  repo-url: "https://github.com/MathisKacer/codification_auto_coicop.git"
   page-footer:
     left: "Rapport de stage — codification automatique COICOP"
   navbar:
