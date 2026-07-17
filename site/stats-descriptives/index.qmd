@@ -37,51 +37,54 @@ joli(recap)
 
 > _(Interprétation à compléter)_
 
-## Accuracy du LLM-judge par division (vérité terrain)
+## Accuracy par classifieur, par division (vérité terrain)
 
-Accuracy de `llm_code` contre `code`, ventilée par division COICOP (niveau
-1 du vrai code), pour chaque niveau de troncature de comparaison. Les
-divisions "98" (indéterminé / illisible) et "99" (hors COICOP : dons,
-impôts, opérations bancaires...) sont des codes à part entière, que les
-classifieurs doivent aussi savoir détecter — elles sont donc traitées ici
-comme n'importe quelle autre division, sans exclusion.
+Accuracy de chacun des 5 classifieurs (les 4 classifieurs de base et le
+LLM-judge) contre `code`, ventilée par division COICOP (niveau 1 du vrai
+code), pour chaque niveau de troncature de comparaison. La ligne TOTAL
+donne l'accuracy globale de chaque classifieur ; les autres lignes la
+détaillent par division. Les divisions "98" (indéterminé / illisible) et
+"99" (hors COICOP : dons, impôts, opérations bancaires...) sont des codes
+à part entière, que les classifieurs doivent aussi savoir détecter — elles
+sont donc traitées ici comme n'importe quelle autre division, sans
+exclusion.
 
 ::: {.panel-tabset}
 
 ### Niveau 4 — sous-classe
 
 ```{python}
-titre("Accuracy par division (niveau 4)")
-display(joli(accuracy_par_division(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]]))
+titre("Accuracy par classifieur, par division (niveau 4)")
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=4, codes_exclus=(), verbose=False,
+)))
 ```
 
 ### Niveau 3 — classe
 
 ```{python}
-titre("Accuracy par division (niveau 3)")
-display(joli(accuracy_par_division(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=3, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]]))
+titre("Accuracy par classifieur, par division (niveau 3)")
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=3, codes_exclus=(), verbose=False,
+)))
 ```
 
 ### Niveau 2 — groupe
 
 ```{python}
-titre("Accuracy par division (niveau 2)")
-display(joli(accuracy_par_division(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=2, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]]))
+titre("Accuracy par classifieur, par division (niveau 2)")
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=2, codes_exclus=(), verbose=False,
+)))
 ```
 
 ### Niveau 1 — division
 
 ```{python}
-titre("Accuracy par division (niveau 1)")
-display(joli(accuracy_par_division(
-    df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, codes_exclus=(), verbose=False,
-)[["n", "n_correct", "accuracy"]]))
+titre("Accuracy par classifieur, par division (niveau 1)")
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=1, codes_exclus=(), verbose=False,
+)))
 ```
 
 :::

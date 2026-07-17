@@ -19,6 +19,7 @@ from src.stats_accord import (
     recap_3_1_multi_niveaux,
     stats_seul_par_division,
     accuracy_par_division,
+    accuracy_multi_classifieurs,
     precision_par_division_llm,
 )
 
@@ -67,6 +68,7 @@ LIBELLES_COLONNES = {
     "pred_division": "Division prédite (LLM)",
     **LIBELLES_CLASSIFIEURS,
     **{f"{k}_tronq": v for k, v in LIBELLES_CLASSIFIEURS.items()},
+    **{f"accuracy_{k}": v for k, v in LIBELLES_CLASSIFIEURS.items()},
 }
 
 

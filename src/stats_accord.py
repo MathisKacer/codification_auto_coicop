@@ -305,6 +305,44 @@ def accuracy_par_division(df, col_pred, col_vrai, niveau=4,
     return recap
 
 
+def accuracy_multi_classifieurs(df, cols_pred, col_vrai, niveau=4,
+                                 codes_exclus=(), verbose=True):
+    """
+    Compare l'accuracy de plusieurs classifieurs (`cols_pred`) contre
+    `col_vrai`, ventilée par division COICOP (niveau 1 du vrai code), pour
+    un niveau de troncature de comparaison donné. Généralise
+    `accuracy_par_division` à plusieurs colonnes de prédiction, présentées
+    côte à côte pour comparaison directe.
+
+    Returns
+    -------
+    pd.DataFrame indexé par division (+ une ligne "TOTAL"), colonnes :
+        - n              : effectif de la division (identique pour tous les
+                            classifieurs, basé sur le vrai code)
+        - une colonne par élément de `cols_pred` : accuracy de ce
+          classifieur sur cette division
+    """
+    resultats = {}
+    n_division = None
+    for col in cols_pred:
+        recap = accuracy_par_division(
+            df, col_pred=col, col_vrai=col_vrai, niveau=niveau,
+            codes_exclus=codes_exclus, verbose=False,
+        )
+        resultats[f"accuracy_{col}"] = recap["accuracy"]
+        if n_division is None:
+            n_division = recap["n"]
+
+    out = pd.DataFrame({"n": n_division, **resultats})
+
+    if verbose:
+        print(f"=== Accuracy comparée ({', '.join(cols_pred)}) vs {col_vrai} "
+              f"au niveau {niveau}, par division ===")
+        print(out.to_string(formatters={c: "{:.1%}".format for c in resultats}))
+
+    return out
+
+
 def precision_par_division_llm(df, col_pred, col_vrai, niveau=1, codes_exclus=("98", "99"),
                                 verbose=True):
     """
