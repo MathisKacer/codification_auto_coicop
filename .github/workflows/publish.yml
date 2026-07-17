@@ -22,7 +22,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-ci.txt
 
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
