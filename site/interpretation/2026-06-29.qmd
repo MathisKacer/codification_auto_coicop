@@ -11,8 +11,6 @@ récent si `CHEMIN_S3_MODELISATION` a changé depuis).
 
 ## Analyse des erreurs de la baseline
 
-_(à compléter)_
-
 ## Performance du modèle
 
 **Niveau de performance.** Avec le seuil par défaut de 0.5 (on prédit
@@ -88,5 +86,3 @@ ne passent inaperçues.
   en réalité fausses (précision sur "correcte" = 95.7 %).
 
 ## Pistes d'analyses futures
-
-_(à compléter)_

@@ -22,8 +22,6 @@ division IPC et le SSPLab (INSEE) ; les résultats de l'édition 2026 de
 l'enquête doivent être transmis à Eurostat en 2028, ce qui rend le
 sujet critique pour la prochaine édition de BDF en 2030.
 
-_(à compléter : organisme d'accueil, équipe, cadre précis du stage)_
-
 ## Pipeline actuel
 
 Le pipeline de codification automatique — développé en amont de ce stage
@@ -54,8 +52,6 @@ nomenclature COICOP**, et en particulier l'étape d'arbitrage par
 LLM-as-a-judge — que ce soit pour la fiabiliser ou pour en réduire le
 coût opérationnel (chaque appel a un coût et une latence, à répéter sur
 l'ensemble des observations de l'enquête).
-
-_(à compléter : cadre précis et périmètre donnés par l'organisme d'accueil)_
 
 ## Piste explorée jusqu'ici : une alternative moins coûteuse au LLM-as-a-judge
 

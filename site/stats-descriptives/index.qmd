@@ -20,8 +20,6 @@ division, on le suit directement"). Différents axes sont étudiés :
   apportent une valeur ajoutée dans les cas les plus difficiles (dont le
   LLM-judge), et dans quelles divisions COICOP ces cas se concentrent-ils ?
 
-> _(Interprétation générale à compléter)_
-
 {{< include _setup.qmd >}}
 
 ## Vue synthétique multi-niveaux
@@ -34,8 +32,6 @@ classifieurs (dont le LLM), faux positif rattrapé par le LLM, ou désaccord.
 recap = recap_multi_niveaux(df, cols_base, col_llm, col_vrai, niveaux=niveaux, verbose=False)
 joli(recap)
 ```
-
-> _(Interprétation à compléter)_
 
 ## Accuracy par classifieur, par division (vérité terrain)
 

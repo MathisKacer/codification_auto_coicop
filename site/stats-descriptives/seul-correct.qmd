@@ -111,9 +111,6 @@ df_seul_1 = afficher_seul_niveau(1)
 
 ::::
 
-> _(Interprétation à compléter — en particulier sur la valeur ajoutée du
-> LLM-judge par rapport aux 4 classifieurs de base)_
-
 ## Ventilation par division COICOP — cas "un seul correct" (niveau 4)
 
 Pour chaque classifieur, dans quelles divisions COICOP se concentrent ses

@@ -13,10 +13,11 @@ from sklearn.metrics import (
     precision_recall_curve, roc_auc_score,
 )
 from sklearn.model_selection import (
-    StratifiedKFold, cross_val_predict, cross_validate, train_test_split,
+    RandomizedSearchCV, StratifiedKFold, cross_val_predict, cross_validate, train_test_split,
 )
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OrdinalEncoder
+from scipy.stats import randint
 
 from src.baseline.preprocessing import COLS_CATEGORIELLES, COLS_NUMERIQUES
 
@@ -171,6 +172,88 @@ def entrainer_evaluer_cv(X, y, n_splits=5, random_state=42, **rf_kwargs):
         "accuracy_std": acc_std,
         "auc_mean": auc_mean,
         "auc_std": auc_std,
+    }
+
+
+def tuner_hyperparametres(X, y, test_size=0.2, random_state=42, n_iter=60, n_splits=5):
+    """
+    RandomizedSearchCV sur les hyperparametres du RF, fitte uniquement sur le train
+    (le meme split que `entrainer_evaluer`, memes test_size/random_state -> resultats
+    directement comparables) pour ne pas biaiser l'evaluation finale sur le test.
+
+    Returns
+    -------
+    dict : {search, best_params, best_score_cv, pipeline, X_train, X_test, y_train,
+    y_test, y_pred, y_proba, importances, accuracy, auc}
+    """
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, stratify=y, random_state=random_state,
+    )
+
+    pipe = construire_pipeline(random_state=random_state)
+    param_distributions = {
+        "rf__n_estimators": randint(100, 800),
+        "rf__max_depth": [None, 5, 10, 20, 30],
+        "rf__min_samples_leaf": randint(1, 20),
+        "rf__max_features": ["sqrt", "log2", None],
+        "rf__class_weight": ["balanced", "balanced_subsample", None],
+    }
+
+    cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
+    search = RandomizedSearchCV(
+        pipe, param_distributions,
+        n_iter=n_iter, scoring="roc_auc", cv=cv,
+        random_state=random_state, n_jobs=-1,
+    )
+    search.fit(X_train, y_train)
+
+    print(f"=== RF binaire : tuning des hyperparametres ({n_iter} tirages, {n_splits} folds) ===")
+    print(f"Meilleur score CV (roc_auc) : {search.best_score_:.3f}")
+    print(f"Meilleurs hyperparametres : {search.best_params_}")
+
+    best_pipe = search.best_estimator_
+    y_pred = best_pipe.predict(X_test)
+    y_proba = best_pipe.predict_proba(X_test)[:, 1]
+
+    acc = accuracy_score(y_test, y_pred)
+    auc = roc_auc_score(y_test, y_proba)
+    cm = confusion_matrix(y_test, y_pred)
+
+    print(f"\nAccuracy (test) : {acc:.3f}")
+    print(f"ROC AUC (test)  : {auc:.3f}")
+    print(f"\nMatrice de confusion (lignes = vrai, colonnes = predit) :")
+    print(pd.DataFrame(
+        cm,
+        index=["vrai=baseline_fausse (0)", "vrai=baseline_correcte (1)"],
+        columns=["pred=0", "pred=1"],
+    ).to_string())
+    print("\nRapport detaille :")
+    print(classification_report(
+        y_test, y_pred,
+        target_names=["baseline_fausse", "baseline_correcte"],
+        digits=3,
+    ))
+
+    rf = best_pipe.named_steps["rf"]
+    noms_features = COLS_CATEGORIELLES + COLS_NUMERIQUES
+    importances = pd.Series(
+        rf.feature_importances_, index=noms_features
+    ).sort_values(ascending=False)
+
+    return {
+        "search": search,
+        "best_params": search.best_params_,
+        "best_score_cv": search.best_score_,
+        "pipeline": best_pipe,
+        "X_train": X_train,
+        "X_test": X_test,
+        "y_train": y_train,
+        "y_test": y_test,
+        "y_pred": y_pred,
+        "y_proba": y_proba,
+        "importances": importances,
+        "accuracy": acc,
+        "auc": auc,
     }
 
 

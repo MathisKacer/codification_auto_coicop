@@ -77,5 +77,3 @@ df_stats_1, df_fp_1, df_acc_1 = afficher_detail_niveau(1)
 ```
 
 :::
-
-> _(Interprétation à compléter)_

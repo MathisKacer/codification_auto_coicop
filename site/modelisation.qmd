@@ -31,7 +31,7 @@ from data.load_data import charger_donnees, CHEMIN_S3_MODELISATION
 from src.coicop import tronquer_niveau
 from src.baseline import (
     baseline_majorite_ttc, evaluer_baseline, preparer_donnees, entrainer_evaluer,
-    entrainer_evaluer_cv, courbe_precision_rappel,
+    entrainer_evaluer_cv, tuner_hyperparametres, courbe_precision_rappel,
 )
 
 pd.set_option("display.max_columns", None)
@@ -249,6 +249,69 @@ pd.crosstab(
       .map({0: "baseline fausse", 1: "baseline correcte"}),
     rownames=["Vrai"], colnames=["Prédit (out-of-fold)"],
 )
+```
+
+### Tuning des hyperparamètres
+
+Le RF ci-dessus utilise des hyperparamètres fixés à la main
+(`n_estimators=300`, `min_samples_leaf=5`, `class_weight="balanced"`).
+On vérifie ici si un `RandomizedSearchCV` (60 tirages, optimisé sur le
+ROC AUC) trouve mieux. La recherche est faite **uniquement sur le train**
+(même split que ci-dessus, `test_size=0.2`, `random_state=42`) : le score
+CV pendant la recherche ne sert qu'à choisir les hyperparamètres, l'écart
+avec le score annoncé plus haut se lit sur le même test set, sans fuite.
+
+```{python}
+with redirect_stdout(io.StringIO()):
+    res_tune = tuner_hyperparametres(X, y, test_size=0.2, random_state=42, n_iter=60, n_splits=5)
+
+display(Markdown(
+    f"**Meilleurs hyperparamètres** : `{res_tune['best_params']}`\n\n"
+    f"**Score CV (roc_auc) pendant la recherche** : {res_tune['best_score_cv']:.3f}"
+))
+```
+
+```{python}
+recap_tuning = pd.DataFrame({
+    "Modèle": ["RF par défaut", "RF tuné"],
+    "Accuracy (test)": [res["accuracy"], res_tune["accuracy"]],
+    "ROC AUC (test)": [res["auc"], res_tune["auc"]],
+})
+recap_tuning["Accuracy (test)"] = recap_tuning["Accuracy (test)"].map(lambda x: f"{x:.1%}")
+recap_tuning["ROC AUC (test)"] = recap_tuning["ROC AUC (test)"].map(lambda x: f"{x:.3f}")
+recap_tuning
+```
+
+```{python}
+pd.crosstab(
+    res_tune["y_test"].map({0: "baseline fausse", 1: "baseline correcte"}),
+    pd.Series(res_tune["y_pred"], index=res_tune["y_test"].index)
+      .map({0: "baseline fausse", 1: "baseline correcte"}),
+    rownames=["Vrai"], colnames=["Prédit"],
+)
+```
+
+L'accuracy et le ROC AUC globaux masquent un effet important sur la
+classe qui compte réellement pour ce modèle : celle des vraies erreurs
+de baseline, qu'on cherche à détecter pour décider de l'envoi au
+LLM-judge.
+
+**⚠️ Le RF tuné gagne en accuracy/ROC AUC globaux mais perd sur le rappel des
+erreurs de baseline.** Sur les **263** vraies erreurs de baseline du test, le
+RF par défaut (`class_weight="balanced"`) en détecte **86.7 %** (228/263),
+contre seulement **66.2 %** (174/263) pour le RF tuné (`class_weight=None`).
+
+Le `RandomizedSearchCV` optimise le ROC AUC, une métrique de classement peu
+sensible au déséquilibre des classes, et n'a donc aucune raison de privilégier
+le rappel sur la classe minoritaire ("baseline fausse", ~23 % des cas) — au
+prix d'erreurs manquées en plus grand nombre au seuil par défaut (0.5).
+**C'est pourquoi le modèle utilisé pour la suite de cette page (section
+[Compromis précision/rappel](#compromis-précisionrappel)) reste le RF par
+défaut (`res`), pas le RF tuné : le gain de tuning est trompeur pour cet
+usage.**
+
+```{python}
+(res_tune["importances"] * 100).round(1).to_frame("Importance (%)")
 ```
 
 ### Analyse des erreurs manquées par le modèle
