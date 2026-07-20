@@ -48,7 +48,7 @@ df_stats_4, df_fp_4, df_acc_4 = afficher_detail_niveau(4)
 ```
 
 ```{python}
-cols_fp = [c for c in [col_libelle, "code", "vrai_tronq", "code_consensus",
+cols_fp = [c for c in [col_ligne, "code", "vrai_tronq", "code_consensus",
                        *[f"{c}_tronq" for c in cols_base]] if c in df_fp_4.columns]
 titre(f"Lignes concernées — {len(df_fp_4)} faux positifs unanimes")
 display(HTML(

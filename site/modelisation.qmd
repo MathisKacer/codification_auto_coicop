@@ -40,6 +40,7 @@ pd.set_option("display.width", 200)
 ```{python}
 chemin_s3 = CHEMIN_S3_MODELISATION
 df = charger_donnees(chemin_s3)
+df["ligne"] = df.index  # identifiant de ligne pour retrouver un cas sans publier le libellé brut
 
 cols_base = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
 col_ttc = "ttc_code_1"
@@ -424,7 +425,7 @@ def tronq4(col):
 
 
 table_manquees = pd.DataFrame({
-    "produit": df.loc[manquees_idx, "l_pr_product"],
+    "ligne": df.loc[manquees_idx, "ligne"],
     "enseigne": df.loc[manquees_idx, "shop_type_name"],
     "code_vrai": tronq4(col_vrai),
     "code_baseline": y_pred_baseline.loc[manquees_idx],

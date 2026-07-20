@@ -32,7 +32,7 @@ df_31_4 = afficher_3_1_niveau(4)
 
 ```{python}
 df_31_only_4 = df_31_4[df_31_4["cas_3_1"]]
-cols_31 = [c for c in [col_libelle, "code", "vrai_tronq", "classifieur_dissident",
+cols_31 = [c for c in [col_ligne, "code", "vrai_tronq", "classifieur_dissident",
                        "code_majorite", "code_minoritaire",
                        "majorite_correcte", "minorite_correcte",
                        *[f"{c}_tronq" for c in cols_base]] if c in df_31_only_4.columns]

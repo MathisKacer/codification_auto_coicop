@@ -27,11 +27,13 @@ pd.set_option("display.max_columns", None)
 
 CHEMIN_S3 = CHEMIN_S3_STATS_DESCRIPTIVES
 df = charger_donnees(CHEMIN_S3)
+df["ligne"] = df.index  # identifiant de ligne pour retrouver un cas sans publier le libellé brut
 
 cols_base = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
 col_llm = "llm_code"
 col_vrai = "code"
 col_libelle = "l_pr_product"
+col_ligne = "ligne"
 cols_tous = cols_base + [col_llm]
 niveaux = (1, 2, 3, 4)
 
@@ -60,7 +62,7 @@ LIBELLES_COLONNES = {
     "vrai_tronq": "Code vrai", "code_consensus": "Consensus",
     "vrai_div": "Division vraie", "pred_div": "Division prédite",
     "division": "Division", "cas": "Cas",
-    "l_pr_product": "Libellé produit",
+    "ligne": "Ligne",
     "accuracy": "Accuracy", "accuracy_hors_exclus": "Accuracy (hors 98/99)",
     "n_exclus": "Exclus (98/99)", "n_hors_exclus": "Total (hors 98/99)",
     "n_correct_hors_exclus": "Corrects (hors 98/99)",

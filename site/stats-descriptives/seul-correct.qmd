@@ -28,7 +28,7 @@ def afficher_detail_classifieur(df_seul_only, classifieur):
     """Lignes où `classifieur` est seul correct, avec la division (niveau 1) du vrai code."""
     sub = df_seul_only[df_seul_only["classifieur_seul"] == classifieur].copy()
     sub["division"] = sub["vrai_tronq"].str[:2]
-    cols = [c for c in [col_libelle, "code", "division", "vrai_tronq"] if c in sub.columns]
+    cols = [c for c in [col_ligne, "code", "division", "vrai_tronq"] if c in sub.columns]
     titre(f"{LIBELLES_CLASSIFIEURS[classifieur]} — {len(sub)} cas")
     display(HTML(
         f'<div style="max-height:400px;overflow-y:auto;border:1px solid #ddd;border-radius:6px;">'
@@ -45,7 +45,7 @@ df_seul_4 = afficher_seul_niveau(4)
 
 ```{python}
 df_seul_only_4 = df_seul_4[df_seul_4["seul_correct"]]
-cols_seul = [c for c in [col_libelle, "code", "vrai_tronq", "classifieur_seul",
+cols_seul = [c for c in [col_ligne, "code", "vrai_tronq", "classifieur_seul",
                          *[f"{c}_tronq" for c in cols_tous]] if c in df_seul_only_4.columns]
 titre(f"Lignes concernées — {len(df_seul_only_4)} cas")
 display(HTML(
