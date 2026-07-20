@@ -46,6 +46,7 @@ from src.stats_accord import (
     recap_3_1_multi_niveaux,
     stats_seul_par_division,
     accuracy_par_division,
+    accuracy_multi_classifieurs,
     precision_par_division_llm,
 )
 
@@ -96,6 +97,7 @@ LIBELLES_COLONNES = {
     "pred_division": "Division prédite (LLM)",
     **LIBELLES_CLASSIFIEURS,
     **{f"{k}_tronq": v for k, v in LIBELLES_CLASSIFIEURS.items()},
+    **{f"accuracy_{k}": f"Accuracy {v}" for k, v in LIBELLES_CLASSIFIEURS.items()},
 }
 
 
@@ -186,6 +188,26 @@ recap_precision_llm_n4 = precision_par_division_llm(
     df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, codes_exclus=("98", "99"), verbose=False,
 )
 display(joli(recap_precision_llm_n4))
+
+# %% [markdown]
+# ## 1quater. Accuracy comparée de tous les classifieurs, par division
+#
+# Même lecture que la section 1bis (accuracy par division COICOP vraie), mais
+# indépendamment du classifieur : les 4 classifieurs de base et le LLM-judge
+# sont présentés côte à côte pour comparaison directe, division par division.
+
+# %%
+sous_titre("Correction jugée au niveau 1 (division)")
+recap_accuracy_tous_n1 = accuracy_multi_classifieurs(
+    df, cols_tous, col_vrai, niveau=1, verbose=False,
+)
+display(joli(recap_accuracy_tous_n1))
+
+sous_titre("Correction jugée au niveau 4 (granularité max)")
+recap_accuracy_tous_n4 = accuracy_multi_classifieurs(
+    df, cols_tous, col_vrai, niveau=4, verbose=False,
+)
+display(joli(recap_accuracy_tous_n4))
 
 # %% [markdown]
 # ## 2. Rapport sur les accords unanimes des 4 classifieurs

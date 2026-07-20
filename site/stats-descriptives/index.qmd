@@ -84,6 +84,53 @@ display(joli(accuracy_multi_classifieurs(
 
 :::
 
+## Accuracy du LLM-judge par division (vérité terrain)
+
+Même lecture, mais focalisée sur le LLM-judge seul (indépendamment des
+autres classifieurs) : accuracy de `llm_code` contre `code`, ventilée par
+division COICOP vraie (rappel), pour chaque niveau de troncature. Comme dans
+la section précédente, les divisions 98 et 99 sont traitées comme n'importe
+quelle autre division, sans exclusion.
+
+::: {.panel-tabset}
+
+### Niveau 4 — sous-classe
+
+```{python}
+def accuracy_llm_par_division(niveau):
+    recap = accuracy_par_division(
+        df, col_pred=col_llm, col_vrai=col_vrai, niveau=niveau, codes_exclus=(), verbose=False,
+    )[["n", "n_correct", "accuracy"]].copy()
+    recap["n_erreurs"] = recap["n"] - recap["n_correct"]
+    return recap[["n", "n_correct", "n_erreurs", "accuracy"]]
+
+titre("Accuracy du LLM-judge par division (niveau 4)")
+display(joli(accuracy_llm_par_division(4)))
+```
+
+### Niveau 3 — classe
+
+```{python}
+titre("Accuracy du LLM-judge par division (niveau 3)")
+display(joli(accuracy_llm_par_division(3)))
+```
+
+### Niveau 2 — groupe
+
+```{python}
+titre("Accuracy du LLM-judge par division (niveau 2)")
+display(joli(accuracy_llm_par_division(2)))
+```
+
+### Niveau 1 — division
+
+```{python}
+titre("Accuracy du LLM-judge par division (niveau 1)")
+display(joli(accuracy_llm_par_division(1)))
+```
+
+:::
+
 ## Précision du LLM-judge par division prédite
 
 Vue complémentaire de la section précédente : au lieu de partir de la
