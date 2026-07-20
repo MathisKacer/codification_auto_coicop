@@ -6,7 +6,7 @@ from src.baseline.ttc import baseline_majorite_ttc, evaluer_baseline
 from src.baseline.preprocessing import preparer_donnees
 from src.baseline.modeling import (
     construire_pipeline, entrainer_evaluer, entrainer_evaluer_cv, tuner_hyperparametres,
-    courbe_precision_rappel,
+    courbe_precision_rappel, courbe_roc,
 )
 
 __all__ = [
@@ -18,4 +18,5 @@ __all__ = [
     "entrainer_evaluer_cv",
     "tuner_hyperparametres",
     "courbe_precision_rappel",
+    "courbe_roc",
 ]

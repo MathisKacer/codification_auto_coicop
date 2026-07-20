@@ -30,7 +30,7 @@ from data.load_data import charger_donnees, CHEMIN_S3_MODELISATION
 from src.coicop import tronquer_niveau
 from src.baseline import (
     baseline_majorite_ttc, evaluer_baseline, preparer_donnees, entrainer_evaluer,
-    entrainer_evaluer_cv, tuner_hyperparametres, courbe_precision_rappel,
+    entrainer_evaluer_cv, tuner_hyperparametres, courbe_precision_rappel, courbe_roc,
 )
 
 pd.set_option("display.max_columns", None)
@@ -55,7 +55,7 @@ display(Markdown(f"*Résultats calculés pour le run : `{chemin_s3}`.*"))
 
 Avant d'entraîner un modèle pour détecter ses erreurs, on mesure la
 performance brute de la baseline (vote majoritaire, TTC arbitre en cas
-d'égalité), au niveau 4 (granularité maximale). En comparaison : l'accuracy
+d'égalité), au niveau 4. En comparaison : l'accuracy
 obtenue en suivant TTC seul permet de chiffrer l'apport du vote majoritaire,
 et l'accuracy du LLM-judge donne la référence haute (plus coûteuse) à
 laquelle la baseline est comparée.
@@ -97,7 +97,7 @@ display(Markdown(
 ## Analyse des erreurs de la baseline
 
 Avant d'entraîner un modèle, on regarde directement ce qui distingue les
-cas où la baseline trouve le bon code de ceux où elle se trompe — une
+cas où la baseline trouve le bon code de ceux où elle se trompe, une
 lecture plus directement interprétable que les importances de features
 du modèle entraîné plus loin.
 
@@ -128,8 +128,7 @@ X.assign(baseline_correcte=y).groupby("nb_accords_max")["baseline_correcte"].agg
 ### Scores de confiance : cas corrects vs incorrects
 
 Médiane de chaque score, calculée sur les valeurs brutes (avant
-imputation des NaN), pour ne pas fausser la comparaison avec les
-sentinelles utilisées par le modèle.
+imputation des NaN).
 
 ```{python}
 cols_num_comparaison = ["lcs_distance", "rag_confidence", "ragann_confidence", "ttc_conf_1", "budget"]
@@ -183,7 +182,7 @@ observation. Cette probabilité est l'élément central de l'articulation
 avec le reste du projet : c'est elle qui sera seuillée dans la section
 [Compromis précision/rappel](#compromis-précisionrappel) pour décider, au
 cas par cas, si l'on fait confiance à la baseline (rapide, gratuite) ou si
-l'on envoie l'observation au LLM-judge (plus fiable, plus coûteux).
+l'on envoie l'observation au LLM-as-a-judge (plus fiable, plus coûteux).
 L'évaluation ci-dessous sert donc à vérifier que cette probabilité est
 suffisamment fiable avant d'en faire une règle de décision opérationnelle.
 
@@ -223,6 +222,13 @@ rapport = classification_report(
 pd.DataFrame(rapport).T.round(3)
 ```
 
+### Courbe ROC
+
+```{python}
+with redirect_stdout(io.StringIO()):
+    courbe_roc({"RF par défaut": (res["y_test"], res["y_proba"])})
+```
+
 ### Importances des features
 
 ```{python}
@@ -254,11 +260,17 @@ pd.crosstab(
 
 Le RF ci-dessus utilise des hyperparamètres fixés à la main
 (`n_estimators=300`, `min_samples_leaf=5`, `class_weight="balanced"`).
-On vérifie ici si un `RandomizedSearchCV` (60 tirages, optimisé sur le
-ROC AUC) trouve mieux. La recherche est faite **uniquement sur le train**
-(même split que ci-dessus, `test_size=0.2`, `random_state=42`) : le score
-CV pendant la recherche ne sert qu'à choisir les hyperparamètres, l'écart
-avec le score annoncé plus haut se lit sur le même test set, sans fuite.
+On vérifie ici si un `RandomizedSearchCV` (60 tirages) trouve mieux. La
+recherche est faite **uniquement sur le train** (même split que ci-dessus,
+`test_size=0.2`, `random_state=42`) : le score CV pendant la recherche ne
+sert qu'à choisir les hyperparamètres, l'écart avec le score annoncé plus
+haut se lit sur le même test set, sans fuite.
+
+Le scoring optimisé n'est **pas** le ROC AUC (métrique de classement globale,
+insensible au déséquilibre des classes) mais l'**average precision sur la
+classe "baseline_fausse"** (aire sous la courbe précision/rappel tracée plus
+bas) : c'est la classe qui compte opérationnellement, puisqu'une "baseline
+fausse" non détectée est une erreur silencieuse qui ne part jamais au LLM.
 
 ```{python}
 with redirect_stdout(io.StringIO()):
@@ -266,7 +278,8 @@ with redirect_stdout(io.StringIO()):
 
 display(Markdown(
     f"**Meilleurs hyperparamètres** : `{res_tune['best_params']}`\n\n"
-    f"**Score CV (roc_auc) pendant la recherche** : {res_tune['best_score_cv']:.3f}"
+    f"**Score CV (average precision, classe \"baseline_fausse\") pendant la "
+    f"recherche** : {res_tune['best_score_cv']:.3f}"
 ))
 ```
 
@@ -290,24 +303,49 @@ pd.crosstab(
 )
 ```
 
+```{python}
+with redirect_stdout(io.StringIO()):
+    courbe_roc({
+        "RF par défaut": (res["y_test"], res["y_proba"]),
+        "RF tuné": (res_tune["y_test"], res_tune["y_proba"]),
+    })
+```
+
 L'accuracy et le ROC AUC globaux masquent un effet important sur la
 classe qui compte réellement pour ce modèle : celle des vraies erreurs
 de baseline, qu'on cherche à détecter pour décider de l'envoi au
 LLM-judge.
 
-**⚠️ Le RF tuné gagne en accuracy/ROC AUC globaux mais perd sur le rappel des
-erreurs de baseline.** Sur les **263** vraies erreurs de baseline du test, le
-RF par défaut (`class_weight="balanced"`) en détecte **86.7 %** (228/263),
-contre seulement **66.2 %** (174/263) pour le RF tuné (`class_weight=None`).
+```{python}
+vrai0 = res["y_test"] == 0
+n_err = int(vrai0.sum())
+det_defaut = int(((res["y_pred"] == 0) & vrai0).sum())
+det_tune = int(((res_tune["y_pred"] == 0) & vrai0).sum())
+rappel_defaut = det_defaut / n_err
+rappel_tune = det_tune / n_err
+cw_defaut = res["pipeline"].named_steps["rf"].class_weight
+cw_tune = res_tune["pipeline"].named_steps["rf"].class_weight
 
-Le `RandomizedSearchCV` optimise le ROC AUC, une métrique de classement peu
-sensible au déséquilibre des classes, et n'a donc aucune raison de privilégier
-le rappel sur la classe minoritaire ("baseline fausse", ~23 % des cas) — au
-prix d'erreurs manquées en plus grand nombre au seuil par défaut (0.5).
+display(Markdown(
+    f"Sur les **{n_err}** vraies erreurs de baseline du test (seuil par défaut "
+    f"0.5), le RF par défaut (`class_weight={cw_defaut!r}`) en détecte "
+    f"**{rappel_defaut:.1%}** ({det_defaut}/{n_err}), contre **{rappel_tune:.1%}** "
+    f"({det_tune}/{n_err}) pour le RF tuné (`class_weight={cw_tune!r}`)."
+))
+```
+
+Optimiser directement l'average precision sur la classe "baseline_fausse"
+plutôt que le ROC AUC ne change pas la conclusion : le rappel du RF tuné au
+seuil par défaut (0.5) reste inférieur à celui du RF par défaut. L'average
+precision est une métrique indépendante du seuil (elle juge le classement sur
+toute la plage des seuils possibles), donc l'améliorer ne garantit rien sur la
+performance à un seuil fixe précis — et `class_weight=None` continue de
+produire des probabilités tassées vers "correcte", peu adaptées à un seuil
+figé à 0.5.
 **C'est pourquoi le modèle utilisé pour la suite de cette page (section
 [Compromis précision/rappel](#compromis-précisionrappel)) reste le RF par
-défaut (`res`), pas le RF tuné : le gain de tuning est trompeur pour cet
-usage.**
+défaut (`res`), pas le RF tuné : quel que soit le critère d'optimisation
+essayé, le gain de tuning ne s'est pas montré utilisable pour cet usage.**
 
 ```{python}
 (res_tune["importances"] * 100).round(1).to_frame("Importance (%)")
@@ -318,8 +356,8 @@ usage.**
 L'accuracy et les importances de features restent agrégées : elles ne
 disent rien de ce qui distingue, *parmi les vraies erreurs de baseline*,
 celles que le modèle détecte de celles qu'il laisse passer à tort (au
-seuil par défaut 0.5). C'est cette seconde catégorie — un faux négatif du
-modèle — qui est la plus coûteuse : la baseline a faux, mais on lui fait
+seuil par défaut 0.5). C'est cette seconde catégorie, un faux négatif du
+modèle, qui est la plus coûteuse : la baseline a faux, mais on lui fait
 confiance sans envoyer au LLM.
 
 ```{python}

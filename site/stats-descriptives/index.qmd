@@ -39,9 +39,8 @@ Accuracy de chacun des 5 classifieurs (les 4 classifieurs de base et le
 LLM-judge) contre `code`, ventilée par division COICOP (niveau 1 du vrai
 code), pour chaque niveau de troncature de comparaison. La ligne TOTAL
 donne l'accuracy globale de chaque classifieur ; les autres lignes la
-détaillent par division. Les divisions "98" (indéterminé / illisible) et
-"99" (hors COICOP : dons, impôts, opérations bancaires...) sont des codes
-à part entière, que les classifieurs doivent aussi savoir détecter — elles
+détaillent par division. Les divisions 98 et 99 sont des codes
+à part entière, que les classifieurs doivent aussi savoir détecter, elles
 sont donc traitées ici comme n'importe quelle autre division, sans
 exclusion.
 

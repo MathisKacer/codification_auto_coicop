@@ -84,5 +84,3 @@ ne passent inaperçues.
   du volume envoyé), mais laisse passer 35 erreurs non détectées (13 %
   des erreurs de baseline), et parmi ce qu'on garde sans LLM, 4.3 % sont
   en réalité fausses (précision sur "correcte" = 95.7 %).
-
-## Pistes d'analyses futures

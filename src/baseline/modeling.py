@@ -9,8 +9,8 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
-    accuracy_score, classification_report, confusion_matrix,
-    precision_recall_curve, roc_auc_score,
+    accuracy_score, average_precision_score, classification_report, confusion_matrix,
+    precision_recall_curve, roc_auc_score, roc_curve,
 )
 from sklearn.model_selection import (
     RandomizedSearchCV, StratifiedKFold, cross_val_predict, cross_validate, train_test_split,
@@ -175,11 +175,35 @@ def entrainer_evaluer_cv(X, y, n_splits=5, random_state=42, **rf_kwargs):
     }
 
 
-def tuner_hyperparametres(X, y, test_size=0.2, random_state=42, n_iter=60, n_splits=5):
+def _average_precision_fausse(estimator, X, y):
+    """
+    Scorer : aire sous la courbe precision/rappel pour la classe "baseline_fausse"
+    (0), la classe qui compte operationnellement (rater une baseline fausse = un
+    faux positif silencieux sur "correcte", pas detecte, jamais envoye au LLM).
+    Contrairement au ROC AUC, sensible au fait que "fausse" est la classe
+    minoritaire (~23%) et directement alignee avec le seuil variable utilise
+    en aval (`courbe_precision_rappel`), plutot qu'un seuil fixe a 0.5.
+    """
+    proba_correcte = estimator.predict_proba(X)[:, 1]
+    return average_precision_score(y, 1 - proba_correcte, pos_label=0)
+
+
+def tuner_hyperparametres(
+    X, y, test_size=0.2, random_state=42, n_iter=60, n_splits=5,
+    scoring=_average_precision_fausse,
+):
     """
     RandomizedSearchCV sur les hyperparametres du RF, fitte uniquement sur le train
-    (le meme split que `entrainer_evaluer`, memes test_size/random_state -> resultats
-    directement comparables) pour ne pas biaiser l'evaluation finale sur le test.
+    (le meme split que `entrainer_evaluer`, memes test_size/random_state ->
+    resultats directement comparables) pour ne pas biaiser l'evaluation finale
+    sur le test.
+
+    Par defaut, optimise `_average_precision_fausse` (aire sous la courbe
+    precision/rappel de la classe "baseline_fausse") plutot que le ROC AUC :
+    ce dernier est une metrique de classement globale insensible au
+    desequilibre des classes, et n'a donc aucune raison de privilegier les
+    hyperparametres qui detectent le mieux les vraies erreurs de baseline.
+    Passer `scoring="roc_auc"` pour retrouver l'ancien comportement.
 
     Returns
     -------
@@ -202,13 +226,14 @@ def tuner_hyperparametres(X, y, test_size=0.2, random_state=42, n_iter=60, n_spl
     cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
     search = RandomizedSearchCV(
         pipe, param_distributions,
-        n_iter=n_iter, scoring="roc_auc", cv=cv,
+        n_iter=n_iter, scoring=scoring, cv=cv,
         random_state=random_state, n_jobs=-1,
     )
     search.fit(X_train, y_train)
 
+    nom_scoring = scoring if isinstance(scoring, str) else getattr(scoring, "__name__", "custom")
     print(f"=== RF binaire : tuning des hyperparametres ({n_iter} tirages, {n_splits} folds) ===")
-    print(f"Meilleur score CV (roc_auc) : {search.best_score_:.3f}")
+    print(f"Meilleur score CV ({nom_scoring}) : {search.best_score_:.3f}")
     print(f"Meilleurs hyperparametres : {search.best_params_}")
 
     best_pipe = search.best_estimator_
@@ -255,6 +280,28 @@ def tuner_hyperparametres(X, y, test_size=0.2, random_state=42, n_iter=60, n_spl
         "accuracy": acc,
         "auc": auc,
     }
+
+
+def courbe_roc(courbes):
+    """
+    Courbe(s) ROC superposees (P(baseline_correcte) comme score de classement).
+
+    Parameters
+    ----------
+    courbes : dict {nom_modele: (y_test, y_proba)}
+    """
+    fig, ax = plt.subplots(figsize=(6, 5))
+    for nom, (y_test, y_proba) in courbes.items():
+        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        auc = roc_auc_score(y_test, y_proba)
+        ax.plot(fpr, tpr, label=f"{nom} (AUC = {auc:.3f})")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="grey", label="Hasard (AUC = 0.5)")
+    ax.set_xlabel("Taux de faux positifs")
+    ax.set_ylabel("Taux de vrais positifs (rappel)")
+    ax.set_title("Courbe ROC")
+    ax.legend()
+    ax.grid(alpha=0.3)
+    plt.show()
 
 
 def courbe_precision_rappel(y_test, y_proba, seuils=(0.99, 0.95, 0.90, 0.80, 0.5)):

@@ -131,6 +131,8 @@ def afficher_ventilation_classifieur(classifieur):
     titre(f"{LIBELLES_CLASSIFIEURS[classifieur]} — {len(detail_c)} division(s) concernée(s)")
     if len(detail_c):
         display(joli(detail_c))
+
+
 ```
 
 **Détail par classifieur sauveur**, au choix :
@@ -168,5 +170,3 @@ afficher_ventilation_classifieur("llm_code")
 ```
 
 :::
-
-> _(Interprétation à compléter)_

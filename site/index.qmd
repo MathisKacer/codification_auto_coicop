@@ -15,13 +15,13 @@ consommation comparables au niveau international et transmises à
 Eurostat.
 
 Cette codification est difficile à automatiser et la coder à la main
-n'est pas soutenable à l'échelle de l'enquête.
+n'est pas soutenable à l'échelle de l'enquête, c'est pourquoi une certaine automatisation est recherchée.
 
 ## Pipeline actuel
 
-Le pipeline de codification automatique — développé en amont de ce stage
+Le pipeline de codification automatique, développé en amont de ce stage
 et documenté en détail sur
-[inseefrlab.github.io/codif-coicop-bdf](https://inseefrlab.github.io/codif-coicop-bdf/) —
+[inseefrlab.github.io/codif-coicop-bdf](https://inseefrlab.github.io/codif-coicop-bdf/),
 enchaîne les étapes suivantes :
 
 > Prétraitement → Regex (cas évidents) → 4 classifieurs en parallèle (LCS,
@@ -44,7 +44,7 @@ enchaîne les étapes suivantes :
 
 Le sujet du stage est d'**améliorer la codification automatique de la
 nomenclature COICOP**, et en particulier l'étape d'arbitrage par
-LLM-as-a-judge — que ce soit pour la fiabiliser ou pour en réduire le
+LLM-as-a-judge, que ce soit pour la fiabiliser ou pour en réduire le
 coût opérationnel (chaque appel a un coût et une latence, à répéter sur
 l'ensemble des observations de l'enquête).
 
