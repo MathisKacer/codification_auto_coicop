@@ -16,7 +16,7 @@ display(Markdown(f"Source : `{CHEMIN_S3}`"))
 ## Aperçu des premières lignes
 
 ```{python}
-df[[col_ligne, col_vrai, *cols_base, col_llm]].head()
+df[[col_ligne, col_vrai, *cols_base, col_llm]].head().set_index(col_ligne)
 ```
 
 ## Répartition par division COICOP (niveau 1, vrai code)

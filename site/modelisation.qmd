@@ -436,7 +436,7 @@ table_manquees = pd.DataFrame({
     "ttc_conf_1": df.loc[manquees_idx, "ttc_conf_1"],
     "nb_accords_max": erreurs_baseline.loc[manquees_idx, "nb_accords_max"],
     "proba_rf": erreurs_baseline.loc[manquees_idx, "proba_correcte"],
-}).sort_values("proba_rf", ascending=False)
+}).sort_values("proba_rf", ascending=False).reset_index(drop=True)
 
 table_manquees.round(3)
 ```
