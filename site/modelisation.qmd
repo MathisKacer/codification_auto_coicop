@@ -10,7 +10,6 @@ Un nouveau classifieur simple a été mis en place, avec comme objectif de compl
 
 Le but est ensuite d'en étudier les performances, notamment via une Random Forest, afin d'établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l'intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.
 
-📝 Cette page ne contient que des résultats bruts, reproductibles pour n'importe quel run. Pour la lecture et l'interprétation de ces résultats (analyse écrite à la main, propre à un run donné) : [page Interprétation](interpretation/index.qmd).
 
 
 

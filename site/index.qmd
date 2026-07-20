@@ -14,13 +14,8 @@ According to Purpose*), utilisée pour produire des statistiques de
 consommation comparables au niveau international et transmises à
 Eurostat.
 
-Cette codification est difficile à automatiser : les libellés sont
-bruités, sémantiquement variables et fragmentés, et la coder à la main
-n'est pas soutenable à l'échelle de l'enquête. Ce travail s'inscrit dans
-la collaboration entre la Maîtrise d'Ouvrage de l'enquête BDF, la
-division IPC et le SSPLab (INSEE) ; les résultats de l'édition 2026 de
-l'enquête doivent être transmis à Eurostat en 2028, ce qui rend le
-sujet critique pour la prochaine édition de BDF en 2030.
+Cette codification est difficile à automatiser et la coder à la main
+n'est pas soutenable à l'échelle de l'enquête.
 
 ## Pipeline actuel
 
