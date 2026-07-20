@@ -182,12 +182,12 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="objectif">Objectif</h2>
 <p>Un nouveau classifieur simple a été mis en place, avec comme objectif de compléter le LLM-as-a-judge, voire de la concurrencer. Celui-ci s’appuie sur une idée simple : suivre l’avis majoritaire des classifieurs (cf.&nbsp;<a href="./stats-descriptives/accords-unanimes.html">Accords unanimes des 4 classifieurs</a> et <a href="./stats-descriptives/trois-contre-un.html">3 classifieurs contre 1 dissident</a>) et TorchTextClassifier en cas d’égalité (cf.&nbsp;<a href="./stats-descriptives/seul-correct.html">classifieurs seuls</a>).</p>
 <p>Le but est ensuite d’en étudier les performances, notamment via une Random Forest, afin d’établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l’intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.</p>
-<div id="e35ce718" class="cell" data-execution_count="2">
+<div id="b3359656" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-stdout">
 <pre><code>[charger_donnees] projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet → shape = (5825, 38)</code></pre>
 </div>
 </div>
-<div id="ca00be7d" class="cell" data-execution_count="3">
+<div id="ac95d05c" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><em>Résultats calculés pour le run : <code>s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet</code>.</em></p>
 </div>
@@ -196,7 +196,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="performance-de-la-baseline" class="level2">
 <h2 class="anchored" data-anchor-id="performance-de-la-baseline">Performance de la baseline</h2>
 <p>Avant d’entraîner un modèle pour détecter ses erreurs, on mesure la performance brute de la baseline (vote majoritaire, TTC arbitre en cas d’égalité), au niveau 4. En comparaison : l’accuracy obtenue en suivant TTC seul permet de chiffrer l’apport du vote majoritaire, et l’accuracy du LLM-judge donne la référence haute (plus coûteuse) à laquelle la baseline est comparée.</p>
-<div id="d78dfb56" class="cell" data-execution_count="4">
+<div id="0f07f156" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
 
@@ -231,7 +231,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="2702a849" class="cell" data-execution_count="5">
+<div id="f4f133b9" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>Gain du vote majoritaire vs TTC seul : +3.12 points</strong></p>
 <p><strong>Écart baseline vs LLM-judge : -4.46 points</strong></p>
@@ -243,7 +243,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Avant d’entraîner un modèle, on regarde directement ce qui distingue les cas où la baseline trouve le bon code de ceux où elle se trompe, une lecture plus directement interprétable que les importances de features du modèle entraîné plus loin.</p>
 <section id="par-division-coicop" class="level3">
 <h3 class="anchored" data-anchor-id="par-division-coicop">Par division COICOP</h3>
-<div id="2d041ed3" class="cell" data-execution_count="7">
+<div id="59cf4eec" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
@@ -346,7 +346,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="par-niveau-daccord-entre-classifieurs" class="level3">
 <h3 class="anchored" data-anchor-id="par-niveau-daccord-entre-classifieurs">Par niveau d’accord entre classifieurs</h3>
-<div id="18b23e01" class="cell" data-execution_count="8">
+<div id="22954401" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 
@@ -395,7 +395,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="scores-de-confiance-cas-corrects-vs-incorrects" class="level3">
 <h3 class="anchored" data-anchor-id="scores-de-confiance-cas-corrects-vs-incorrects">Scores de confiance : cas corrects vs incorrects</h3>
 <p>Médiane de chaque score, calculée sur les valeurs brutes (avant imputation des NaN).</p>
-<div id="f011c701" class="cell" data-execution_count="9">
+<div id="2a1d346d" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
@@ -524,7 +524,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<div id="2d373ffd" class="cell" data-execution_count="10">
+<div id="7a8d0b6e" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>14 features</strong> (7 catégorielles, 7 numériques) pour <strong>5825 observations</strong>, dont <strong>77.4%</strong> de baseline correcte.</p>
 </div>
@@ -536,13 +536,13 @@ ul.task-list li input[type="checkbox"] {
 <p>Un premier split train/test sert à obtenir des métriques et les importances de features ; la validation croisée donne ensuite une estimation plus robuste, en réentraînant le pipeline complet (encodage compris) sur chaque fold.</p>
 <section id="split-traintest" class="level3">
 <h3 class="anchored" data-anchor-id="split-traintest">Split train/test</h3>
-<div id="a8c91fbc" class="cell" data-execution_count="11">
+<div id="c1f09556" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Train : <strong>4660</strong> lignes — Test : <strong>1165</strong> lignes (taux de baseline correcte dans le train : 77.4%)</p>
 <p><strong>Accuracy (test)</strong> : 86.0% — <strong>ROC AUC</strong> : 0.946</p>
 </div>
 </div>
-<div id="2678d2cc" class="cell" data-execution_count="12">
+<div id="a2f7e351" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display" data-execution_count="12">
 <div>
 
@@ -577,7 +577,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="0f1039f0" class="cell" data-execution_count="13">
+<div id="39d29f98" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display" data-execution_count="13">
 <div>
 
@@ -637,7 +637,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="courbe-roc" class="level3">
 <h3 class="anchored" data-anchor-id="courbe-roc">Courbe ROC</h3>
-<div id="22037b4e" class="cell" data-execution_count="14">
+<div id="3d59e0e1" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -649,7 +649,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="importances-des-features" class="level3">
 <h3 class="anchored" data-anchor-id="importances-des-features">Importances des features</h3>
-<div id="3b685553" class="cell" data-execution_count="15">
+<div id="7cf1b633" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-display" data-execution_count="15">
 <div>
 
@@ -727,12 +727,12 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="validation-croisée-estimation-plus-robuste" class="level3">
 <h3 class="anchored" data-anchor-id="validation-croisée-estimation-plus-robuste">Validation croisée (estimation plus robuste)</h3>
-<div id="78e2bded" class="cell" data-execution_count="16">
+<div id="f028deaf" class="cell" data-execution_count="16">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>Accuracy</strong> : 84.6% ± 0.6% — <strong>ROC AUC</strong> : 0.935 ± 0.005 (5 folds)</p>
 </div>
 </div>
-<div id="9389ac47" class="cell" data-execution_count="17">
+<div id="c3ff474b" class="cell" data-execution_count="17">
 <div class="cell-output cell-output-display" data-execution_count="17">
 <div>
 
@@ -772,13 +772,13 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="tuning-des-hyperparamètres">Tuning des hyperparamètres</h3>
 <p>Le RF ci-dessus utilise des hyperparamètres fixés à la main (<code>n_estimators=300</code>, <code>min_samples_leaf=5</code>, <code>class_weight="balanced"</code>). On vérifie ici si un <code>RandomizedSearchCV</code> (60 tirages) trouve mieux. La recherche est faite <strong>uniquement sur le train</strong> (même split que ci-dessus, <code>test_size=0.2</code>, <code>random_state=42</code>) : le score CV pendant la recherche ne sert qu’à choisir les hyperparamètres, l’écart avec le score annoncé plus haut se lit sur le même test set, sans fuite.</p>
 <p>Le scoring optimisé n’est <strong>pas</strong> le ROC AUC (métrique de classement globale, insensible au déséquilibre des classes) mais l’<strong>average precision sur la classe “baseline_fausse”</strong> (aire sous la courbe précision/rappel tracée plus bas) : c’est la classe qui compte opérationnellement, puisqu’une “baseline fausse” non détectée est une erreur silencieuse qui ne part jamais au LLM.</p>
-<div id="bd4dd12e" class="cell" data-execution_count="18">
+<div id="00e85bb0" class="cell" data-execution_count="18">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>Meilleurs hyperparamètres</strong> : <code>{'rf__class_weight': None, 'rf__max_depth': 20, 'rf__max_features': 'sqrt', 'rf__min_samples_leaf': 1, 'rf__n_estimators': 739}</code></p>
 <p><strong>Score CV (average precision, classe “baseline_fausse”) pendant la recherche</strong> : 0.834</p>
 </div>
 </div>
-<div id="0525a55c" class="cell" data-execution_count="19">
+<div id="1ca9330c" class="cell" data-execution_count="19">
 <div class="cell-output cell-output-display" data-execution_count="19">
 <div>
 
@@ -811,7 +811,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="2c88ff88" class="cell" data-execution_count="20">
+<div id="864800f9" class="cell" data-execution_count="20">
 <div class="cell-output cell-output-display" data-execution_count="20">
 <div>
 
@@ -846,7 +846,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="702fa6bf" class="cell" data-execution_count="21">
+<div id="1d3e01a7" class="cell" data-execution_count="21">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -856,13 +856,13 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <p>L’accuracy et le ROC AUC globaux masquent un effet important sur la classe qui compte réellement pour ce modèle : celle des vraies erreurs de baseline, qu’on cherche à détecter pour décider de l’envoi au LLM-judge.</p>
-<div id="730acd18" class="cell" data-execution_count="22">
+<div id="0085ce72" class="cell" data-execution_count="22">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Sur les <strong>263</strong> vraies erreurs de baseline du test (seuil par défaut 0.5), le RF par défaut (<code>class_weight='balanced'</code>) en détecte <strong>86.7%</strong> (228/263), contre <strong>66.2%</strong> (174/263) pour le RF tuné (<code>class_weight=None</code>).</p>
 </div>
 </div>
 <p>Optimiser directement l’average precision sur la classe “baseline_fausse” plutôt que le ROC AUC ne change pas la conclusion : le rappel du RF tuné au seuil par défaut (0.5) reste inférieur à celui du RF par défaut. L’average precision est une métrique indépendante du seuil (elle juge le classement sur toute la plage des seuils possibles), donc l’améliorer ne garantit rien sur la performance à un seuil fixe précis — et <code>class_weight=None</code> continue de produire des probabilités tassées vers “correcte”, peu adaptées à un seuil figé à 0.5. <strong>C’est pourquoi le modèle utilisé pour la suite de cette page (section <a href="#compromis-précisionrappel">Compromis précision/rappel</a>) reste le RF par défaut (<code>res</code>), pas le RF tuné : quel que soit le critère d’optimisation essayé, le gain de tuning ne s’est pas montré utilisable pour cet usage.</strong></p>
-<div id="e709f8b2" class="cell" data-execution_count="23">
+<div id="8c4ee0e3" class="cell" data-execution_count="23">
 <div class="cell-output cell-output-display" data-execution_count="23">
 <div>
 
@@ -941,12 +941,12 @@ ul.task-list li input[type="checkbox"] {
 <section id="analyse-des-erreurs-manquées-par-le-modèle" class="level3">
 <h3 class="anchored" data-anchor-id="analyse-des-erreurs-manquées-par-le-modèle">Analyse des erreurs manquées par le modèle</h3>
 <p>L’accuracy et les importances de features restent agrégées : elles ne disent rien de ce qui distingue, <em>parmi les vraies erreurs de baseline</em>, celles que le modèle détecte de celles qu’il laisse passer à tort (au seuil par défaut 0.5). C’est cette seconde catégorie, un faux négatif du modèle, qui est la plus coûteuse : la baseline a faux, mais on lui fait confiance sans envoyer au LLM.</p>
-<div id="68079c66" class="cell" data-execution_count="24">
+<div id="f6631cc5" class="cell" data-execution_count="24">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Sur les <strong>263</strong> erreurs réelles de baseline du test, la RF (seuil 0.5) en <strong>manque 35</strong> : elle leur attribue <code>P(baseline correcte) &gt; 0.5</code> alors que la baseline a bel et bien faux.</p>
 </div>
 </div>
-<div id="b23e3c56" class="cell" data-execution_count="25">
+<div id="8ac96e04" class="cell" data-execution_count="25">
 <div class="cell-output cell-output-display" data-execution_count="25">
 <div>
 
@@ -1001,7 +1001,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="d7d3d251" class="cell" data-execution_count="26">
+<div id="d5f20a16" class="cell" data-execution_count="26">
 <div class="cell-output cell-output-display" data-execution_count="26">
 <div>
 
@@ -1120,13 +1120,13 @@ ul.task-list li input[type="checkbox"] {
 </div>
 <section id="détail-des-cas-manqués" class="level4">
 <h4 class="anchored" data-anchor-id="détail-des-cas-manqués">Détail des cas manqués</h4>
-<div id="a883f46a" class="cell" data-execution_count="27">
+<div id="a0ca59dc" class="cell" data-execution_count="27">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Les <strong>35</strong> erreurs manquées elles-mêmes, triées par <code>proba_rf</code> décroissante (les cas où le modèle est le plus confiant à tort en premier).</p>
 </div>
 </div>
 <div style="max-height: 420px; overflow: auto;">
-<div id="6319fcf6" class="cell" data-execution_count="28">
+<div id="10c48cf5" class="cell" data-execution_count="28">
 <div class="cell-output cell-output-display" data-execution_count="28">
 <div>
 
@@ -1150,7 +1150,7 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">5505</th>
+<th data-quarto-table-cell-role="th">0</th>
 <td>5505</td>
 <td>Hypermarchés</td>
 <td>04.3.1.1</td>
@@ -1164,7 +1164,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.920</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">5534</th>
+<th data-quarto-table-cell-role="th">1</th>
 <td>5534</td>
 <td>Magasins maxi-discompte</td>
 <td>01.1.2.3</td>
@@ -1178,7 +1178,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.872</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">2262</th>
+<th data-quarto-table-cell-role="th">2</th>
 <td>2262</td>
 <td>None</td>
 <td>04.3.1.1</td>
@@ -1192,7 +1192,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.861</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">5336</th>
+<th data-quarto-table-cell-role="th">3</th>
 <td>5336</td>
 <td>Magasins maxi-discompte</td>
 <td>01.1.2.3</td>
@@ -1206,7 +1206,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.857</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3990</th>
+<th data-quarto-table-cell-role="th">4</th>
 <td>3990</td>
 <td>Service d’entretien, de réparation ou de locat...</td>
 <td>05.6.2.9</td>
@@ -1220,7 +1220,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.839</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">5360</th>
+<th data-quarto-table-cell-role="th">5</th>
 <td>5360</td>
 <td>site de drive ou de grande surface alimentaire</td>
 <td>01.1.3.1</td>
@@ -1234,7 +1234,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.814</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3086</th>
+<th data-quarto-table-cell-role="th">6</th>
 <td>3086</td>
 <td>Grande surface spécialisée Loisir, Culture et TIC</td>
 <td>09.2.2.2</td>
@@ -1248,7 +1248,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.786</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">525</th>
+<th data-quarto-table-cell-role="th">7</th>
 <td>525</td>
 <td>Services publics (administrations, établisseme...</td>
 <td>07.4.1</td>
@@ -1262,7 +1262,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.726</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">4565</th>
+<th data-quarto-table-cell-role="th">8</th>
 <td>4565</td>
 <td>None</td>
 <td>05.3.2</td>
@@ -1276,7 +1276,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.722</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">973</th>
+<th data-quarto-table-cell-role="th">9</th>
 <td>973</td>
 <td>None</td>
 <td>11.1.1</td>
@@ -1290,7 +1290,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.719</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">592</th>
+<th data-quarto-table-cell-role="th">10</th>
 <td>592</td>
 <td>None</td>
 <td>01.1.3.3</td>
@@ -1304,7 +1304,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.687</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">2307</th>
+<th data-quarto-table-cell-role="th">11</th>
 <td>2307</td>
 <td>Hypermarchés</td>
 <td>01.1.3.3</td>
@@ -1318,7 +1318,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.683</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">4965</th>
+<th data-quarto-table-cell-role="th">12</th>
 <td>4965</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01</td>
@@ -1332,7 +1332,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.671</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">4718</th>
+<th data-quarto-table-cell-role="th">13</th>
 <td>4718</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01.1.2.2</td>
@@ -1346,7 +1346,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.657</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3496</th>
+<th data-quarto-table-cell-role="th">14</th>
 <td>3496</td>
 <td>Hypermarchés</td>
 <td>01.2.9.0</td>
@@ -1360,7 +1360,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.656</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">2740</th>
+<th data-quarto-table-cell-role="th">15</th>
 <td>2740</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01.1.2.2</td>
@@ -1374,7 +1374,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.647</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">5117</th>
+<th data-quarto-table-cell-role="th">16</th>
 <td>5117</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01.1.9.1</td>
@@ -1388,7 +1388,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.645</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">755</th>
+<th data-quarto-table-cell-role="th">17</th>
 <td>755</td>
 <td>Magasins maxi-discompte</td>
 <td>01.2.5.0</td>
@@ -1402,7 +1402,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.634</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">1836</th>
+<th data-quarto-table-cell-role="th">18</th>
 <td>1836</td>
 <td>Hypermarchés</td>
 <td>98.4</td>
@@ -1416,7 +1416,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.597</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">5157</th>
+<th data-quarto-table-cell-role="th">19</th>
 <td>5157</td>
 <td>None</td>
 <td>01</td>
@@ -1430,7 +1430,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.569</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3147</th>
+<th data-quarto-table-cell-role="th">20</th>
 <td>3147</td>
 <td>None</td>
 <td>01.1.7.5</td>
@@ -1444,7 +1444,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.569</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">1266</th>
+<th data-quarto-table-cell-role="th">21</th>
 <td>1266</td>
 <td>None</td>
 <td>09.7.1</td>
@@ -1458,7 +1458,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.564</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">1821</th>
+<th data-quarto-table-cell-role="th">22</th>
 <td>1821</td>
 <td>Marché et éventaire, ambulant et tournée SAI (...</td>
 <td>09.7.1</td>
@@ -1472,7 +1472,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.538</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">880</th>
+<th data-quarto-table-cell-role="th">23</th>
 <td>880</td>
 <td>Hypermarchés</td>
 <td>01.1.9.1</td>
@@ -1486,7 +1486,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.538</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">2543</th>
+<th data-quarto-table-cell-role="th">24</th>
 <td>2543</td>
 <td>None</td>
 <td>03</td>
@@ -1500,7 +1500,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.535</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">465</th>
+<th data-quarto-table-cell-role="th">25</th>
 <td>465</td>
 <td>None</td>
 <td>13.1.2.0</td>
@@ -1514,7 +1514,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.531</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">2918</th>
+<th data-quarto-table-cell-role="th">26</th>
 <td>2918</td>
 <td>Hypermarchés</td>
 <td>01.1.9.1</td>
@@ -1528,7 +1528,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.522</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">87</th>
+<th data-quarto-table-cell-role="th">27</th>
 <td>87</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01.1.1.9</td>
@@ -1542,7 +1542,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.517</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">143</th>
+<th data-quarto-table-cell-role="th">28</th>
 <td>143</td>
 <td>Hypermarchés</td>
 <td>09.3.2.2</td>
@@ -1556,7 +1556,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.514</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">242</th>
+<th data-quarto-table-cell-role="th">29</th>
 <td>242</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01.1.3</td>
@@ -1570,7 +1570,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.508</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">566</th>
+<th data-quarto-table-cell-role="th">30</th>
 <td>566</td>
 <td>Supermarchés, magasins multi-commerces</td>
 <td>01.1.1.3</td>
@@ -1584,7 +1584,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.505</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">3065</th>
+<th data-quarto-table-cell-role="th">31</th>
 <td>3065</td>
 <td>Hypermarchés</td>
 <td>01.2.9.0</td>
@@ -1598,7 +1598,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.504</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3898</th>
+<th data-quarto-table-cell-role="th">32</th>
 <td>3898</td>
 <td>Magasins maxi-discompte</td>
 <td>01.1.9.1</td>
@@ -1612,7 +1612,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.502</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">3326</th>
+<th data-quarto-table-cell-role="th">33</th>
 <td>3326</td>
 <td>None</td>
 <td>03.1.2</td>
@@ -1626,7 +1626,7 @@ ul.task-list li input[type="checkbox"] {
 <td>0.501</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">2956</th>
+<th data-quarto-table-cell-role="th">34</th>
 <td>2956</td>
 <td>None</td>
 <td>06.4.2.0</td>
@@ -1656,7 +1656,7 @@ ul.task-list li input[type="checkbox"] {
 <li>un seuil plus <strong>bas</strong> envoie plus d’observations au LLM (meilleur rappel sur “baseline fausse”, donc moins d’erreurs manquées), au prix d’un volume, donc d’un coût, plus élevé</li>
 <li>un seuil plus <strong>haut</strong> limite le volume envoyé au LLM (économie), mais laisse passer davantage d’erreurs de baseline non détectées</li>
 </ul>
-<div id="8f26acd3" class="cell" data-execution_count="29">
+<div id="d1dd7bf6" class="cell" data-execution_count="29">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
