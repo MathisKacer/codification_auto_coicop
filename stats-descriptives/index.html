@@ -176,6 +176,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#vue-synthétique-multi-niveaux" id="toc-vue-synthétique-multi-niveaux" class="nav-link active" data-scroll-target="#vue-synthétique-multi-niveaux">Vue synthétique multi-niveaux</a></li>
   <li><a href="#accuracy-par-classifieur-par-division-vérité-terrain" id="toc-accuracy-par-classifieur-par-division-vérité-terrain" class="nav-link" data-scroll-target="#accuracy-par-classifieur-par-division-vérité-terrain">Accuracy par classifieur, par division (vérité terrain)</a></li>
+  <li><a href="#accuracy-du-llm-judge-par-division-vérité-terrain" id="toc-accuracy-du-llm-judge-par-division-vérité-terrain" class="nav-link" data-scroll-target="#accuracy-du-llm-judge-par-division-vérité-terrain">Accuracy du LLM-judge par division (vérité terrain)</a></li>
   <li><a href="#précision-du-llm-judge-par-division-prédite" id="toc-précision-du-llm-judge-par-division-prédite" class="nav-link" data-scroll-target="#précision-du-llm-judge-par-division-prédite">Précision du LLM-judge par division prédite</a></li>
   <li><a href="#confusion-par-division-coicop" id="toc-confusion-par-division-coicop" class="nav-link" data-scroll-target="#confusion-par-division-coicop">Confusion par division COICOP</a></li>
   </ul>
@@ -216,7 +217,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong><a href="../stats-descriptives/trois-contre-un.html">3 contre 1</a></strong> : quand 3 classifieurs s’accordent contre un dissident, la majorité l’emporte-t-elle à raison ?</li>
 <li><strong><a href="../stats-descriptives/seul-correct.html">Un seul classifieur a raison</a></strong> : quels classifieurs apportent une valeur ajoutée dans les cas les plus difficiles (dont le LLM-judge), et dans quelles divisions COICOP ces cas se concentrent-ils ?</li>
 </ul>
-<div id="e2a09b4c" class="cell" data-execution_count="1">
+<div id="1356f5a6" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-stdout">
 <pre><code>[charger_donnees] projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet → shape = (5825, 38)</code></pre>
 </div>
@@ -224,7 +225,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="vue-synthétique-multi-niveaux" class="level2">
 <h2 class="anchored" data-anchor-id="vue-synthétique-multi-niveaux">Vue synthétique multi-niveaux</h2>
 <p>Décomposition, pour chaque niveau de troncature COICOP, de la part des observations en accord correct unanime, faux positif partagé par tous les classifieurs (dont le LLM), faux positif rattrapé par le LLM, ou désaccord.</p>
-<div id="c1c30322" class="cell" data-execution_count="2">
+<div id="20eccb63" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display" data-execution_count="2">
 <div>
 
@@ -307,7 +308,7 @@ ul.task-list li input[type="checkbox"] {
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Niveau 4 — sous-classe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Niveau 3 — classe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Niveau 2 — groupe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href="">Niveau 1 — division</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
-<div id="2370b8f4" class="cell" data-execution_count="3">
+<div id="92045dfa" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy par classifieur, par division (niveau 4)</p>
 </div>
@@ -489,7 +490,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div id="4d5dd83f" class="cell" data-execution_count="4">
+<div id="64e26d2f" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy par classifieur, par division (niveau 3)</p>
 </div>
@@ -671,7 +672,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
-<div id="21409cdc" class="cell" data-execution_count="5">
+<div id="69d30b8c" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy par classifieur, par division (niveau 2)</p>
 </div>
@@ -853,7 +854,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
-<div id="760ab8d2" class="cell" data-execution_count="6">
+<div id="4a43e156" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy par classifieur, par division (niveau 1)</p>
 </div>
@@ -1037,14 +1038,607 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </section>
-<section id="précision-du-llm-judge-par-division-prédite" class="level2">
-<h2 class="anchored" data-anchor-id="précision-du-llm-judge-par-division-prédite">Précision du LLM-judge par division prédite</h2>
-<p>Vue complémentaire de la section précédente : au lieu de partir de la division vraie (rappel), on part ici de la division que le LLM a prédite, et on regarde quelle part de ces prédictions est effectivement correcte (précision). Répond à la question « quand le LLM annonce telle division, a-t-il raison ? ». Le regroupement par ligne (division annoncée par le LLM) est le même dans tous les tableaux ci-dessous ; seul le niveau auquel on juge une prédiction “correcte” change.</p>
+<section id="accuracy-du-llm-judge-par-division-vérité-terrain" class="level2">
+<h2 class="anchored" data-anchor-id="accuracy-du-llm-judge-par-division-vérité-terrain">Accuracy du LLM-judge par division (vérité terrain)</h2>
+<p>Même lecture, mais focalisée sur le LLM-judge seul (indépendamment des autres classifieurs) : accuracy de <code>llm_code</code> contre <code>code</code>, ventilée par division COICOP vraie (rappel), pour chaque niveau de troncature. Comme dans la section précédente, les divisions 98 et 99 sont traitées comme n’importe quelle autre division, sans exclusion.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Niveau 4 — sous-classe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Niveau 3 — classe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Niveau 2 — groupe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-4" role="tab" aria-controls="tabset-2-4" aria-selected="false" href="">Niveau 1 — division</a></li></ul>
 <div class="tab-content">
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
-<div id="a8eeba02" class="cell" data-execution_count="7">
+<div id="b006768f" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy du LLM-judge par division (niveau 4)</p>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Effectif</th>
+<th data-quarto-table-cell-role="th">Corrects</th>
+<th data-quarto-table-cell-role="th">Erreurs</th>
+<th data-quarto-table-cell-role="th">Accuracy</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Division</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">01</th>
+<td>3266</td>
+<td>2794</td>
+<td>472</td>
+<td>85.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">02</th>
+<td>124</td>
+<td>115</td>
+<td>9</td>
+<td>92.7%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">03</th>
+<td>159</td>
+<td>111</td>
+<td>48</td>
+<td>69.8%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">04</th>
+<td>126</td>
+<td>92</td>
+<td>34</td>
+<td>73.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">05</th>
+<td>301</td>
+<td>246</td>
+<td>55</td>
+<td>81.7%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">06</th>
+<td>129</td>
+<td>59</td>
+<td>70</td>
+<td>45.7%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">07</th>
+<td>286</td>
+<td>249</td>
+<td>37</td>
+<td>87.1%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">08</th>
+<td>88</td>
+<td>73</td>
+<td>15</td>
+<td>83.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">09</th>
+<td>398</td>
+<td>345</td>
+<td>53</td>
+<td>86.7%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">10</th>
+<td>9</td>
+<td>6</td>
+<td>3</td>
+<td>66.7%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">11</th>
+<td>323</td>
+<td>266</td>
+<td>57</td>
+<td>82.4%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">12</th>
+<td>76</td>
+<td>62</td>
+<td>14</td>
+<td>81.6%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">13</th>
+<td>251</td>
+<td>234</td>
+<td>17</td>
+<td>93.2%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">98</th>
+<td>209</td>
+<td>54</td>
+<td>155</td>
+<td>25.8%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">99</th>
+<td>80</td>
+<td>62</td>
+<td>18</td>
+<td>77.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">TOTAL</th>
+<td>5825</td>
+<td>4768</td>
+<td>1057</td>
+<td>81.9%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div id="b572cd95" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display">
+<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy du LLM-judge par division (niveau 3)</p>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Effectif</th>
+<th data-quarto-table-cell-role="th">Corrects</th>
+<th data-quarto-table-cell-role="th">Erreurs</th>
+<th data-quarto-table-cell-role="th">Accuracy</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Division</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">01</th>
+<td>3266</td>
+<td>2928</td>
+<td>338</td>
+<td>89.7%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">02</th>
+<td>124</td>
+<td>115</td>
+<td>9</td>
+<td>92.7%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">03</th>
+<td>159</td>
+<td>147</td>
+<td>12</td>
+<td>92.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">04</th>
+<td>126</td>
+<td>95</td>
+<td>31</td>
+<td>75.4%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">05</th>
+<td>301</td>
+<td>255</td>
+<td>46</td>
+<td>84.7%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">06</th>
+<td>129</td>
+<td>93</td>
+<td>36</td>
+<td>72.1%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">07</th>
+<td>286</td>
+<td>271</td>
+<td>15</td>
+<td>94.8%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">08</th>
+<td>88</td>
+<td>73</td>
+<td>15</td>
+<td>83.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">09</th>
+<td>398</td>
+<td>362</td>
+<td>36</td>
+<td>91.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">10</th>
+<td>9</td>
+<td>6</td>
+<td>3</td>
+<td>66.7%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">11</th>
+<td>323</td>
+<td>287</td>
+<td>36</td>
+<td>88.9%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">12</th>
+<td>76</td>
+<td>62</td>
+<td>14</td>
+<td>81.6%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">13</th>
+<td>251</td>
+<td>234</td>
+<td>17</td>
+<td>93.2%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">98</th>
+<td>209</td>
+<td>54</td>
+<td>155</td>
+<td>25.8%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">99</th>
+<td>80</td>
+<td>62</td>
+<td>18</td>
+<td>77.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">TOTAL</th>
+<td>5825</td>
+<td>5044</td>
+<td>781</td>
+<td>86.6%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<div id="4186d3b0" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy du LLM-judge par division (niveau 2)</p>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Effectif</th>
+<th data-quarto-table-cell-role="th">Corrects</th>
+<th data-quarto-table-cell-role="th">Erreurs</th>
+<th data-quarto-table-cell-role="th">Accuracy</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Division</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">01</th>
+<td>3266</td>
+<td>3173</td>
+<td>93</td>
+<td>97.2%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">02</th>
+<td>124</td>
+<td>116</td>
+<td>8</td>
+<td>93.5%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">03</th>
+<td>159</td>
+<td>154</td>
+<td>5</td>
+<td>96.9%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">04</th>
+<td>126</td>
+<td>105</td>
+<td>21</td>
+<td>83.3%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">05</th>
+<td>301</td>
+<td>259</td>
+<td>42</td>
+<td>86.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">06</th>
+<td>129</td>
+<td>125</td>
+<td>4</td>
+<td>96.9%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">07</th>
+<td>286</td>
+<td>281</td>
+<td>5</td>
+<td>98.3%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">08</th>
+<td>88</td>
+<td>85</td>
+<td>3</td>
+<td>96.6%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">09</th>
+<td>398</td>
+<td>368</td>
+<td>30</td>
+<td>92.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">10</th>
+<td>9</td>
+<td>6</td>
+<td>3</td>
+<td>66.7%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">11</th>
+<td>323</td>
+<td>291</td>
+<td>32</td>
+<td>90.1%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">12</th>
+<td>76</td>
+<td>76</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">13</th>
+<td>251</td>
+<td>235</td>
+<td>16</td>
+<td>93.6%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">98</th>
+<td>209</td>
+<td>56</td>
+<td>153</td>
+<td>26.8%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">99</th>
+<td>80</td>
+<td>62</td>
+<td>18</td>
+<td>77.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">TOTAL</th>
+<td>5825</td>
+<td>5392</td>
+<td>433</td>
+<td>92.6%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-2-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-4-tab">
+<div id="5e369b5a" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display">
+<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Accuracy du LLM-judge par division (niveau 1)</p>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Effectif</th>
+<th data-quarto-table-cell-role="th">Corrects</th>
+<th data-quarto-table-cell-role="th">Erreurs</th>
+<th data-quarto-table-cell-role="th">Accuracy</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Division</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">01</th>
+<td>3266</td>
+<td>3200</td>
+<td>66</td>
+<td>98.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">02</th>
+<td>124</td>
+<td>118</td>
+<td>6</td>
+<td>95.2%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">03</th>
+<td>159</td>
+<td>155</td>
+<td>4</td>
+<td>97.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">04</th>
+<td>126</td>
+<td>106</td>
+<td>20</td>
+<td>84.1%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">05</th>
+<td>301</td>
+<td>265</td>
+<td>36</td>
+<td>88.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">06</th>
+<td>129</td>
+<td>127</td>
+<td>2</td>
+<td>98.4%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">07</th>
+<td>286</td>
+<td>281</td>
+<td>5</td>
+<td>98.3%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">08</th>
+<td>88</td>
+<td>87</td>
+<td>1</td>
+<td>98.9%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">09</th>
+<td>398</td>
+<td>373</td>
+<td>25</td>
+<td>93.7%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">10</th>
+<td>9</td>
+<td>7</td>
+<td>2</td>
+<td>77.8%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">11</th>
+<td>323</td>
+<td>291</td>
+<td>32</td>
+<td>90.1%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">12</th>
+<td>76</td>
+<td>76</td>
+<td>0</td>
+<td>100.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">13</th>
+<td>251</td>
+<td>236</td>
+<td>15</td>
+<td>94.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">98</th>
+<td>209</td>
+<td>57</td>
+<td>152</td>
+<td>27.3%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">99</th>
+<td>80</td>
+<td>63</td>
+<td>17</td>
+<td>78.8%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">TOTAL</th>
+<td>5825</td>
+<td>5442</td>
+<td>383</td>
+<td>93.4%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="précision-du-llm-judge-par-division-prédite" class="level2">
+<h2 class="anchored" data-anchor-id="précision-du-llm-judge-par-division-prédite">Précision du LLM-judge par division prédite</h2>
+<p>Vue complémentaire de la section précédente : au lieu de partir de la division vraie (rappel), on part ici de la division que le LLM a prédite, et on regarde quelle part de ces prédictions est effectivement correcte (précision). Répond à la question « quand le LLM annonce telle division, a-t-il raison ? ». Le regroupement par ligne (division annoncée par le LLM) est le même dans tous les tableaux ci-dessous ; seul le niveau auquel on juge une prédiction “correcte” change.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">Niveau 4 — sous-classe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Niveau 3 — classe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-3" role="tab" aria-controls="tabset-3-3" aria-selected="false" href="">Niveau 2 — groupe</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-4" role="tab" aria-controls="tabset-3-4" aria-selected="false" href="">Niveau 1 — division</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div id="c6456dcf" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Précision par division prédite (niveau 4)</p>
 </div>
@@ -1189,8 +1783,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div id="01acc98b" class="cell" data-execution_count="8">
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div id="e624beae" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Précision par division prédite (niveau 3)</p>
 </div>
@@ -1335,8 +1929,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
-<div id="c75b8315" class="cell" data-execution_count="9">
+<div id="tabset-3-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-3-tab">
+<div id="144265b4" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Précision par division prédite (niveau 2)</p>
 </div>
@@ -1481,8 +2075,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="tabset-2-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-4-tab">
-<div id="14ecba30" class="cell" data-execution_count="10">
+<div id="tabset-3-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-4-tab">
+<div id="ee9c3ea9" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Précision par division prédite (niveau 1)</p>
 </div>
@@ -1633,11 +2227,11 @@ ul.task-list li input[type="checkbox"] {
 <section id="confusion-par-division-coicop" class="level2">
 <h2 class="anchored" data-anchor-id="confusion-par-division-coicop">Confusion par division COICOP</h2>
 <p>Les deux tableaux ci-dessus se lisent en fait sur une seule et même matrice de confusion (division vraie × division prédite par le LLM) : une ligne redonne l’accuracy par division vraie (section précédente), une colonne redonne la précision par division prédite. La diagonale concentre les accords ; les cellules hors diagonale montrent où se concentrent les confusions.</p>
-<div id="647ceed5" class="cell" data-execution_count="11">
+<div id="9707e14b" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="index_files/figure-html/cell-12-output-1.png" width="833" height="662" class="figure-img"></p>
+<p><img src="index_files/figure-html/cell-16-output-1.png" width="833" height="662" class="figure-img"></p>
 </figure>
 </div>
 </div>
