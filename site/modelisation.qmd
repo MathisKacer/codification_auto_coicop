@@ -18,6 +18,7 @@ import sys, os
 sys.path.append(os.path.abspath(".."))
 
 import io
+from collections import Counter
 from contextlib import redirect_stdout
 
 import numpy as np
@@ -551,10 +552,6 @@ def categoriser(row):
 
 
 table_annotee["categorie"] = table_annotee.apply(categoriser, axis=1)
-
-table_annotee[[
-    "enseigne", "code_vrai", "code_baseline", "code_mathis", "categorie", "proba_rf",
-]].round(3)
 ```
 
 Pour affiner ces recherches, j'étudie donc les erreurs manqués selon
@@ -614,4 +611,56 @@ fig_interactif.update_layout(
 )
 fig_interactif.show()
 ```
+
+<details>
+<summary>Sur les cas où la baseline a réellement tort, ce qu'elle a suivi
+(majorité ou TTC), et le rôle de RAG-ANN</summary>
+
+Sur les seuls cas où la baseline a réellement tort (catégories **Erreur
+réelle** et **Ambigu** — les erreurs d'annotation et de troncature sont
+écartées puisque la baseline n'y est pour rien), on regarde ce qu'elle a
+concrètement suivi : un vote majoritaire entre les 4 classifieurs, ou TTC en
+tant qu'arbitre (égalité entre plusieurs codes, ou aucun vote possible).
+Quand c'est la majorité, on regarde en plus si RAG-ANN en faisait partie, ou
+s'il était le dissident (et ce qu'il répondait dans ce cas).
+
+```{python}
+votants_tronq = df[cols_base].apply(lambda col: col.map(lambda x: tronquer_niveau(x, niveau=4)))
+
+
+def analyser_mecanisme(idx):
+    votes = [v for v in votants_tronq.loc[idx] if pd.notna(v)]
+    if not votes:
+        return "TTC (aucun vote)", np.nan
+    compteur = Counter(votes)
+    max_count = max(compteur.values())
+    codes_majoritaires = [code for code, n in compteur.items() if n == max_count]
+    if len(codes_majoritaires) > 1:
+        return "TTC (égalité)", np.nan
+    ragann_code_row = votants_tronq.loc[idx, "ragann_code"]
+    ragann_dans_majorite = pd.notna(ragann_code_row) and ragann_code_row == codes_majoritaires[0]
+    return "Majorité", ragann_dans_majorite
+
+
+erreurs_confirmees_idx = table_annotee[
+    table_annotee["categorie"].isin(["Erreur reelle", "Ambigu"])
+].index
+
+mecanisme, ragann_dans_majorite = zip(
+    *[analyser_mecanisme(idx) for idx in erreurs_confirmees_idx]
+)
+
+table_mecanisme = pd.DataFrame({
+    "code_vrai": table_annotee.loc[erreurs_confirmees_idx, "code_vrai"],
+    "code_baseline": table_annotee.loc[erreurs_confirmees_idx, "code_baseline"],
+    "code_mathis": table_annotee.loc[erreurs_confirmees_idx, "code_mathis"],
+    "categorie": table_annotee.loc[erreurs_confirmees_idx, "categorie"],
+    "mecanisme": mecanisme,
+    "ragann_dans_majorite": ragann_dans_majorite,
+    "ragann_code": votants_tronq.loc[erreurs_confirmees_idx, "ragann_code"],
+})
+table_mecanisme
+```
+
+</details>
 
