@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-21">
+<meta name="dcterms.date" content="2026-07-22">
 
 <title>Modélisation – Codification automatique COICOP</title>
 <style>
@@ -74,6 +74,12 @@ ul.task-list li input[type="checkbox"] {
 <script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
 <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+<script>
+window.PlotlyConfig = {MathJaxConfig: 'local'};
+if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}
+</script>
+<script type="module">import "https://cdn.plot.ly/plotly-3.6.0.min"</script>
+
 
 
 </head>
@@ -146,6 +152,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#analyse-des-erreurs-manquées-par-le-modèle" id="toc-analyse-des-erreurs-manquées-par-le-modèle" class="nav-link" data-scroll-target="#analyse-des-erreurs-manquées-par-le-modèle">Analyse des erreurs manquées par le modèle</a></li>
   </ul></li>
   <li><a href="#compromis-précisionrappel" id="toc-compromis-précisionrappel" class="nav-link" data-scroll-target="#compromis-précisionrappel">Compromis précision/rappel</a></li>
+  <li><a href="#réannotation-manuelle-des-cas-manqués" id="toc-réannotation-manuelle-des-cas-manqués" class="nav-link" data-scroll-target="#réannotation-manuelle-des-cas-manqués">Réannotation manuelle des cas manqués</a></li>
   </ul>
 </nav>
     </div>
@@ -166,7 +173,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 21, 2026</p>
+      <p class="date">July 22, 2026</p>
     </div>
   </div>
   
@@ -182,12 +189,12 @@ ul.task-list li input[type="checkbox"] {
 <h2 class="anchored" data-anchor-id="objectif">Objectif</h2>
 <p>Un nouveau classifieur simple a été mis en place, avec comme objectif de compléter le LLM-as-a-judge, voire de la concurrencer. Celui-ci s’appuie sur une idée simple : suivre l’avis majoritaire des classifieurs (cf.&nbsp;<a href="./stats-descriptives/accords-unanimes.html">Accords unanimes des 4 classifieurs</a> et <a href="./stats-descriptives/trois-contre-un.html">3 classifieurs contre 1 dissident</a>) et TorchTextClassifier en cas d’égalité (cf.&nbsp;<a href="./stats-descriptives/seul-correct.html">classifieurs seuls</a>).</p>
 <p>Le but est ensuite d’en étudier les performances, notamment via une Random Forest, afin d’établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l’intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.</p>
-<div id="b3359656" class="cell" data-execution_count="2">
+<div id="001fccb2" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-stdout">
 <pre><code>[charger_donnees] projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet → shape = (5825, 38)</code></pre>
 </div>
 </div>
-<div id="ac95d05c" class="cell" data-execution_count="3">
+<div id="90014d89" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><em>Résultats calculés pour le run : <code>s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet</code>.</em></p>
 </div>
@@ -196,8 +203,8 @@ ul.task-list li input[type="checkbox"] {
 <section id="performance-de-la-baseline" class="level2">
 <h2 class="anchored" data-anchor-id="performance-de-la-baseline">Performance de la baseline</h2>
 <p>Avant d’entraîner un modèle pour détecter ses erreurs, on mesure la performance brute de la baseline (vote majoritaire, TTC arbitre en cas d’égalité), au niveau 4. En comparaison : l’accuracy obtenue en suivant TTC seul permet de chiffrer l’apport du vote majoritaire, et l’accuracy du LLM-judge donne la référence haute (plus coûteuse) à laquelle la baseline est comparée.</p>
-<div id="0f07f156" class="cell" data-execution_count="4">
-<div class="cell-output cell-output-display" data-execution_count="4">
+<div id="ae12671c" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display" data-execution_count="97">
 <div>
 
 
@@ -231,7 +238,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="f4f133b9" class="cell" data-execution_count="5">
+<div id="2f3d71ef" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>Gain du vote majoritaire vs TTC seul : +3.12 points</strong></p>
 <p><strong>Écart baseline vs LLM-judge : -4.46 points</strong></p>
@@ -243,8 +250,8 @@ ul.task-list li input[type="checkbox"] {
 <p>Avant d’entraîner un modèle, on regarde directement ce qui distingue les cas où la baseline trouve le bon code de ceux où elle se trompe, une lecture plus directement interprétable que les importances de features du modèle entraîné plus loin.</p>
 <section id="par-division-coicop" class="level3">
 <h3 class="anchored" data-anchor-id="par-division-coicop">Par division COICOP</h3>
-<div id="59cf4eec" class="cell" data-execution_count="7">
-<div class="cell-output cell-output-display" data-execution_count="7">
+<div id="e2c2d5e7" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display" data-execution_count="100">
 <div>
 
 
@@ -346,8 +353,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="par-niveau-daccord-entre-classifieurs" class="level3">
 <h3 class="anchored" data-anchor-id="par-niveau-daccord-entre-classifieurs">Par niveau d’accord entre classifieurs</h3>
-<div id="22954401" class="cell" data-execution_count="8">
-<div class="cell-output cell-output-display" data-execution_count="8">
+<div id="f16e428a" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="101">
 <div>
 
 
@@ -395,8 +402,8 @@ ul.task-list li input[type="checkbox"] {
 <section id="scores-de-confiance-cas-corrects-vs-incorrects" class="level3">
 <h3 class="anchored" data-anchor-id="scores-de-confiance-cas-corrects-vs-incorrects">Scores de confiance : cas corrects vs incorrects</h3>
 <p>Médiane de chaque score, calculée sur les valeurs brutes (avant imputation des NaN).</p>
-<div id="2a1d346d" class="cell" data-execution_count="9">
-<div class="cell-output cell-output-display" data-execution_count="9">
+<div id="b66193a1" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display" data-execution_count="102">
 <div>
 
 
@@ -524,7 +531,7 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<div id="7a8d0b6e" class="cell" data-execution_count="10">
+<div id="94a5c2f6" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>14 features</strong> (7 catégorielles, 7 numériques) pour <strong>5825 observations</strong>, dont <strong>77.4%</strong> de baseline correcte.</p>
 </div>
@@ -536,14 +543,14 @@ ul.task-list li input[type="checkbox"] {
 <p>Un premier split train/test sert à obtenir des métriques et les importances de features ; la validation croisée donne ensuite une estimation plus robuste, en réentraînant le pipeline complet (encodage compris) sur chaque fold.</p>
 <section id="split-traintest" class="level3">
 <h3 class="anchored" data-anchor-id="split-traintest">Split train/test</h3>
-<div id="c1f09556" class="cell" data-execution_count="11">
+<div id="72e4015b" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Train : <strong>4660</strong> lignes — Test : <strong>1165</strong> lignes (taux de baseline correcte dans le train : 77.4%)</p>
 <p><strong>Accuracy (test)</strong> : 86.0% — <strong>ROC AUC</strong> : 0.946</p>
 </div>
 </div>
-<div id="a2f7e351" class="cell" data-execution_count="12">
-<div class="cell-output cell-output-display" data-execution_count="12">
+<div id="5b05bad5" class="cell" data-execution_count="12">
+<div class="cell-output cell-output-display" data-execution_count="105">
 <div>
 
 
@@ -577,8 +584,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="39d29f98" class="cell" data-execution_count="13">
-<div class="cell-output cell-output-display" data-execution_count="13">
+<div id="7e76b2a0" class="cell" data-execution_count="13">
+<div class="cell-output cell-output-display" data-execution_count="106">
 <div>
 
 
@@ -637,7 +644,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="courbe-roc" class="level3">
 <h3 class="anchored" data-anchor-id="courbe-roc">Courbe ROC</h3>
-<div id="3d59e0e1" class="cell" data-execution_count="14">
+<div id="b9c241db" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -649,8 +656,8 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="importances-des-features" class="level3">
 <h3 class="anchored" data-anchor-id="importances-des-features">Importances des features</h3>
-<div id="7cf1b633" class="cell" data-execution_count="15">
-<div class="cell-output cell-output-display" data-execution_count="15">
+<div id="94c76637" class="cell" data-execution_count="15">
+<div class="cell-output cell-output-display" data-execution_count="108">
 <div>
 
 
@@ -727,13 +734,13 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="validation-croisée-estimation-plus-robuste" class="level3">
 <h3 class="anchored" data-anchor-id="validation-croisée-estimation-plus-robuste">Validation croisée (estimation plus robuste)</h3>
-<div id="f028deaf" class="cell" data-execution_count="16">
+<div id="aba1d72d" class="cell" data-execution_count="16">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>Accuracy</strong> : 84.6% ± 0.6% — <strong>ROC AUC</strong> : 0.935 ± 0.005 (5 folds)</p>
 </div>
 </div>
-<div id="c3ff474b" class="cell" data-execution_count="17">
-<div class="cell-output cell-output-display" data-execution_count="17">
+<div id="f978a1e7" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display" data-execution_count="110">
 <div>
 
 
@@ -772,14 +779,14 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="tuning-des-hyperparamètres">Tuning des hyperparamètres</h3>
 <p>Le RF ci-dessus utilise des hyperparamètres fixés à la main (<code>n_estimators=300</code>, <code>min_samples_leaf=5</code>, <code>class_weight="balanced"</code>). On vérifie ici si un <code>RandomizedSearchCV</code> (60 tirages) trouve mieux. La recherche est faite <strong>uniquement sur le train</strong> (même split que ci-dessus, <code>test_size=0.2</code>, <code>random_state=42</code>) : le score CV pendant la recherche ne sert qu’à choisir les hyperparamètres, l’écart avec le score annoncé plus haut se lit sur le même test set, sans fuite.</p>
 <p>Le scoring optimisé n’est <strong>pas</strong> le ROC AUC (métrique de classement globale, insensible au déséquilibre des classes) mais l’<strong>average precision sur la classe “baseline_fausse”</strong> (aire sous la courbe précision/rappel tracée plus bas) : c’est la classe qui compte opérationnellement, puisqu’une “baseline fausse” non détectée est une erreur silencieuse qui ne part jamais au LLM.</p>
-<div id="00e85bb0" class="cell" data-execution_count="18">
+<div id="863536d3" class="cell" data-execution_count="18">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p><strong>Meilleurs hyperparamètres</strong> : <code>{'rf__class_weight': None, 'rf__max_depth': 20, 'rf__max_features': 'sqrt', 'rf__min_samples_leaf': 1, 'rf__n_estimators': 739}</code></p>
 <p><strong>Score CV (average precision, classe “baseline_fausse”) pendant la recherche</strong> : 0.834</p>
 </div>
 </div>
-<div id="1ca9330c" class="cell" data-execution_count="19">
-<div class="cell-output cell-output-display" data-execution_count="19">
+<div id="348987b7" class="cell" data-execution_count="19">
+<div class="cell-output cell-output-display" data-execution_count="112">
 <div>
 
 
@@ -811,8 +818,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="864800f9" class="cell" data-execution_count="20">
-<div class="cell-output cell-output-display" data-execution_count="20">
+<div id="75f4771b" class="cell" data-execution_count="20">
+<div class="cell-output cell-output-display" data-execution_count="113">
 <div>
 
 
@@ -846,7 +853,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="1d3e01a7" class="cell" data-execution_count="21">
+<div id="efe5bd58" class="cell" data-execution_count="21">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -856,14 +863,14 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <p>L’accuracy et le ROC AUC globaux masquent un effet important sur la classe qui compte réellement pour ce modèle : celle des vraies erreurs de baseline, qu’on cherche à détecter pour décider de l’envoi au LLM-judge.</p>
-<div id="0085ce72" class="cell" data-execution_count="22">
+<div id="85874e8b" class="cell" data-execution_count="22">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Sur les <strong>263</strong> vraies erreurs de baseline du test (seuil par défaut 0.5), le RF par défaut (<code>class_weight='balanced'</code>) en détecte <strong>86.7%</strong> (228/263), contre <strong>66.2%</strong> (174/263) pour le RF tuné (<code>class_weight=None</code>).</p>
 </div>
 </div>
 <p>Optimiser directement l’average precision sur la classe “baseline_fausse” plutôt que le ROC AUC ne change pas la conclusion : le rappel du RF tuné au seuil par défaut (0.5) reste inférieur à celui du RF par défaut. L’average precision est une métrique indépendante du seuil (elle juge le classement sur toute la plage des seuils possibles), donc l’améliorer ne garantit rien sur la performance à un seuil fixe précis — et <code>class_weight=None</code> continue de produire des probabilités tassées vers “correcte”, peu adaptées à un seuil figé à 0.5. <strong>C’est pourquoi le modèle utilisé pour la suite de cette page (section <a href="#compromis-précisionrappel">Compromis précision/rappel</a>) reste le RF par défaut (<code>res</code>), pas le RF tuné : quel que soit le critère d’optimisation essayé, le gain de tuning ne s’est pas montré utilisable pour cet usage.</strong></p>
-<div id="8c4ee0e3" class="cell" data-execution_count="23">
-<div class="cell-output cell-output-display" data-execution_count="23">
+<div id="ea6f79b1" class="cell" data-execution_count="23">
+<div class="cell-output cell-output-display" data-execution_count="116">
 <div>
 
 
@@ -941,13 +948,13 @@ ul.task-list li input[type="checkbox"] {
 <section id="analyse-des-erreurs-manquées-par-le-modèle" class="level3">
 <h3 class="anchored" data-anchor-id="analyse-des-erreurs-manquées-par-le-modèle">Analyse des erreurs manquées par le modèle</h3>
 <p>L’accuracy et les importances de features restent agrégées : elles ne disent rien de ce qui distingue, <em>parmi les vraies erreurs de baseline</em>, celles que le modèle détecte de celles qu’il laisse passer à tort (au seuil par défaut 0.5). C’est cette seconde catégorie, un faux négatif du modèle, qui est la plus coûteuse : la baseline a faux, mais on lui fait confiance sans envoyer au LLM.</p>
-<div id="f6631cc5" class="cell" data-execution_count="24">
+<div id="ca39800d" class="cell" data-execution_count="24">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Sur les <strong>263</strong> erreurs réelles de baseline du test, la RF (seuil 0.5) en <strong>manque 35</strong> : elle leur attribue <code>P(baseline correcte) &gt; 0.5</code> alors que la baseline a bel et bien faux.</p>
 </div>
 </div>
-<div id="8ac96e04" class="cell" data-execution_count="25">
-<div class="cell-output cell-output-display" data-execution_count="25">
+<div id="2655bcfa" class="cell" data-execution_count="25">
+<div class="cell-output cell-output-display" data-execution_count="118">
 <div>
 
 
@@ -1001,8 +1008,8 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="d5f20a16" class="cell" data-execution_count="26">
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div id="ede73648" class="cell" data-execution_count="26">
+<div class="cell-output cell-output-display" data-execution_count="119">
 <div>
 
 
@@ -1120,14 +1127,14 @@ ul.task-list li input[type="checkbox"] {
 </div>
 <section id="détail-des-cas-manqués" class="level4">
 <h4 class="anchored" data-anchor-id="détail-des-cas-manqués">Détail des cas manqués</h4>
-<div id="a0ca59dc" class="cell" data-execution_count="27">
+<div id="6e08faf6" class="cell" data-execution_count="27">
 <div class="cell-output cell-output-display cell-output-markdown">
 <p>Les <strong>35</strong> erreurs manquées elles-mêmes, triées par <code>proba_rf</code> décroissante (les cas où le modèle est le plus confiant à tort en premier).</p>
 </div>
 </div>
 <div style="max-height: 420px; overflow: auto;">
-<div id="10c48cf5" class="cell" data-execution_count="28">
-<div class="cell-output cell-output-display" data-execution_count="28">
+<div id="4e1b5a2d" class="cell" data-execution_count="28">
+<div class="cell-output cell-output-display" data-execution_count="121">
 <div>
 
 
@@ -1656,7 +1663,7 @@ ul.task-list li input[type="checkbox"] {
 <li>un seuil plus <strong>bas</strong> envoie plus d’observations au LLM (meilleur rappel sur “baseline fausse”, donc moins d’erreurs manquées), au prix d’un volume, donc d’un coût, plus élevé</li>
 <li>un seuil plus <strong>haut</strong> limite le volume envoyé au LLM (économie), mais laisse passer davantage d’erreurs de baseline non détectées</li>
 </ul>
-<div id="d1dd7bf6" class="cell" data-execution_count="29">
+<div id="661598e6" class="cell" data-execution_count="29">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -1664,7 +1671,7 @@ ul.task-list li input[type="checkbox"] {
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="29">
+<div class="cell-output cell-output-display" data-execution_count="122">
 <div>
 
 
@@ -1732,6 +1739,396 @@ ul.task-list li input[type="checkbox"] {
 </table>
 
 </div>
+</div>
+</div>
+<p>On a ainsi un nombre d’erreur manqué qui dépend du seuil fixé. Les annotations ayant été faites à la main, il est possible qu’il reste quelques coquilles dans l’annotation (<code>code_vrai</code>). Les erreurs indiquées ici peuvent donc ne pas en être.</p>
+</section>
+<section id="réannotation-manuelle-des-cas-manqués" class="level2">
+<h2 class="anchored" data-anchor-id="réannotation-manuelle-des-cas-manqués">Réannotation manuelle des cas manqués</h2>
+<p>Les 35 cas manqués par la RF au seuil par défaut (0.5, cf.&nbsp;section <a href="#analyse-des-erreurs-manquées-par-le-modèle">Analyse des erreurs manquées par le modèle</a>) ont été réannoté manuellement (par moi-même) pour distinguer une vraie erreur de la baseline d’une fausse (problème d’annotation inital). Quatre catégories en résultent :</p>
+<ul>
+<li><strong>Erreur réelle</strong> : la baseline a bien tort, confirmé par la relecture.</li>
+<li><strong>Ambigu</strong> : la baseline a tort, mais la réponse reste litigieuse (presque acceptable).</li>
+<li><strong>Problème de troncature</strong> : la baseline a raison, la comparaison brute au niveau 4 ne le détecte pas à cause d’un souci de troncature du code.</li>
+<li><strong>Erreur d’annotation</strong> : la baseline a raison, mais le code du jeu de données (<code>code_vrai</code>) semble lui-même erroné.</li>
+</ul>
+<div id="90b507e9" class="cell" data-execution_count="30">
+<div class="cell-output cell-output-display" data-execution_count="123">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">enseigne</th>
+<th data-quarto-table-cell-role="th">code_vrai</th>
+<th data-quarto-table-cell-role="th">code_baseline</th>
+<th data-quarto-table-cell-role="th">code_mathis</th>
+<th data-quarto-table-cell-role="th">categorie</th>
+<th data-quarto-table-cell-role="th">proba_rf</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">ligne</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5505</th>
+<td>Hypermarchés</td>
+<td>04.3.1.1</td>
+<td>05.5.2.1</td>
+<td>05.5.2.1</td>
+<td>Erreur d'annotation</td>
+<td>0.920</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5534</th>
+<td>Magasins maxi-discompte</td>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>01.1.2.3</td>
+<td>Ambigu</td>
+<td>0.872</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2262</th>
+<td>None</td>
+<td>04.3.1.1</td>
+<td>05.6.1.1</td>
+<td>04.3.1.1</td>
+<td>Erreur reelle</td>
+<td>0.861</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5336</th>
+<td>Magasins maxi-discompte</td>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>01.1.2.3</td>
+<td>Ambigu</td>
+<td>0.857</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3990</th>
+<td>Service d’entretien, de réparation ou de locat...</td>
+<td>05.6.2.9</td>
+<td>05.2.1.2</td>
+<td>05.2.1.2</td>
+<td>Erreur d'annotation</td>
+<td>0.839</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5360</th>
+<td>site de drive ou de grande surface alimentaire</td>
+<td>01.1.3.1</td>
+<td>01.1.3.3</td>
+<td>01.1.3.3</td>
+<td>Erreur d'annotation</td>
+<td>0.814</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3086</th>
+<td>Grande surface spécialisée Loisir, Culture et TIC</td>
+<td>09.2.2.2</td>
+<td>09.2.2.1</td>
+<td>09.2.2.2</td>
+<td>Erreur reelle</td>
+<td>0.786</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">525</th>
+<td>Services publics (administrations, établisseme...</td>
+<td>07.4.1</td>
+<td>07.4.1.1</td>
+<td>07.4.1</td>
+<td>Ambigu</td>
+<td>0.726</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4565</th>
+<td>None</td>
+<td>05.3.2</td>
+<td>05.3.2.9</td>
+<td>05.3.2.9</td>
+<td>Erreur d'annotation</td>
+<td>0.722</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">973</th>
+<td>None</td>
+<td>11.1.1</td>
+<td>11.1.1.1</td>
+<td>11.1.1</td>
+<td>Erreur reelle</td>
+<td>0.719</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">592</th>
+<td>None</td>
+<td>01.1.3.3</td>
+<td>01.1.3.4</td>
+<td>01.1.3.4</td>
+<td>Erreur d'annotation</td>
+<td>0.687</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">2307</th>
+<td>Hypermarchés</td>
+<td>01.1.3.3</td>
+<td>01.1.3.4</td>
+<td>01.1.3.4</td>
+<td>Erreur d'annotation</td>
+<td>0.683</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4965</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01</td>
+<td>01.1.1.3</td>
+<td>01</td>
+<td>Erreur reelle</td>
+<td>0.671</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">4718</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.2.2</td>
+<td>01.1.2.5</td>
+<td>98.1</td>
+<td>Ambigu</td>
+<td>0.657</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3496</th>
+<td>Hypermarchés</td>
+<td>01.2.9.0</td>
+<td>01.2.9</td>
+<td>01.2.9</td>
+<td>Probleme de troncature</td>
+<td>0.656</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">2740</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.2.2</td>
+<td>01.1.9.1</td>
+<td>98.1</td>
+<td>Erreur reelle</td>
+<td>0.647</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5117</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.9.1</td>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>Ambigu</td>
+<td>0.645</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">755</th>
+<td>Magasins maxi-discompte</td>
+<td>01.2.5.0</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>Probleme de troncature</td>
+<td>0.634</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">1836</th>
+<td>Hypermarchés</td>
+<td>98.4</td>
+<td>01.1.9.1</td>
+<td>98.1</td>
+<td>Erreur reelle</td>
+<td>0.597</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5157</th>
+<td>None</td>
+<td>01</td>
+<td>13.1.2.0</td>
+<td>01</td>
+<td>Erreur reelle</td>
+<td>0.569</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3147</th>
+<td>None</td>
+<td>01.1.7.5</td>
+<td>01.1.7.9</td>
+<td>01.1.7.9</td>
+<td>Erreur d'annotation</td>
+<td>0.569</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1266</th>
+<td>None</td>
+<td>09.7.1</td>
+<td>99.1</td>
+<td>99.1</td>
+<td>Erreur d'annotation</td>
+<td>0.564</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">1821</th>
+<td>Marché et éventaire, ambulant et tournée SAI (...</td>
+<td>09.7.1</td>
+<td>01.1.9.4</td>
+<td>99.1</td>
+<td>Ambigu</td>
+<td>0.538</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">880</th>
+<td>Hypermarchés</td>
+<td>01.1.9.1</td>
+<td>01.1.1.3</td>
+<td>01.1.9.1</td>
+<td>Erreur reelle</td>
+<td>0.538</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2543</th>
+<td>None</td>
+<td>03</td>
+<td>03.1.2.2</td>
+<td>03.1.2.2</td>
+<td>Erreur d'annotation</td>
+<td>0.535</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">465</th>
+<td>None</td>
+<td>13.1.2.0</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>Probleme de troncature</td>
+<td>0.531</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2918</th>
+<td>Hypermarchés</td>
+<td>01.1.9.1</td>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>Ambigu</td>
+<td>0.522</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">87</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.1.9</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>Erreur d'annotation</td>
+<td>0.517</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">143</th>
+<td>Hypermarchés</td>
+<td>09.3.2.2</td>
+<td>01.1.3.1</td>
+<td>09.3.2.2</td>
+<td>Erreur reelle</td>
+<td>0.514</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">242</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.3</td>
+<td>01.1.3.4</td>
+<td>01.1.3</td>
+<td>Erreur reelle</td>
+<td>0.508</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">566</th>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.1.3</td>
+<td>01.1.7.9</td>
+<td>01.1.7.9</td>
+<td>Erreur d'annotation</td>
+<td>0.505</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3065</th>
+<td>Hypermarchés</td>
+<td>01.2.9.0</td>
+<td>01.2.9</td>
+<td>01.2.9</td>
+<td>Probleme de troncature</td>
+<td>0.504</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3898</th>
+<td>Magasins maxi-discompte</td>
+<td>01.1.9.1</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
+<td>Erreur d'annotation</td>
+<td>0.502</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3326</th>
+<td>None</td>
+<td>03.1.2</td>
+<td>05.6.1.9</td>
+<td>99.1</td>
+<td>Erreur reelle</td>
+<td>0.501</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2956</th>
+<td>None</td>
+<td>06.4.2.0</td>
+<td>06.4.2</td>
+<td>06.4.2</td>
+<td>Probleme de troncature</td>
+<td>0.500</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>pour</p>
+<div id="0c4d6266" class="cell" data-execution_count="31">
+<div class="cell-output cell-output-display">
+<div style="height:525px; width:100%;">            <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script><script>if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}</script>                <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.6.0.min.js" integrity="sha256-QaOVwtVY0T02VaHrr6pnoHLCwayMJp4O5n4YyaE3rJk=" crossorigin="anonymous"></script>                <div id="71ee974d-1a0e-4a8d-b004-bf32e0796289" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("71ee974d-1a0e-4a8d-b004-bf32e0796289")) {                    Plotly.newPlot(                        "71ee974d-1a0e-4a8d-b004-bf32e0796289",                        [{"hoverinfo":"text","hovertext":["1836 : 98.4 (baseline: 01.1.9.1)\u003cbr\u003e5157 : 01 (baseline: 13.1.2.0)\u003cbr\u003e880 : 01.1.9.1 (baseline: 01.1.1.3)\u003cbr\u003e143 : 09.3.2.2 (baseline: 01.1.3.1)\u003cbr\u003e242 : 01.1.3 (baseline: 01.1.3.4)\u003cbr\u003e3326 : 03.1.2 (baseline: 05.6.1.9)","4965 : 01 (baseline: 01.1.1.3)\u003cbr\u003e2740 : 01.1.2.2 (baseline: 01.1.9.1)","3086 : 09.2.2.2 (baseline: 09.2.2.1)\u003cbr\u003e973 : 11.1.1 (baseline: 11.1.1.1)","2262 : 04.3.1.1 (baseline: 05.6.1.1)","aucun cas"],"marker":{"color":"#2a78d6"},"name":"Erreur reelle","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"BgICAQA="},"type":"bar"},{"hoverinfo":"text","hovertext":["1821 : 09.7.1 (baseline: 01.1.9.4)\u003cbr\u003e2918 : 01.1.9.1 (baseline: 01.1.1.5)","4718 : 01.1.2.2 (baseline: 01.1.2.5)\u003cbr\u003e5117 : 01.1.9.1 (baseline: 01.1.1.5)","525 : 07.4.1 (baseline: 07.4.1.1)","5534 : 01.1.2.3 (baseline: 01.1.2.2)\u003cbr\u003e5336 : 01.1.2.3 (baseline: 01.1.2.2)","aucun cas"],"marker":{"color":"#eb6834"},"name":"Ambigu","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AgIBAgA="},"type":"bar"},{"hoverinfo":"text","hovertext":["465 : 13.1.2.0 (baseline: 13.1.2)\u003cbr\u003e3065 : 01.2.9.0 (baseline: 01.2.9)\u003cbr\u003e2956 : 06.4.2.0 (baseline: 06.4.2)","3496 : 01.2.9.0 (baseline: 01.2.9)\u003cbr\u003e755 : 01.2.5.0 (baseline: 01.2.5)","aucun cas","aucun cas","aucun cas"],"marker":{"color":"#1baf7a"},"name":"Probleme de troncature","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AwIAAAA="},"type":"bar"},{"hoverinfo":"text","hovertext":["3147 : 01.1.7.5 (baseline: 01.1.7.9)\u003cbr\u003e1266 : 09.7.1 (baseline: 99.1)\u003cbr\u003e2543 : 03 (baseline: 03.1.2.2)\u003cbr\u003e87 : 01.1.1.9 (baseline: 01.1.1.3)\u003cbr\u003e566 : 01.1.1.3 (baseline: 01.1.7.9)\u003cbr\u003e3898 : 01.1.9.1 (baseline: 01.1.2.2)","592 : 01.1.3.3 (baseline: 01.1.3.4)\u003cbr\u003e2307 : 01.1.3.3 (baseline: 01.1.3.4)","4565 : 05.3.2 (baseline: 05.3.2.9)","3990 : 05.6.2.9 (baseline: 05.2.1.2)\u003cbr\u003e5360 : 01.1.3.1 (baseline: 01.1.3.3)","5505 : 04.3.1.1 (baseline: 05.5.2.1)"],"marker":{"color":"#eda100"},"name":"Erreur d'annotation","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"BgIBAgE="},"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"legend":{"title":{"text":"Categorie"}},"barmode":"stack","title":{"text":"Erreurs manqu\u00e9es par la RF, selon la confiance et la nature du cas"},"xaxis":{"title":{"text":"Tranche de proba_rf (confiance de la RF en la baseline)"}},"yaxis":{"title":{"text":"Nombre de cas"}}},                        {"responsive": true}                    ).then(function(){
+                            
+var gd = document.getElementById('71ee974d-1a0e-4a8d-b004-bf32e0796289');
+var x = new MutationObserver(function (mutations, observer) {{
+        var display = window.getComputedStyle(gd).display;
+        if (!display || display === 'none') {{
+            console.log([gd, 'removed!']);
+            Plotly.purge(gd);
+            observer.disconnect();
+        }}
+}});
+
+// Listen for the removal of the full notebook cells
+var notebookContainer = gd.closest('#notebook-container');
+if (notebookContainer) {{
+    x.observe(notebookContainer, {childList: true});
+}}
+
+// Listen for the clearing of the current output cell
+var outputEl = gd.closest('.output');
+if (outputEl) {{
+    x.observe(outputEl, {childList: true});
+}}
+
+                        })                };            </script>        </div>
 </div>
 </div>
 
