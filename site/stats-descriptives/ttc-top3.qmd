@@ -1,0 +1,183 @@
+---
+title: "Le top-3 de TTC"
+subtitle: "Justesse des rangs 2 et 3, valeur ajoutée du top-3, et cas où TTC a raison seul"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+TTC (TorchTextClassifier) ne fournit pas un seul code mais un **classement de
+ses trois meilleures propositions** (`ttc_code_1`, `ttc_code_2`, `ttc_code_3`),
+chacune avec une confiance. Les autres analyses du site n'utilisent que le
+rang 1 ; cette page regarde ce qu'apportent les rangs 2 et 3, et isole les cas
+où TTC est le seul à trouver le bon code. Toutes les comparaisons sont faites
+au **niveau 4** (sous-classe).
+
+```{python}
+from src.coicop import tronquer_niveau
+
+
+def tr4(col):
+    return df[col].map(lambda x: tronquer_niveau(x, niveau=4))
+
+
+def pct(x):
+    return f"{x:.1%}"
+
+
+vrai = tr4(col_vrai)
+ttc1 = tr4("ttc_code_1")
+ttc2 = tr4("ttc_code_2")
+ttc3 = tr4("ttc_code_3")
+
+c1 = (ttc1 == vrai)
+c2 = (ttc2 == vrai)
+c3 = (ttc3 == vrai)
+top3 = c1 | c2 | c3
+n = len(df)
+```
+
+## Justesse de chaque rang TTC
+
+Part des produits pour lesquels le code d'un rang donné correspond au vrai
+code. La dernière ligne — le vrai code présent **quelque part** dans le top-3 —
+est le plafond que l'on atteindrait en sachant toujours choisir le bon rang.
+
+```{python}
+recap = pd.DataFrame({
+    "Cas": [
+        "Rang 1 correct",
+        "Rang 2 correct",
+        "Rang 3 correct",
+        "Vrai code présent dans le top-3",
+    ],
+    "Effectif": [int(c1.sum()), int(c2.sum()), int(c3.sum()), int(top3.sum())],
+    "% des produits": [pct(c1.mean()), pct(c2.mean()), pct(c3.mean()), pct(top3.mean())],
+})
+recap
+```
+
+```{python}
+display(Markdown(
+    f"Le rang 1 seul est correct dans **{pct(c1.mean())}** des cas, mais le vrai "
+    f"code figure dans le top-3 dans **{pct(top3.mean())}** des cas — soit "
+    f"**{(top3.mean() - c1.mean()) * 100:.1f} points** de couverture "
+    f"supplémentaire dormant dans les rangs 2 et 3. "
+    f"(TTC fournit toujours un rang 2 et un rang 3 : présents dans "
+    f"{pct(ttc2.notna().mean())} et {pct(ttc3.notna().mean())} des cas.)"
+))
+```
+
+## Valeur ajoutée des rangs 2 et 3
+
+La question opérationnelle : quand le rang 1 se trompe, à quelle fréquence le
+vrai code est-il quand même récupérable en rang 2 ou 3 ?
+
+```{python}
+faux1 = ~c1
+n_faux = int(faux1.sum())
+r2 = int((faux1 & c2).sum())
+r3 = int((faux1 & c3).sum())
+r23 = int((faux1 & (c2 | c3)).sum())
+
+resc = pd.DataFrame({
+    "Cas (parmi les produits où le rang 1 a tort)": [
+        "Rang 2 rattrape",
+        "Rang 3 rattrape",
+        "Rang 2 ou 3 rattrape",
+    ],
+    "Effectif": [r2, r3, r23],
+    "% des cas où rang 1 a tort": [pct(r2 / n_faux), pct(r3 / n_faux), pct(r23 / n_faux)],
+    "% de tous les produits": [pct(r2 / n), pct(r3 / n), pct(r23 / n)],
+})
+resc
+```
+
+```{python}
+display(Markdown(
+    f"Sur les **{n_faux}** produits où le rang 1 de TTC se trompe, le vrai code "
+    f"est malgré tout présent en rang 2 ou 3 dans **{r23}** cas "
+    f"(**{pct(r23 / n_faux)}**). C'est le gain potentiel qu'on récupérerait en "
+    f"exploitant le top-3 plutôt que le seul rang 1."
+))
+```
+
+**La confiance discrimine-t-elle les rangs 2/3 corrects ?** Si oui, `ttc_conf_2`
+et `ttc_conf_3` sont des variables utiles pour départager. Confiance médiane
+selon que le rang est correct ou non :
+
+```{python}
+conf_tab = pd.DataFrame({
+    "Rang": ["Rang 2", "Rang 3"],
+    "Conf. médiane si correct": [
+        round(df.loc[c2, "ttc_conf_2"].median(), 3),
+        round(df.loc[c3, "ttc_conf_3"].median(), 3),
+    ],
+    "Conf. médiane si incorrect": [
+        round(df.loc[~c2 & ttc2.notna(), "ttc_conf_2"].median(), 3),
+        round(df.loc[~c3 & ttc3.notna(), "ttc_conf_3"].median(), 3),
+    ],
+})
+conf_tab
+```
+
+## TTC a-t-il raison seul ?
+
+Cas où TTC trouve le bon code alors qu'**aucun** des trois autres classifieurs
+de base (LCS, RAG, RAG-ANN) ne l'a — la contribution propre de TTC, qu'on
+perdrait en le retirant.
+
+```{python}
+lcs = tr4("lcs_code")
+rag = tr4("rag_code")
+ragann = tr4("ragann_code")
+autres_bon = (lcs == vrai) | (rag == vrai) | (ragann == vrai)
+
+ttc1_seul = c1 & ~autres_bon
+ttc_top3_seul = top3 & ~autres_bon
+
+seul = pd.DataFrame({
+    "Cas": [
+        "Rang 1 correct, aucun autre classifieur correct",
+        "Vrai code dans le top-3, aucun autre classifieur correct",
+    ],
+    "Effectif": [int(ttc1_seul.sum()), int(ttc_top3_seul.sum())],
+    "% des produits": [pct(ttc1_seul.mean()), pct(ttc_top3_seul.mean())],
+})
+seul
+```
+
+```{python}
+display(Markdown(
+    f"TTC est seul à trouver le bon code (rang 1) dans **{int(ttc1_seul.sum())}** "
+    f"cas (**{pct(ttc1_seul.mean())}**). En comptant son top-3, il apporte le vrai "
+    f"code qu'aucun autre classifieur n'a proposé dans **{int(ttc_top3_seul.sum())}** "
+    f"cas (**{pct(ttc_top3_seul.mean())}**)."
+))
+```
+
+**Détail des cas où TTC (rang 1) est seul correct**, avec la division COICOP
+(niveau 1) du vrai code. Seuls la ligne et les codes sont exposés (pas le
+libellé brut du produit).
+
+```{python}
+det = pd.DataFrame({
+    "Ligne": df.loc[ttc1_seul, col_ligne].values,
+    "Code vrai": vrai[ttc1_seul].values,
+    "Division": vrai[ttc1_seul].str[:2].values,
+})
+display(HTML(
+    f'<div style="max-height:400px;overflow-y:auto;border:1px solid #ddd;border-radius:6px;">'
+    f'{det.to_html(classes="table table-sm table-striped", index=False)}'
+    f'</div>'
+))
+```
+
+## Pour la modélisation
+
+Ces chiffres motivent directement l'ajout de features dérivées du top-3 de TTC
+(cf. [modélisation](../modelisation.qmd) et le notebook SIRUS) : le rang auquel
+un code candidat apparaît chez TTC (`ttc_rang`) et la confiance associée
+portent un signal réel, puisque le vrai code est présent dans le top-3 bien plus
+souvent qu'en rang 1 seul, et que la confiance des rangs 2/3 sépare les bons des
+mauvais.

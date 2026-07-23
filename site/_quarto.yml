@@ -29,6 +29,7 @@ website:
         - stats-descriptives/accords-unanimes.qmd
         - stats-descriptives/trois-contre-un.qmd
         - stats-descriptives/seul-correct.qmd
+        - stats-descriptives/ttc-top3.qmd
 
 format:
   html:
