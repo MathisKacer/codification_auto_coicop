@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2026-07-27">
 
-<title>Aperçu des données – Codification automatique COICOP</title>
+<title>Profondeur et qualité des codes – Codification automatique COICOP</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -125,7 +125,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../stats-descriptives/apercu-donnees.html">Aperçu des données</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../stats-descriptives/profondeur-codes.html">Profondeur et qualité des codes</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -139,7 +139,7 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../stats-descriptives/apercu-donnees.html" class="sidebar-item-text sidebar-link active">
+  <a href="../stats-descriptives/apercu-donnees.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Aperçu des données</span></a>
   </div>
 </li>
@@ -175,7 +175,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../stats-descriptives/profondeur-codes.html" class="sidebar-item-text sidebar-link">
+  <a href="../stats-descriptives/profondeur-codes.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Profondeur et qualité des codes</span></a>
   </div>
 </li>
@@ -195,9 +195,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#jeu-de-données" id="toc-jeu-de-données" class="nav-link active" data-scroll-target="#jeu-de-données">Jeu de données</a></li>
-  <li><a href="#aperçu-des-premières-lignes" id="toc-aperçu-des-premières-lignes" class="nav-link" data-scroll-target="#aperçu-des-premières-lignes">Aperçu des premières lignes</a></li>
-  <li><a href="#répartition-par-division-coicop-niveau-1-vrai-code" id="toc-répartition-par-division-coicop-niveau-1-vrai-code" class="nav-link" data-scroll-target="#répartition-par-division-coicop-niveau-1-vrai-code">Répartition par division COICOP (niveau 1, vrai code)</a></li>
+  <li><a href="#profondeur-réelle-des-codes-par-classifieur" id="toc-profondeur-réelle-des-codes-par-classifieur" class="nav-link active" data-scroll-target="#profondeur-réelle-des-codes-par-classifieur">Profondeur réelle des codes, par classifieur</a></li>
+  <li><a href="#codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4" id="toc-codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4" class="nav-link" data-scroll-target="#codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4">Codes incomplets, complets ou sur-précis par rapport au niveau 4</a></li>
+  <li><a href="#codes-absents-et-indicateurs-de-codabilité" id="toc-codes-absents-et-indicateurs-de-codabilité" class="nav-link" data-scroll-target="#codes-absents-et-indicateurs-de-codabilité">Codes absents et indicateurs de codabilité</a></li>
+  <li><a href="#divisions-spéciales-98-99-par-classifieur" id="toc-divisions-spéciales-98-99-par-classifieur" class="nav-link" data-scroll-target="#divisions-spéciales-98-99-par-classifieur">Divisions spéciales (98 / 99) par classifieur</a></li>
   </ul>
 </nav>
     </div>
@@ -206,8 +207,8 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Aperçu des données</h1>
-<p class="subtitle lead">Jeu de données utilisé et statistiques descriptives de base</p>
+<h1 class="title">Profondeur et qualité des codes</h1>
+<p class="subtitle lead">Codes incomplets, sur-précis ou absents, par classifieur</p>
 </div>
 
 
@@ -230,25 +231,21 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div id="8ec96e0d" class="cell" data-execution_count="1">
+<div id="5d6e070a" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-stdout">
 <pre><code>[charger_donnees] projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet → shape = (5825, 38)</code></pre>
 </div>
 </div>
-<section id="jeu-de-données" class="level2">
-<h2 class="anchored" data-anchor-id="jeu-de-données">Jeu de données</h2>
-<div id="c371aad2" class="cell" data-execution_count="2">
-<div class="cell-output cell-output-display cell-output-markdown">
-<p><strong>5825 observations</strong> — classifieurs de base : <code>lcs_code, rag_code, ragann_code, ttc_code_1</code> — LLM-judge : <code>llm_code</code></p>
-</div>
-<div class="cell-output cell-output-display cell-output-markdown">
-<p>Source : <code>s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet</code></p>
-</div>
-</div>
-</section>
-<section id="aperçu-des-premières-lignes" class="level2">
-<h2 class="anchored" data-anchor-id="aperçu-des-premières-lignes">Aperçu des premières lignes</h2>
-<div id="30e12205" class="cell" data-execution_count="3">
+<p>Un code COICOP est hiérarchique (convention du projet : niveau N = N+1 chiffres significatifs, format <code>XX.X.X.X</code> au niveau 4). Les analyses du site comparent toujours les classifieurs à la vérité terrain <strong>au niveau 4</strong> (<code>tronquer_niveau(..., niveau=4)</code>), qui ne fait que raccourcir un code, jamais le rallonger. Un classifieur peut donc être pénalisé de deux façons différentes d’une simple erreur de contenu :</p>
+<ul>
+<li>il répond avec <strong>moins</strong> de segments que le niveau 4 (code incomplet) — la comparaison stricte le compte comme faux même s’il n’a rien affirmé d’incorrect sur les segments fournis ;</li>
+<li>il répond avec <strong>plus</strong> de segments (sur-précis) — sans incidence sur la comparaison (le surplus est tronqué), mais ça peut signaler un changement de comportement du classifieur.</li>
+</ul>
+<p>Cette page fait un état des lieux : profondeur réelle de chaque classifieur, et autres cas particuliers (codes absents, divisions spéciales 98/99).</p>
+<section id="profondeur-réelle-des-codes-par-classifieur" class="level2">
+<h2 class="anchored" data-anchor-id="profondeur-réelle-des-codes-par-classifieur">Profondeur réelle des codes, par classifieur</h2>
+<p>Répartition de la profondeur effective de chaque code (avant toute troncature), en part du total des observations. <code>code</code> est la vérité terrain ; les autres colonnes sont les classifieurs (<code>ttc_code_2</code> et <code>ttc_code_3</code> sont les rangs 2 et 3 de TTC, cf.&nbsp;<a href="../stats-descriptives/ttc-top3.html">le top-3 de TTC</a>).</p>
+<div id="5e8661a3" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display" data-execution_count="3">
 <div>
 
@@ -257,15 +254,17 @@ ul.task-list li input[type="checkbox"] {
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">code</th>
-<th data-quarto-table-cell-role="th">lcs_code</th>
-<th data-quarto-table-cell-role="th">rag_code</th>
-<th data-quarto-table-cell-role="th">ragann_code</th>
-<th data-quarto-table-cell-role="th">ttc_code_1</th>
-<th data-quarto-table-cell-role="th">llm_code</th>
+<th data-quarto-table-cell-role="th">Effectif</th>
+<th data-quarto-table-cell-role="th">% absent</th>
+<th data-quarto-table-cell-role="th">% profondeur 1</th>
+<th data-quarto-table-cell-role="th">% profondeur 2</th>
+<th data-quarto-table-cell-role="th">% profondeur 3</th>
+<th data-quarto-table-cell-role="th">% profondeur 4</th>
+<th data-quarto-table-cell-role="th">% profondeur 5+</th>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">ligne</th>
+<th data-quarto-table-cell-role="th">Classifieur</th>
+<th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th"></th>
 <th data-quarto-table-cell-role="th"></th>
@@ -276,49 +275,84 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">0</th>
-<td>07.4.1.1</td>
-<td>07.4.1.1</td>
-<td>None</td>
-<td>07.4.1.1</td>
-<td>07.4.1.1</td>
-<td>07.4.1.1</td>
+<th data-quarto-table-cell-role="th">code</th>
+<td>5825</td>
+<td>0.0%</td>
+<td>0.2%</td>
+<td>4.5%</td>
+<td>6.0%</td>
+<td>32.1%</td>
+<td>57.1%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">1</th>
-<td>01.1.4.8.1</td>
-<td>01.1.4.8.1</td>
-<td>01.1.4.8</td>
-<td>01.1.4.8</td>
-<td>01.1.4.8</td>
-<td>01.1.4.8.1</td>
+<th data-quarto-table-cell-role="th">LCS</th>
+<td>5825</td>
+<td>0.6%</td>
+<td>0.0%</td>
+<td>1.4%</td>
+<td>1.7%</td>
+<td>32.4%</td>
+<td>63.9%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">2</th>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-<td>None</td>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
+<th data-quarto-table-cell-role="th">RAG</th>
+<td>5825</td>
+<td>13.0%</td>
+<td>2.0%</td>
+<td>3.4%</td>
+<td>15.4%</td>
+<td>66.2%</td>
+<td>0.0%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">3</th>
-<td>09.7.1</td>
-<td>09.7.1</td>
-<td>09.7.1.9</td>
-<td>09.7.1</td>
-<td>09.7.4.0</td>
-<td>09.7.1</td>
+<th data-quarto-table-cell-role="th">RAG-ANN</th>
+<td>5825</td>
+<td>0.4%</td>
+<td>0.2%</td>
+<td>4.0%</td>
+<td>19.3%</td>
+<td>76.2%</td>
+<td>0.0%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">4</th>
-<td>01.1.6.4.1</td>
-<td>01.1.9.1.1</td>
-<td>01.1.6.4</td>
-<td>01.1.6.4</td>
-<td>01.1.6.4</td>
-<td>01.1.6.4.1</td>
+<th data-quarto-table-cell-role="th">TTC</th>
+<td>5825</td>
+<td>0.0%</td>
+<td>0.0%</td>
+<td>1.8%</td>
+<td>0.7%</td>
+<td>97.5%</td>
+<td>0.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">ttc_code_2</th>
+<td>5825</td>
+<td>0.0%</td>
+<td>0.0%</td>
+<td>1.6%</td>
+<td>1.0%</td>
+<td>97.4%</td>
+<td>0.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">ttc_code_3</th>
+<td>5825</td>
+<td>0.0%</td>
+<td>0.0%</td>
+<td>1.5%</td>
+<td>1.0%</td>
+<td>97.5%</td>
+<td>0.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">LLM-judge</th>
+<td>5825</td>
+<td>0.2%</td>
+<td>0.1%</td>
+<td>2.3%</td>
+<td>2.3%</td>
+<td>36.3%</td>
+<td>58.8%</td>
 </tr>
 </tbody>
 </table>
@@ -327,9 +361,9 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </section>
-<section id="répartition-par-division-coicop-niveau-1-vrai-code" class="level2">
-<h2 class="anchored" data-anchor-id="répartition-par-division-coicop-niveau-1-vrai-code">Répartition par division COICOP (niveau 1, vrai code)</h2>
-<div id="624ec36a" class="cell" data-execution_count="4">
+<section id="codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4" class="level2">
+<h2 class="anchored" data-anchor-id="codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4">Codes incomplets, complets ou sur-précis par rapport au niveau 4</h2>
+<div id="e3e3b677" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
 
@@ -338,101 +372,245 @@ ul.task-list li input[type="checkbox"] {
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">division</th>
-<th data-quarto-table-cell-role="th">n</th>
-<th data-quarto-table-cell-role="th">%</th>
+<th data-quarto-table-cell-role="th">% absent</th>
+<th data-quarto-table-cell-role="th">% incomplet (&lt; niveau 4)</th>
+<th data-quarto-table-cell-role="th">% complet (niveau 4)</th>
+<th data-quarto-table-cell-role="th">% sur-précis (&gt; niveau 4)</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Classifieur</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">0</th>
-<td>01</td>
-<td>3266</td>
-<td>56.1</td>
+<th data-quarto-table-cell-role="th">code</th>
+<td>0.0%</td>
+<td>10.7%</td>
+<td>32.1%</td>
+<td>57.1%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">1</th>
-<td>02</td>
-<td>124</td>
-<td>2.1</td>
+<th data-quarto-table-cell-role="th">LCS</th>
+<td>0.6%</td>
+<td>3.1%</td>
+<td>32.4%</td>
+<td>63.9%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">2</th>
-<td>03</td>
-<td>159</td>
-<td>2.7</td>
+<th data-quarto-table-cell-role="th">RAG</th>
+<td>13.0%</td>
+<td>20.8%</td>
+<td>66.2%</td>
+<td>0.0%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">3</th>
-<td>04</td>
-<td>126</td>
-<td>2.2</td>
+<th data-quarto-table-cell-role="th">RAG-ANN</th>
+<td>0.4%</td>
+<td>23.4%</td>
+<td>76.2%</td>
+<td>0.0%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">4</th>
-<td>05</td>
-<td>301</td>
-<td>5.2</td>
+<th data-quarto-table-cell-role="th">TTC</th>
+<td>0.0%</td>
+<td>2.5%</td>
+<td>97.5%</td>
+<td>0.0%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">5</th>
-<td>06</td>
-<td>129</td>
-<td>2.2</td>
+<th data-quarto-table-cell-role="th">ttc_code_2</th>
+<td>0.0%</td>
+<td>2.6%</td>
+<td>97.4%</td>
+<td>0.0%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">6</th>
-<td>07</td>
-<td>286</td>
-<td>4.9</td>
+<th data-quarto-table-cell-role="th">ttc_code_3</th>
+<td>0.0%</td>
+<td>2.5%</td>
+<td>97.5%</td>
+<td>0.0%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">7</th>
-<td>08</td>
-<td>88</td>
-<td>1.5</td>
+<th data-quarto-table-cell-role="th">LLM-judge</th>
+<td>0.2%</td>
+<td>4.7%</td>
+<td>36.3%</td>
+<td>58.8%</td>
 </tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">8</th>
-<td>09</td>
-<td>398</td>
-<td>6.8</td>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="b26ead9c" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display cell-output-markdown">
+<p>Un code <strong>incomplet</strong> (moins de 4 segments) n’est pas forcément une erreur de fond : si le 4e segment de la vérité vaut <code>0</code> (convention COICOP “pas de sous-classe plus précise”), le classifieur n’a rien affirmé d’incorrect en s’arrêtant avant — voir <a href="../modelisation.html">modélisation</a> pour la mesure d’accuracy qui en tient compte.</p>
+</div>
+</div>
+</section>
+<section id="codes-absents-et-indicateurs-de-codabilité" class="level2">
+<h2 class="anchored" data-anchor-id="codes-absents-et-indicateurs-de-codabilité">Codes absents et indicateurs de codabilité</h2>
+<p>Au-delà de la profondeur, un classifieur peut ne renvoyer aucun code (<code>NaN</code>), ou exposer son propre indicateur booléen de codabilité.</p>
+<div id="d8536936" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display">
+<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Codes absents (NaN), par classifieur</p>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">% absent</th>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">9</th>
-<td>10</td>
-<td>9</td>
-<td>0.2</td>
+<th data-quarto-table-cell-role="th">Classifieur</th>
+<th data-quarto-table-cell-role="th"></th>
 </tr>
+</thead>
+<tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">10</th>
-<td>11</td>
-<td>323</td>
-<td>5.5</td>
+<th data-quarto-table-cell-role="th">code</th>
+<td>0.0%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">11</th>
-<td>12</td>
-<td>76</td>
-<td>1.3</td>
+<th data-quarto-table-cell-role="th">LCS</th>
+<td>0.6%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">12</th>
-<td>13</td>
-<td>251</td>
-<td>4.3</td>
+<th data-quarto-table-cell-role="th">RAG</th>
+<td>13.0%</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">13</th>
-<td>98</td>
-<td>209</td>
-<td>3.6</td>
+<th data-quarto-table-cell-role="th">RAG-ANN</th>
+<td>0.4%</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">14</th>
-<td>99</td>
-<td>80</td>
-<td>1.4</td>
+<th data-quarto-table-cell-role="th">TTC</th>
+<td>0.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">ttc_code_2</th>
+<td>0.0%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">ttc_code_3</th>
+<td>0.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">LLM-judge</th>
+<td>0.2%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="d2068981" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Indicateurs de codabilité dédiés</p>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">% non codable</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Classifieur</th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Codable (indicateur générique)</th>
+<td>19.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">RAG-ANN</th>
+<td>0.4%</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="divisions-spéciales-98-99-par-classifieur" class="level2">
+<h2 class="anchored" data-anchor-id="divisions-spéciales-98-99-par-classifieur">Divisions spéciales (98 / 99) par classifieur</h2>
+<p>Rappel : la division <code>98</code> signale un produit indéterminé/illisible, <code>99</code> un cas hors COICOP (dons, impôts, opérations bancaires…). Part des prédictions de chaque classifieur tombant dans l’une de ces deux divisions, comparée à la vérité terrain.</p>
+<div id="02255731" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">% division 98</th>
+<th data-quarto-table-cell-role="th">% division 99</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Classifieur</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">code</th>
+<td>3.6%</td>
+<td>1.4%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">LCS</th>
+<td>0.1%</td>
+<td>1.3%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">RAG</th>
+<td>0.0%</td>
+<td>0.0%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">RAG-ANN</th>
+<td>3.2%</td>
+<td>1.3%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">TTC</th>
+<td>1.2%</td>
+<td>1.3%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">ttc_code_2</th>
+<td>2.1%</td>
+<td>0.6%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">ttc_code_3</th>
+<td>2.1%</td>
+<td>0.5%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">LLM-judge</th>
+<td>1.1%</td>
+<td>1.2%</td>
 </tr>
 </tbody>
 </table>
