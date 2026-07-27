@@ -126,4 +126,51 @@ for name, df in [("ancien", df_ancien), ("nouveau", df_nouveau)]:
         })
 pd.DataFrame(lignes_plafond)
 
+# %% [markdown]
+# ## 5. Convention COICOP : "0" en 4e position = pas de sous-classe plus précise
+#
+# Un classifieur qui s'arrête avant le niveau 4 alors que le 4e segment de la
+# vérité vaut "0" (ex. `01.2.1` vs vérité `01.2.1.0.1`, tronquée à
+# `01.2.1.0`) n'est pas réellement en tort : "0" signifie "pas de sous-classe
+# plus précise", donc la comparaison doit se faire au niveau 3 dans ce cas
+# précis (le classifieur n'a rien affirmé de faux, il n'a juste pas ajouté un
+# 4e segment qui n'aurait de toute façon rien apporté).
+
+# %%
+def a_raison_convention_zero(code_classifieur, code_verite, niveau_max=4):
+    if pd.isna(code_classifieur) or pd.isna(code_verite):
+        return False
+    vrai_tr = tronquer_niveau(code_verite, niveau_max)
+    pred_tr = tronquer_niveau(code_classifieur, niveau_max)
+    if pred_tr == vrai_tr:
+        return True
+    segments_vrai = vrai_tr.split(".")
+    if (
+        len(segments_vrai) >= niveau_max
+        and segments_vrai[niveau_max - 1] == "0"
+        and niveau_atteint(code_classifieur) < niveau_max
+    ):
+        return tronquer_niveau(code_classifieur, niveau_max - 1) == tronquer_niveau(code_verite, niveau_max - 1)
+    return False
+
+
+lignes_zero = []
+for name, df in [("ancien", df_ancien), ("nouveau", df_nouveau)]:
+    for c in cols_base:
+        vrai_tronq = df[col_vrai].map(lambda x: tronquer_niveau(x, niveau=4))
+        pred_tronq = df[c].map(lambda x: tronquer_niveau(x, niveau=4))
+        acc_naive = (pred_tronq == vrai_tronq).mean()
+        correct_zero = df.apply(lambda row, c=c: a_raison_convention_zero(row[c], row[col_vrai], niveau_max=4), axis=1)
+        acc_zero = correct_zero.mean()
+        n_recupere = int((correct_zero & (pred_tronq != vrai_tronq)).sum())
+        lignes_zero.append({
+            "run": name, "classifieur": c,
+            "accuracy_naive": round(acc_naive, 3), "accuracy_convention_zero": round(acc_zero, 3),
+            "ecart_pts": round((acc_zero - acc_naive) * 100, 1), "n_recupere": n_recupere,
+        })
+recap_zero = pd.DataFrame(lignes_zero).pivot(index="classifieur", columns="run", values=["accuracy_naive", "accuracy_convention_zero"])
+recap_zero["ecart_naive_pts"] = (recap_zero[("accuracy_naive", "nouveau")] - recap_zero[("accuracy_naive", "ancien")]) * 100
+recap_zero["ecart_convention_zero_pts"] = (recap_zero[("accuracy_convention_zero", "nouveau")] - recap_zero[("accuracy_convention_zero", "ancien")]) * 100
+recap_zero
+
 # %%

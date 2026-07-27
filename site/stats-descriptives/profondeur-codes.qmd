@@ -1,0 +1,142 @@
+---
+title: "Profondeur et qualité des codes"
+subtitle: "Codes incomplets, sur-précis ou absents, par classifieur"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+Un code COICOP est hiérarchique (convention du projet : niveau N = N+1
+chiffres significatifs, format `XX.X.X.X` au niveau 4). Les analyses du site
+comparent toujours les classifieurs à la vérité terrain **au niveau 4**
+(`tronquer_niveau(..., niveau=4)`), qui ne fait que raccourcir un code, jamais
+le rallonger. Un classifieur peut donc être pénalisé de deux façons
+différentes d'une simple erreur de contenu :
+
+- il répond avec **moins** de segments que le niveau 4 (code incomplet) —
+  la comparaison stricte le compte comme faux même s'il n'a rien affirmé
+  d'incorrect sur les segments fournis ;
+- il répond avec **plus** de segments (sur-précis) — sans incidence sur la
+  comparaison (le surplus est tronqué), mais ça peut signaler un
+  changement de comportement du classifieur.
+
+Cette page fait un état des lieux : profondeur réelle de chaque
+classifieur, et autres cas particuliers (codes absents, divisions
+spéciales 98/99).
+
+```{python}
+from src.coicop import niveau_atteint
+
+cols_codes = [col_vrai, *cols_base, "ttc_code_2", "ttc_code_3", col_llm]
+cols_codes = [c for c in cols_codes if c in df.columns]
+
+
+def stats_profondeur(df, colonnes):
+    n_total = len(df)
+    lignes = []
+    for c in colonnes:
+        non_na = df[c].dropna()
+        sentinelles = non_na.isin(["AUCUNE_SUGGESTION", "NON_CODABLE"])
+        codes_reels = non_na[~sentinelles]
+        prof = codes_reels.map(niveau_atteint)
+        lignes.append({
+            "classifieur": c,
+            "n": n_total,
+            "pct_absent": df[c].isna().sum() / n_total,
+            "pct_profondeur_1": (prof == 1).sum() / n_total,
+            "pct_profondeur_2": (prof == 2).sum() / n_total,
+            "pct_profondeur_3": (prof == 3).sum() / n_total,
+            "pct_profondeur_4": (prof == 4).sum() / n_total,
+            "pct_profondeur_5_plus": (prof >= 5).sum() / n_total,
+        })
+    out = pd.DataFrame(lignes).set_index("classifieur")
+    out.index = out.index.map(lambda c: LIBELLES_CLASSIFIEURS.get(c, c))
+    out.index.name = "classifieur"
+    return out
+
+
+recap_profondeur = stats_profondeur(df, cols_codes)
+```
+
+## Profondeur réelle des codes, par classifieur
+
+Répartition de la profondeur effective de chaque code (avant toute
+troncature), en part du total des observations. `code` est la vérité
+terrain ; les autres colonnes sont les classifieurs (`ttc_code_2` et
+`ttc_code_3` sont les rangs 2 et 3 de TTC, cf. [le top-3 de TTC](ttc-top3.qmd)).
+
+```{python}
+joli(recap_profondeur.round(4))
+```
+
+## Codes incomplets, complets ou sur-précis par rapport au niveau 4
+
+```{python}
+recap_synthese = pd.DataFrame({
+    "pct_absent": recap_profondeur["pct_absent"],
+    "pct_incomplet": recap_profondeur[["pct_profondeur_1", "pct_profondeur_2", "pct_profondeur_3"]].sum(axis=1),
+    "pct_complet_niveau_4": recap_profondeur["pct_profondeur_4"],
+    "pct_sur_precis": recap_profondeur["pct_profondeur_5_plus"],
+})
+joli(recap_synthese.round(4))
+```
+
+```{python}
+display(Markdown(
+    "Un code **incomplet** (moins de 4 segments) n'est pas forcément une "
+    "erreur de fond : si le 4e segment de la vérité vaut `0` (convention "
+    "COICOP \"pas de sous-classe plus précise\"), le classifieur n'a rien "
+    "affirmé d'incorrect en s'arrêtant avant — voir "
+    "[modélisation](../modelisation.qmd) pour la mesure d'accuracy qui en "
+    "tient compte."
+))
+```
+
+## Codes absents et indicateurs de codabilité
+
+Au-delà de la profondeur, un classifieur peut ne renvoyer aucun code
+(`NaN`), ou exposer son propre indicateur booléen de codabilité.
+
+```{python}
+titre("Codes absents (NaN), par classifieur")
+joli(recap_profondeur[["pct_absent"]].round(4))
+```
+
+```{python}
+LIBELLES_CODABLE = {"codable": "Codable (indicateur générique)", "ragann_codable": "RAG-ANN"}
+
+cols_codable = [c for c in ["codable", "ragann_codable"] if c in df.columns]
+if cols_codable:
+    recap_codable = pd.DataFrame({
+        "pct_non_codable": [(~df[c]).sum() / len(df) for c in cols_codable],
+    }, index=[LIBELLES_CODABLE[c] for c in cols_codable])
+    recap_codable.index.name = "classifieur"
+    titre("Indicateurs de codabilité dédiés")
+    display(joli(recap_codable.round(4)))
+```
+
+## Divisions spéciales (98 / 99) par classifieur
+
+Rappel : la division `98` signale un produit indéterminé/illisible, `99`
+un cas hors COICOP (dons, impôts, opérations bancaires...). Part des
+prédictions de chaque classifieur tombant dans l'une de ces deux
+divisions, comparée à la vérité terrain.
+
+```{python}
+def pct_divisions_speciales(df, colonnes):
+    lignes = []
+    for c in colonnes:
+        div = df[c].astype(str).str[:2]
+        lignes.append({
+            "classifieur": c,
+            "pct_div_98": (div == "98").sum() / len(df),
+            "pct_div_99": (div == "99").sum() / len(df),
+        })
+    out = pd.DataFrame(lignes).set_index("classifieur")
+    out.index = out.index.map(lambda c: LIBELLES_CLASSIFIEURS.get(c, c))
+    out.index.name = "classifieur"
+    return out
+
+
+joli(pct_divisions_speciales(df, cols_codes).round(4))
+```

@@ -1,0 +1,127 @@
+---
+title: "Calibration des scores de confiance"
+subtitle: "Part de bonnes réponses selon la confiance, par classifieur"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+Chaque classifieur expose son propre score de confiance (`lcs_distance`,
+`rag_confidence`, `ragann_confidence`, `ttc_conf_1`, `llm_confiance`). Cette
+page vérifie s'il est bien **calibré** : est-ce qu'une confiance plus élevée
+correspond réellement à une part plus grande de bonnes réponses ? C'est la
+question centrale avant d'utiliser un seuil de confiance pour décider quand
+faire confiance à un classifieur et quand escalader (reprise manuelle ou
+LLM-judge) — cf. le
+[compromis précision/rappel](../modelisation.qmd#compromis-précisionrappel)
+déjà utilisé pour la Random Forest.
+
+```{python}
+from src.coicop import tronquer_niveau
+import plotly.graph_objects as go
+
+
+def stats_calibration(df, col_confiance, col_pred, col_vrai, bornes, niveau=4):
+    """Part de predictions correctes (niveau 4), par tranche de confiance."""
+    vrai_tronq = df[col_vrai].map(lambda x: tronquer_niveau(x, niveau=niveau))
+    pred_tronq = df[col_pred].map(lambda x: tronquer_niveau(x, niveau=niveau))
+    correct = pred_tronq == vrai_tronq
+    tranche = pd.cut(df[col_confiance], bins=bornes, include_lowest=True)
+    recap = pd.DataFrame({"correct": correct, "tranche": tranche}).groupby(
+        "tranche", observed=True
+    ).agg(n=("correct", "count"), pct_correct_confiance=("correct", "mean"))
+    return recap
+
+
+def graphique_calibration(recap, titre_graphique):
+    fig = go.Figure()
+    fig.add_bar(
+        x=[str(i) for i in recap.index], y=recap["pct_correct_confiance"],
+        text=[f"n={n}" for n in recap["n"]], textposition="outside",
+        marker_color="#2a78d6",
+    )
+    fig.update_layout(
+        title=titre_graphique,
+        yaxis_title="% correct (niveau 4)", yaxis_tickformat=".0%", yaxis_range=[0, 1.05],
+        xaxis_title="Tranche de confiance",
+    )
+    fig.show()
+```
+
+## Calibration par classifieur
+
+::: {.panel-tabset}
+
+### LCS
+
+`lcs_distance` est une distance : **plus petit = plus proche, donc plus
+confiant**. Les tranches sont donc lues dans l'ordre inverse des autres
+classifieurs.
+
+```{python}
+recap_lcs = stats_calibration(
+    df, "lcs_distance", "lcs_code", col_vrai,
+    bornes=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+)
+display(joli(recap_lcs.round(3)))
+graphique_calibration(recap_lcs, "LCS : % correct par tranche de distance (plus petit = plus proche)")
+```
+
+### RAG
+
+```{python}
+recap_rag = stats_calibration(
+    df, "rag_confidence", "rag_code", col_vrai,
+    bornes=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
+)
+display(joli(recap_rag.round(3)))
+graphique_calibration(recap_rag, "RAG : % correct par tranche de confiance")
+```
+
+### RAG-ANN
+
+```{python}
+recap_ragann = stats_calibration(
+    df, "ragann_confidence", "ragann_code", col_vrai,
+    bornes=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
+)
+display(joli(recap_ragann.round(3)))
+graphique_calibration(recap_ragann, "RAG-ANN : % correct par tranche de confiance")
+```
+
+### TTC
+
+Rang 1 uniquement — voir [le top-3 de TTC](ttc-top3.qmd) pour les rangs 2 et 3.
+
+```{python}
+recap_ttc = stats_calibration(
+    df, "ttc_conf_1", "ttc_code_1", col_vrai,
+    bornes=[0, 0.2, 0.4, 0.6, 0.8, 1.0],
+)
+display(joli(recap_ttc.round(3)))
+graphique_calibration(recap_ttc, "TTC (rang 1) : % correct par tranche de confiance")
+```
+
+### LLM-judge
+
+`llm_confiance` est une échelle discrète 1 à 5 (pas une probabilité continue).
+
+```{python}
+recap_llm = stats_calibration(
+    df, "llm_confiance", col_llm, col_vrai,
+    bornes=[0.5, 1.5, 2.5, 3.5, 4.5, 5.5],
+)
+display(joli(recap_llm.round(3)))
+graphique_calibration(recap_llm, "LLM-judge : % correct par tranche de confiance (échelle 1-5)")
+```
+
+:::
+
+```{python}
+display(Markdown(
+    "> _(Interprétation à compléter : quels classifieurs sont bien calibrés "
+    "— confiance croissante = accuracy croissante — et lesquels restent "
+    "confiants à tort sur certaines tranches, ce qui limiterait l'usage "
+    "d'un seuil de confiance simple pour décider d'escalader.)_"
+))
+```

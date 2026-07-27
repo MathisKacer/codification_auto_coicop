@@ -30,6 +30,8 @@ website:
         - stats-descriptives/trois-contre-un.qmd
         - stats-descriptives/seul-correct.qmd
         - stats-descriptives/ttc-top3.qmd
+        - stats-descriptives/profondeur-codes.qmd
+        - stats-descriptives/calibration-confiance.qmd
 
 format:
   html:
