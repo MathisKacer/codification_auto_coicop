@@ -21,6 +21,12 @@ Nécessite un environnement R avec les packages arrow, dplyr, tidyr, sirus,
 knitr, ggplot2 déjà installés (cf. notebooks/sirus_modelisation.R pour
 l'installation initiale, notamment sirus depuis l'archive CRAN). Pour
 rendre : `quarto render notebooks/sirus_rapport.qmd --to html`.
+
+Version allégée : pas de robustesse multi-graines ici (trop long pour de
+l'explo à ce stade, à refaire plus tard sur les pistes retenues). TTC :
+les features top-3 (rang/confiance des rangs 2-3) ont été testées et
+écartées (aucun gain démontré sur plusieurs graines) — seul le vote TTC
+au rang 1 est gardé.
 -->
 
 ## Setup
@@ -70,6 +76,10 @@ tronquer_niveau <- function(codes, niveau = 4) {
   vapply(codes, tronquer_niveau_un, character(1), niveau = niveau, USE.NAMES = FALSE)
 }
 
+# TTC : vote + confiance au rang 1 (vote_ttc, conf_ttc), meme traitement
+# que LCS/RAG/RAG-ANN. Les features top-3 (rang/confiance parmi les rangs
+# 1-3 de TTC) ont ete testees et ecartees : aucun gain demontrable sur
+# plusieurs graines.
 construire_table_long <- function(df, niveau = 4) {
   df <- df %>%
     mutate(
@@ -77,8 +87,6 @@ construire_table_long <- function(df, niveau = 4) {
       rag_n4    = tronquer_niveau(rag_code, niveau),
       ragann_n4 = tronquer_niveau(ragann_code, niveau),
       ttc_n4    = tronquer_niveau(ttc_code_1, niveau),
-      ttc2_n4   = tronquer_niveau(ttc_code_2, niveau),
-      ttc3_n4   = tronquer_niveau(ttc_code_3, niveau),
       vrai_n4   = tronquer_niveau(code, niveau),
     )
 
@@ -94,9 +102,8 @@ construire_table_long <- function(df, niveau = 4) {
   candidats %>%
     left_join(
       df %>% select(
-        ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4, ttc2_n4, ttc3_n4,
-        lcs_distance, rag_confidence, ragann_confidence,
-        ttc_conf_1, ttc_conf_2, ttc_conf_3,
+        ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4,
+        lcs_distance, rag_confidence, ragann_confidence, ttc_conf_1,
       ),
       by = "ligne",
     ) %>%
@@ -110,48 +117,20 @@ construire_table_long <- function(df, niveau = 4) {
       code_candidat_n1 = tronquer_niveau(code_candidat, niveau = 1),
       conf_rag    = if_else(vote_rag == 1L,    coalesce(rag_confidence, -1),    -1),
       conf_ragann = if_else(vote_ragann == 1L, coalesce(ragann_confidence, -1), -1),
+      conf_ttc    = if_else(vote_ttc == 1L,    coalesce(ttc_conf_1, -1),        -1),
       dist_lcs    = if_else(vote_lcs == 1L,    coalesce(lcs_distance, 1.5),     1.5),
-      ttc_rang = case_when(
-        code_candidat == ttc_n4  ~ 1L,
-        code_candidat == ttc2_n4 ~ 2L,
-        code_candidat == ttc3_n4 ~ 3L,
-        TRUE                     ~ 4L,
-      ),
-      ttc_conf_au_rang = case_when(
-        code_candidat == ttc_n4  ~ coalesce(ttc_conf_1, -1),
-        code_candidat == ttc2_n4 ~ coalesce(ttc_conf_2, -1),
-        code_candidat == ttc3_n4 ~ coalesce(ttc_conf_3, -1),
-        TRUE                     ~ -1,
-      ),
     ) %>%
     select(
       ligne, code_candidat, code_candidat_n1,
       vote_lcs, vote_rag, vote_ragann, vote_ttc, nb_votants,
-      conf_rag, conf_ragann, dist_lcs, ttc_rang, ttc_conf_au_rang, correcte,
+      conf_rag, conf_ragann, conf_ttc, dist_lcs, correcte,
     )
 }
 
 features <- c(
   "vote_lcs", "vote_rag", "vote_ragann", "vote_ttc", "nb_votants",
-  "conf_rag", "conf_ragann", "dist_lcs",
-  "ttc_rang", "ttc_conf_au_rang", "code_candidat_n1"
+  "conf_rag", "conf_ragann", "conf_ttc", "dist_lcs", "code_candidat_n1"
 )
-
-evaluer_config <- function(feats, table, lignes_uniques, graines = 1:8, regles = 5) {
-  bind_rows(lapply(graines, function(g) {
-    set.seed(g)
-    lignes_tr <- sample(lignes_uniques, size = round(0.8 * length(lignes_uniques)))
-    tr <- table %>% filter(ligne %in% lignes_tr)
-    te <- table %>% filter(!ligne %in% lignes_tr)
-    m <- sirus.fit(
-      as.data.frame(tr[, feats]), tr$correcte,
-      type = "classif", num.rule = regles, seed = g, verbose = FALSE,
-    )
-    te$proba <- sirus.predict(m, as.data.frame(te[, feats]))
-    choix <- te %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
-    data.frame(graine = g, acc_produit = mean(choix$correcte))
-  }))
-}
 ```
 
 ## Modèle (ancien run, `codif-vvkv9`)
@@ -159,7 +138,7 @@ evaluer_config <- function(feats, table, lignes_uniques, graines = 1:8, regles =
 Format long : une ligne par candidat proposé par au moins un des 4
 classifieurs de base (LCS, RAG, RAG-ANN, TTC), pas de code candidat brut en
 feature — seulement des dérivés (vote de chaque classifieur, confiances,
-troncature niveau 1, rang/confiance TTC).
+troncature niveau 1).
 
 ```{r}
 df_ancien <- charger_run(objet_s3_ancien)
@@ -293,33 +272,6 @@ sur l'un ou l'autre est donc directement exploitable comme critère
 d'escalade vers une reprise manuelle ou le LLM-judge, sans modèle
 supplémentaire.
 
-## Robustesse multi-graines : le top-3 de TTC apporte-t-il un vrai gain ?
-
-Une seule graine ne suffit pas à trancher (variance du split train/test et
-de la sélection de règles de SIRUS). `num.trees` n'est pas fixé — SIRUS
-s'auto-stabilise à chaque graine — seul `num.rule` (5) est fixé, pour que
-les deux configurations restent comparables en complexité.
-
-```{r}
-feats_sans_top3 <- setdiff(features, c("ttc_rang", "ttc_conf_au_rang"))
-
-recap_top3 <- bind_rows(
-  data.frame(config = "avec top-3", evaluer_config(features, table_long, lignes_uniques)),
-  data.frame(config = "sans top-3", evaluer_config(feats_sans_top3, table_long, lignes_uniques)),
-) %>%
-  group_by(config) %>%
-  summarise(
-    moyenne = mean(acc_produit), ecart_type = sd(acc_produit),
-    min = min(acc_produit), max = max(acc_produit), .groups = "drop",
-  )
-recap_top3
-```
-
-**L'écart entre les deux configurations est plus petit que l'écart-type
-de chacune** : contrairement à une lecture précédente (basée sur un
-`num.trees` fixe, insuffisamment stabilisé), le top-3 de TTC n'apporte pas
-de gain démontrable une fois la méthodologie corrigée.
-
 ## Généralisation au nouveau run (`codif-8m8jn`)
 
 ```{r}
@@ -332,6 +284,21 @@ choix_nouveau <- table_long_nouveau %>%
   group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
 borne_haute_nouveau <- table_long_nouveau %>%
   group_by(ligne) %>% summarise(possible = max(correcte)) %>% pull(possible) %>% mean()
+
+# Niveau produit (proba du candidat retenu, marge, nombre de candidats) --
+# reutilise plus bas pour la calibration, le compromis seuil/volume, et le
+# potentiel d'un second modele sur les cas incertains.
+table_produit_nouveau <- table_long_nouveau %>%
+  group_by(ligne) %>%
+  arrange(desc(proba), .by_group = TRUE) %>%
+  summarise(
+    n_candidats = n(),
+    proba_gagnant = first(proba),
+    proba_second = if (n() >= 2) nth(proba, 2) else NA_real_,
+    sirus_correct = first(correcte),
+    .groups = "drop",
+  ) %>%
+  mutate(ecart_proba = if_else(is.na(proba_second), proba_gagnant, proba_gagnant - proba_second))
 
 set.seed(42)
 lignes_uniques_nouveau <- unique(table_long_nouveau$ligne)
@@ -360,17 +327,19 @@ data.frame(
 ) %>% mutate(across(where(is.numeric), ~ sprintf("%.1f%%", . * 100)))
 ```
 
+**Réentraîner directement sur le nouveau run n'aide quasiment pas** :
+l'accuracy reste proche de celle obtenue avec le modèle ancien appliqué
+tel quel. La baisse d'accuracy vient donc de la borne haute elle-même
+(moins bonne couverture des candidats par les classifieurs de base,
+RAG-ANN en particulier), pas d'un défaut de généralisation du modèle.
+
 ### Réentraîner change-t-il la plage de proba disponible ?
 
-L'accuracy ne bouge quasiment pas en réentraînant (section précédente),
-mais SIRUS re-dérive ses seuils de coupure (`conf_ragann < 1`,
-`ttc_conf_au_rang < 0.672`...) à partir des données d'entraînement. Si la
-distribution de ces scores a changé sur le nouveau run, un modèle
-réentraîné pourrait exploiter une plage de confiance différente — plus
-utile pour l'escalade — même à accuracy identique. Comparaison directe des
-règles et de la distribution de `proba_gagnant` entre le modèle actuel
-(entraîné ancien) et `modele_nouveau` (réentraîné), tous deux appliqués
-au nouveau run.
+L'accuracy ne bouge quasiment pas en réentraînant, mais SIRUS re-dérive
+ses seuils de coupure à partir des données d'entraînement : si la
+distribution des scores de confiance a changé sur le nouveau run, un
+modèle réentraîné pourrait exploiter une plage de confiance différente —
+plus utile pour l'escalade — même à accuracy identique.
 
 ```{r}
 sirus.print(modele_nouveau)
@@ -401,60 +370,10 @@ table_produit_nouveau_reentraine %>%
   summarise(n = n(), pct_correct = mean(sirus_correct), .groups = "drop")
 ```
 
-```{r}
-courbe_seuil(table_produit_nouveau_reentraine) %>%
-  mutate(across(-seuil, ~ sprintf("%.1f%%", . * 100)))
-```
-
-Si la plage (`Proba_max` notamment) et la courbe seuil/volume sont
-sensiblement plus étendues pour le modèle réentraîné, c'est un argument
-pour réentraîner **spécifiquement pour l'usage escalade**, indépendamment
-du fait que l'accuracy brute ne change pas.
-
-### Robustesse multi-graines
-
-```{r}
-evaluer_generalisation <- function(graines = 1:8, regles = 5) {
-  bind_rows(lapply(graines, function(g) {
-    set.seed(g)
-    lignes_tr <- sample(lignes_uniques, size = round(0.8 * length(lignes_uniques)))
-    tr <- table_long %>% filter(ligne %in% lignes_tr)
-    m_ancien <- sirus.fit(
-      as.data.frame(tr[, features]), tr$correcte,
-      type = "classif", num.rule = regles, seed = g, verbose = FALSE,
-    )
-    tn <- table_long_nouveau
-    tn$proba <- sirus.predict(m_ancien, as.data.frame(tn[, features]))
-    choix_a <- tn %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
-
-    lignes_tr_n <- sample(lignes_uniques_nouveau, size = round(0.8 * length(lignes_uniques_nouveau)))
-    tr_n <- table_long_nouveau %>% filter(ligne %in% lignes_tr_n)
-    te_n <- table_long_nouveau %>% filter(!ligne %in% lignes_tr_n)
-    m_nouveau <- sirus.fit(
-      as.data.frame(tr_n[, features]), tr_n$correcte,
-      type = "classif", num.rule = regles, seed = g, verbose = FALSE,
-    )
-    te_n$proba <- sirus.predict(m_nouveau, as.data.frame(te_n[, features]))
-    choix_n <- te_n %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
-
-    data.frame(graine = g, ancien_sur_nouveau = mean(choix_a$correcte), nouveau_reentraine = mean(choix_n$correcte))
-  }))
-}
-
-recap_multi <- evaluer_generalisation()
-recap_multi %>%
-  summarise(
-    moyenne_ancien_sur_nouveau = mean(ancien_sur_nouveau), ecart_type_ancien_sur_nouveau = sd(ancien_sur_nouveau),
-    moyenne_nouveau_reentraine = mean(nouveau_reentraine), ecart_type_nouveau_reentraine = sd(nouveau_reentraine),
-  )
-```
-
-**Réentraîner directement sur le nouveau run n'aide quasiment pas**
-(écart plus petit qu'un écart-type) : le modèle atteint dans les deux cas
-~88 % de la borne haute du nouveau run, contre ~87 % sur l'ancien. La
-baisse d'accuracy vient donc de la borne haute elle-même (moins bonne
-couverture des candidats par les classifieurs de base, RAG-ANN en
-particulier), pas d'un défaut de généralisation du modèle.
+Si la plage (`Proba_max` notamment) est sensiblement plus étendue pour le
+modèle réentraîné, c'est un argument pour réentraîner **spécifiquement
+pour l'usage escalade**, indépendamment du fait que l'accuracy brute ne
+change pas.
 
 ## Compromis seuil / volume / erreurs sur le nouveau run
 
@@ -465,18 +384,6 @@ pour un seuil donné sur `proba_gagnant`, quelle part du volume garder en
 confiance, et quelle fiabilité obtient-on sur ce qu'on garde ?
 
 ```{r}
-table_produit_nouveau <- table_long_nouveau %>%
-  group_by(ligne) %>%
-  arrange(desc(proba), .by_group = TRUE) %>%
-  summarise(
-    n_candidats = n(),
-    proba_gagnant = first(proba),
-    proba_second = if (n() >= 2) nth(proba, 2) else NA_real_,
-    sirus_correct = first(correcte),
-    .groups = "drop",
-  ) %>%
-  mutate(ecart_proba = if_else(is.na(proba_second), proba_gagnant, proba_gagnant - proba_second))
-
 courbe_seuil <- function(table_produit, seuils = seq(0, 0.9, by = 0.1)) {
   bind_rows(lapply(seuils, function(s) {
     garde <- table_produit$proba_gagnant >= s
@@ -508,7 +415,43 @@ ggplot(courbe_seuil(table_produit_nouveau), aes(x = seuil)) +
   scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
   labs(
     title = "Nouveau run : compromis seuil / volume / fiabilité",
-    x = "Seuil sur proba_gagnant", y = NULL, color = NULL,
+    x = "Seuil sur proba_gagnant", y = NULL, color = NULL
   ) +
   theme_minimal()
 ```
+
+### Un second modèle sur les cas incertains a-t-il du potentiel ?
+
+Avant d'envisager un modèle spécialisé sur les cas envoyés en reprise (en
+plus de, ou à la place du LLM) : s'il n'y a même pas le bon candidat parmi
+les propositions des classifieurs de base pour ces cas-là, aucun modèle ne
+peut les récupérer — c'est la même borne haute que partout ailleurs dans
+ce rapport, mais restreinte au sous-ensemble incertain.
+
+```{r}
+seuil_ref <- 0.6
+lignes_incertaines <- table_produit_nouveau %>%
+  filter(proba_gagnant < seuil_ref) %>%
+  pull(ligne)
+
+borne_haute_incertains <- table_long_nouveau %>%
+  filter(ligne %in% lignes_incertaines) %>%
+  group_by(ligne) %>%
+  summarise(possible = max(correcte)) %>%
+  pull(possible) %>%
+  mean()
+
+data.frame(
+  Groupe = c("Ensemble du nouveau run", sprintf("Cas incertains (proba_gagnant < %.1f)", seuil_ref)),
+  N = c(n_distinct(table_long_nouveau$ligne), length(lignes_incertaines)),
+  Borne_haute = c(borne_haute_nouveau, borne_haute_incertains)
+) %>% mutate(Borne_haute = sprintf("%.1f%%", Borne_haute * 100))
+```
+
+**Lecture** : si `Borne_haute` reste élevée (disons > 50 %) sur le
+sous-ensemble incertain, il y a une vraie marge pour un second modèle
+(spécialisé sur cette zone, avec éventuellement d'autres features) avant
+d'envoyer systématiquement au LLM. Si elle est basse, ça confirme que la
+majorité de ces cas sont structurellement irrécupérables par re-ranking
+— le LLM (ou une relecture humaine, qui peut chercher au-delà des 4
+candidats proposés) reste alors la seule option pertinente pour eux.
