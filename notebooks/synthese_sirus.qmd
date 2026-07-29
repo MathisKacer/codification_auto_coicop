@@ -1,0 +1,348 @@
+---
+title: "Synthèse — SIRUS et le nouveau run"
+subtitle: "Résultats clés, tableaux uniquement"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    theme: flatly
+    code-fold: true
+    code-summary: "Voir le code"
+    df-print: kable
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(arrow)
+library(dplyr)
+library(tidyr)
+library(sirus)
+library(randomForest)
+
+niveau <- 4
+
+bucket_s3   <- "projet-budget-famille"
+endpoint_s3 <- "minio.lab.sspcloud.fr"
+objet_s3_ancien  <- "data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+objet_s3_nouveau <- "data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet"
+
+charger_run <- function(objet_s3) {
+  df <- aws.s3::s3read_using(
+    FUN = arrow::read_parquet, object = objet_s3, bucket = bucket_s3,
+    opts = list(region = "", base_url = endpoint_s3),
+  )
+  if (!"ligne" %in% names(df)) df$ligne <- seq_len(nrow(df)) - 1L
+  df
+}
+
+tronquer_niveau_un <- function(code, niveau = 4) {
+  if (is.na(code)) return(NA_character_)
+  s <- as.character(code)
+  if (s %in% c("AUCUNE_SUGGESTION", "NON_CODABLE")) return(s)
+  n_chiffres_cible <- niveau + 1
+  chiffres <- 0L
+  out <- character(0)
+  for (ch in strsplit(s, "")[[1]]) {
+    if (grepl("[0-9]", ch)) {
+      if (chiffres == n_chiffres_cible) break
+      chiffres <- chiffres + 1L
+      out <- c(out, ch)
+    } else if (chiffres < n_chiffres_cible) {
+      out <- c(out, ch)
+    }
+  }
+  paste(out, collapse = "")
+}
+tronquer_niveau <- function(codes, niveau = 4) {
+  vapply(codes, tronquer_niveau_un, character(1), niveau = niveau, USE.NAMES = FALSE)
+}
+
+construire_table_long <- function(df, niveau = 4) {
+  df <- df %>%
+    mutate(
+      lcs_n4    = tronquer_niveau(lcs_code, niveau),
+      rag_n4    = tronquer_niveau(rag_code, niveau),
+      ragann_n4 = tronquer_niveau(ragann_code, niveau),
+      ttc_n4    = tronquer_niveau(ttc_code_1, niveau),
+      vrai_n4   = tronquer_niveau(code, niveau),
+    )
+
+  candidats <- df %>%
+    select(ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4, vrai_n4) %>%
+    pivot_longer(
+      cols = c(lcs_n4, rag_n4, ragann_n4, ttc_n4),
+      names_to = "classifieur", values_to = "code_candidat",
+    ) %>%
+    filter(!is.na(code_candidat)) %>%
+    distinct(ligne, code_candidat, vrai_n4)
+
+  candidats %>%
+    left_join(
+      df %>% select(
+        ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4,
+        lcs_distance, rag_confidence, ragann_confidence, ttc_conf_1,
+        budget, shop_type_name, source,
+      ),
+      by = "ligne",
+    ) %>%
+    mutate(
+      vote_lcs    = as.integer(!is.na(lcs_n4)    & lcs_n4    == code_candidat),
+      vote_rag    = as.integer(!is.na(rag_n4)    & rag_n4    == code_candidat),
+      vote_ragann = as.integer(!is.na(ragann_n4) & ragann_n4 == code_candidat),
+      vote_ttc    = as.integer(!is.na(ttc_n4)    & ttc_n4    == code_candidat),
+      nb_votants  = vote_lcs + vote_rag + vote_ragann + vote_ttc,
+      correcte    = as.integer(!is.na(vrai_n4) & code_candidat == vrai_n4),
+      code_candidat_n1 = tronquer_niveau(code_candidat, niveau = 1),
+      conf_rag    = if_else(vote_rag == 1L,    coalesce(rag_confidence, -1),    -1),
+      conf_ragann = if_else(vote_ragann == 1L, coalesce(ragann_confidence, -1), -1),
+      conf_ttc    = if_else(vote_ttc == 1L,    coalesce(ttc_conf_1, -1),        -1),
+      dist_lcs    = if_else(vote_lcs == 1L,    coalesce(lcs_distance, 1.5),     1.5),
+      shop_type_name = if_else(is.na(shop_type_name), "INCONNU", shop_type_name),
+      source         = if_else(is.na(source), "INCONNU", source),
+    ) %>%
+    select(
+      ligne, code_candidat, code_candidat_n1,
+      vote_lcs, vote_rag, vote_ragann, vote_ttc, nb_votants,
+      conf_rag, conf_ragann, conf_ttc, dist_lcs, correcte,
+      budget, shop_type_name, source,
+    )
+}
+
+features <- c(
+  "vote_lcs", "vote_rag", "vote_ragann", "vote_ttc", "nb_votants",
+  "conf_rag", "conf_ragann", "conf_ttc", "dist_lcs", "code_candidat_n1"
+)
+```
+
+## Modèle (ancien run)
+
+```{r}
+df_ancien <- charger_run(objet_s3_ancien)
+table_long <- construire_table_long(df_ancien, niveau) %>%
+  mutate(code_candidat_n1 = as.factor(code_candidat_n1))
+
+set.seed(42)
+lignes_uniques <- unique(table_long$ligne)
+lignes_train <- sample(lignes_uniques, size = round(0.8 * length(lignes_uniques)))
+train <- table_long %>% filter(ligne %in% lignes_train)
+test  <- table_long %>% filter(!ligne %in% lignes_train)
+
+modele <- sirus.fit(
+  as.data.frame(train[, features]), train$correcte,
+  type = "classif", num.rule = 10, verbose = FALSE,
+)
+
+test$proba <- sirus.predict(modele, as.data.frame(test[, features]))
+choix_par_produit <- test %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+borne_haute <- test %>% group_by(ligne) %>% summarise(possible = max(correcte)) %>% pull(possible) %>% mean()
+
+data.frame(
+  Indicateur = c("Accuracy candidat-level", "Accuracy produit-level", "Borne haute"),
+  Valeur = c(mean(as.integer(test$proba > 0.5) == test$correcte), mean(choix_par_produit$correcte), borne_haute)
+) %>% mutate(Valeur = sprintf("%.1f%%", Valeur * 100))
+```
+
+## SIRUS avec ou sans `budget`, `shop_type_name`, `source` ?
+
+Même split train/test que le modèle principal ci-dessus. `budget` imputé
+par la médiane du train uniquement (pas de fuite) ; `shop_type_name` et
+`source` en facteurs, niveaux cohérents train/test.
+
+```{r}
+features_etendues <- c(features, "budget", "shop_type_name", "source")
+mediane_budget_train <- median(train$budget, na.rm = TRUE)
+
+train_etendu <- train %>%
+  mutate(
+    budget = coalesce(budget, mediane_budget_train),
+    shop_type_name = as.factor(shop_type_name),
+    source = as.factor(source)
+  )
+test_etendu <- test %>%
+  mutate(
+    budget = coalesce(budget, mediane_budget_train),
+    shop_type_name = factor(shop_type_name, levels = levels(train_etendu$shop_type_name)),
+    source = factor(source, levels = levels(train_etendu$source))
+  )
+
+modele_etendu <- sirus.fit(
+  as.data.frame(train_etendu[, features_etendues]), train_etendu$correcte,
+  type = "classif", num.rule = 10, verbose = FALSE,
+)
+
+test_etendu$proba <- sirus.predict(modele_etendu, as.data.frame(test_etendu[, features_etendues]))
+choix_par_produit_etendu <- test_etendu %>%
+  group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+
+data.frame(
+  Modele = c("SIRUS (features de base)", "SIRUS (+ budget, shop_type_name, source)"),
+  Accuracy_candidat = c(
+    mean(as.integer(test$proba > 0.5) == test$correcte),
+    mean(as.integer(test_etendu$proba > 0.5) == test_etendu$correcte)
+  ),
+  Accuracy_produit = c(mean(choix_par_produit$correcte), mean(choix_par_produit_etendu$correcte))
+) %>% mutate(across(c(Accuracy_candidat, Accuracy_produit), ~ sprintf("%.1f%%", . * 100)))
+```
+
+## Calibration de la confiance (ancien run)
+
+```{r}
+table_produit <- test %>%
+  group_by(ligne) %>%
+  arrange(desc(proba), .by_group = TRUE) %>%
+  summarise(
+    n_candidats = n(), proba_gagnant = first(proba),
+    proba_second = if (n() >= 2) nth(proba, 2) else NA_real_,
+    sirus_correct = first(correcte), .groups = "drop"
+  ) %>%
+  mutate(ecart_proba = if_else(is.na(proba_second), proba_gagnant, proba_gagnant - proba_second))
+
+table_produit %>%
+  mutate(tranche = cut(proba_gagnant, breaks = seq(0, 1, by = 0.1), include.lowest = TRUE)) %>%
+  group_by(tranche) %>%
+  summarise(n = n(), pct_correct = mean(sirus_correct), .groups = "drop") %>%
+  mutate(pct_correct = sprintf("%.1f%%", pct_correct * 100))
+```
+
+```{r}
+table_produit %>%
+  group_by(n_candidats) %>%
+  summarise(n = n(), pct_correct = mean(sirus_correct), proba_gagnant_moy = mean(proba_gagnant), .groups = "drop") %>%
+  mutate(
+    pct_correct = sprintf("%.1f%%", pct_correct * 100),
+    proba_gagnant_moy = round(proba_gagnant_moy, 3)
+  )
+```
+
+## Généralisation au nouveau run
+
+```{r}
+df_nouveau <- charger_run(objet_s3_nouveau)
+table_long_nouveau <- construire_table_long(df_nouveau, niveau) %>%
+  mutate(code_candidat_n1 = factor(code_candidat_n1, levels = levels(table_long$code_candidat_n1)))
+
+table_long_nouveau$proba <- sirus.predict(modele, as.data.frame(table_long_nouveau[, features]))
+choix_nouveau <- table_long_nouveau %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+borne_haute_nouveau <- table_long_nouveau %>%
+  group_by(ligne) %>% summarise(possible = max(correcte)) %>% pull(possible) %>% mean()
+
+table_produit_nouveau <- table_long_nouveau %>%
+  group_by(ligne) %>%
+  arrange(desc(proba), .by_group = TRUE) %>%
+  summarise(
+    n_candidats = n(), proba_gagnant = first(proba),
+    proba_second = if (n() >= 2) nth(proba, 2) else NA_real_,
+    sirus_correct = first(correcte), .groups = "drop"
+  ) %>%
+  mutate(ecart_proba = if_else(is.na(proba_second), proba_gagnant, proba_gagnant - proba_second))
+
+set.seed(42)
+lignes_uniques_nouveau <- unique(table_long_nouveau$ligne)
+lignes_train_nouveau <- sample(lignes_uniques_nouveau, size = round(0.8 * length(lignes_uniques_nouveau)))
+train_nouveau <- table_long_nouveau %>% filter(ligne %in% lignes_train_nouveau)
+test_nouveau  <- table_long_nouveau %>% filter(!ligne %in% lignes_train_nouveau)
+
+modele_nouveau <- sirus.fit(
+  as.data.frame(train_nouveau[, features]), train_nouveau$correcte,
+  type = "classif", num.rule = 10, verbose = FALSE,
+)
+test_nouveau$proba <- sirus.predict(modele_nouveau, as.data.frame(test_nouveau[, features]))
+choix_nouveau_reentraine <- test_nouveau %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+
+data.frame(
+  Modele = c(
+    "Entraîné ancien, testé ancien (test 20%)",
+    "Entraîné ancien, testé nouveau (intégral)",
+    "Entraîné nouveau, testé nouveau (test 20%)"
+  ),
+  Accuracy_produit = c(
+    mean(choix_par_produit$correcte), mean(choix_nouveau$correcte), mean(choix_nouveau_reentraine$correcte)
+  ),
+  Borne_haute = c(borne_haute, borne_haute_nouveau, borne_haute_nouveau)
+) %>% mutate(across(where(is.numeric), ~ sprintf("%.1f%%", . * 100)))
+```
+
+## Plage de confiance : ancien vs réentraîné (nouveau run)
+
+```{r}
+table_produit_nouveau_reentraine <- test_nouveau %>%
+  group_by(ligne) %>%
+  arrange(desc(proba), .by_group = TRUE) %>%
+  summarise(proba_gagnant = first(proba), sirus_correct = first(correcte), .groups = "drop")
+
+data.frame(
+  Modele = c("Entraîné ancien", "Entraîné nouveau"),
+  Proba_min = c(min(table_produit_nouveau$proba_gagnant), min(table_produit_nouveau_reentraine$proba_gagnant)),
+  Proba_max = c(max(table_produit_nouveau$proba_gagnant), max(table_produit_nouveau_reentraine$proba_gagnant)),
+  Proba_mediane = c(median(table_produit_nouveau$proba_gagnant), median(table_produit_nouveau_reentraine$proba_gagnant))
+) %>% mutate(across(where(is.numeric), ~ round(., 3)))
+```
+
+## Seuil / volume / fiabilité (nouveau run)
+
+```{r}
+courbe_seuil <- function(table_produit, seuils = seq(0, 0.9, by = 0.1)) {
+  bind_rows(lapply(seuils, function(s) {
+    garde <- table_produit$proba_gagnant >= s
+    data.frame(
+      seuil = s,
+      pct_volume_garde = mean(garde),
+      accuracy_gardes = if (sum(garde) > 0) mean(table_produit$sirus_correct[garde]) else NA_real_,
+      pct_volume_envoye = mean(!garde),
+      accuracy_qui_aurait_ete_gardee = if (sum(!garde) > 0) mean(table_produit$sirus_correct[!garde]) else NA_real_
+    )
+  }))
+}
+
+courbe_seuil(table_produit_nouveau) %>% mutate(across(-seuil, ~ sprintf("%.1f%%", . * 100)))
+```
+
+## Sous-ensemble incertain (`proba_gagnant < 0.6`) : RF vs SIRUS
+
+```{r}
+seuil_ref <- 0.6
+lignes_incertaines <- table_produit_nouveau %>% filter(proba_gagnant < seuil_ref) %>% pull(ligne)
+borne_haute_incertains <- table_long_nouveau %>%
+  filter(ligne %in% lignes_incertaines) %>%
+  group_by(ligne) %>% summarise(possible = max(correcte)) %>% pull(possible) %>% mean()
+
+table_long_incertains <- table_long_nouveau %>% filter(ligne %in% lignes_incertaines)
+set.seed(42)
+lignes_incertaines_uniques <- unique(table_long_incertains$ligne)
+lignes_train_inc <- sample(lignes_incertaines_uniques, size = round(0.8 * length(lignes_incertaines_uniques)))
+train_inc <- table_long_incertains %>% filter(ligne %in% lignes_train_inc)
+test_inc  <- table_long_incertains %>% filter(!ligne %in% lignes_train_inc)
+
+rf_incertains <- randomForest(x = as.data.frame(train_inc[, features]), y = as.factor(train_inc$correcte), ntree = 500)
+test_inc$proba_rf <- predict(rf_incertains, as.data.frame(test_inc[, features]), type = "prob")[, "1"]
+
+choix_rf <- test_inc %>% group_by(ligne) %>% slice_max(proba_rf, n = 1, with_ties = FALSE) %>% ungroup()
+borne_haute_test_inc <- test_inc %>% group_by(ligne) %>% summarise(possible = max(correcte)) %>% pull(possible) %>% mean()
+sirus_sur_test_inc <- table_produit_nouveau %>% filter(ligne %in% unique(test_inc$ligne))
+
+data.frame(
+  Modele = c("SIRUS (référence)", "Random Forest", "Borne haute"),
+  Accuracy_produit = c(mean(sirus_sur_test_inc$sirus_correct), mean(choix_rf$correcte), borne_haute_test_inc)
+) %>% mutate(Accuracy_produit = sprintf("%.1f%%", Accuracy_produit * 100))
+```
+
+```{r}
+stats_confusion <- function(vrai, proba, seuil = 0.5) {
+  pred <- as.integer(proba > seuil)
+  data.frame(
+    Vrais_positifs = sum(pred == 1 & vrai == 1), Faux_positifs = sum(pred == 1 & vrai == 0),
+    Faux_negatifs = sum(pred == 0 & vrai == 1), Vrais_negatifs = sum(pred == 0 & vrai == 0),
+    Precision = sum(pred == 1 & vrai == 1) / sum(pred == 1),
+    Rappel = sum(pred == 1 & vrai == 1) / sum(vrai == 1)
+  )
+}
+
+bind_rows(
+  data.frame(Modele = "RF", stats_confusion(test_inc$correcte, test_inc$proba_rf)),
+  data.frame(Modele = "SIRUS", stats_confusion(test_inc$correcte, test_inc$proba)),
+) %>% mutate(across(c(Precision, Rappel), ~ sprintf("%.1f%%", . * 100)))
+```

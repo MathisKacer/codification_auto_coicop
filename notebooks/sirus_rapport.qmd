@@ -37,6 +37,7 @@ library(dplyr)
 library(tidyr)
 library(sirus)
 library(ggplot2)
+library(randomForest)
 
 niveau <- 4  # convention du projet : niveau N = N+1 chiffres significatifs
 
@@ -104,6 +105,7 @@ construire_table_long <- function(df, niveau = 4) {
       df %>% select(
         ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4,
         lcs_distance, rag_confidence, ragann_confidence, ttc_conf_1,
+        budget, shop_type_name, source,
       ),
       by = "ligne",
     ) %>%
@@ -119,11 +121,14 @@ construire_table_long <- function(df, niveau = 4) {
       conf_ragann = if_else(vote_ragann == 1L, coalesce(ragann_confidence, -1), -1),
       conf_ttc    = if_else(vote_ttc == 1L,    coalesce(ttc_conf_1, -1),        -1),
       dist_lcs    = if_else(vote_lcs == 1L,    coalesce(lcs_distance, 1.5),     1.5),
+      shop_type_name = if_else(is.na(shop_type_name), "INCONNU", shop_type_name),
+      source         = if_else(is.na(source), "INCONNU", source),
     ) %>%
     select(
       ligne, code_candidat, code_candidat_n1,
       vote_lcs, vote_rag, vote_ragann, vote_ttc, nb_votants,
       conf_rag, conf_ragann, conf_ttc, dist_lcs, correcte,
+      budget, shop_type_name, source,
     )
 }
 
@@ -221,7 +226,7 @@ table_produit <- test %>%
 
 ```{r}
 calib_proba <- table_produit %>%
-  mutate(tranche = cut(proba_gagnant, breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0), include.lowest = TRUE)) %>%
+  mutate(tranche = cut(proba_gagnant, breaks = seq(0, 1, by = 0.1), include.lowest = TRUE)) %>%
   group_by(tranche) %>%
   summarise(n = n(), pct_correct = mean(sirus_correct), .groups = "drop")
 calib_proba
@@ -365,7 +370,7 @@ data.frame(
 
 ```{r}
 table_produit_nouveau_reentraine %>%
-  mutate(tranche = cut(proba_gagnant, breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0), include.lowest = TRUE)) %>%
+  mutate(tranche = cut(proba_gagnant, breaks = seq(0, 1, by = 0.1), include.lowest = TRUE)) %>%
   group_by(tranche) %>%
   summarise(n = n(), pct_correct = mean(sirus_correct), .groups = "drop")
 ```
@@ -455,3 +460,289 @@ d'envoyer systématiquement au LLM. Si elle est basse, ça confirme que la
 majorité de ces cas sont structurellement irrécupérables par re-ranking
 — le LLM (ou une relecture humaine, qui peut chercher au-delà des 4
 candidats proposés) reste alors la seule option pertinente pour eux.
+
+## Un Random Forest sur les cas incertains
+
+Test direct : un modèle plus expressif (interactions entre features, ce
+que les règles à un seuil de SIRUS ne capturent pas) fait-il mieux que
+SIRUS sur les mêmes produits incertains ? Mêmes features, même split
+80/20 (par produit), comparaison sur les mêmes produits de test.
+
+```{r}
+table_long_incertains <- table_long_nouveau %>% filter(ligne %in% lignes_incertaines)
+
+set.seed(42)
+lignes_incertaines_uniques <- unique(table_long_incertains$ligne)
+lignes_train_inc <- sample(lignes_incertaines_uniques, size = round(0.8 * length(lignes_incertaines_uniques)))
+
+train_inc <- table_long_incertains %>% filter(ligne %in% lignes_train_inc)
+test_inc  <- table_long_incertains %>% filter(!ligne %in% lignes_train_inc)
+
+rf_incertains <- randomForest(
+  x = as.data.frame(train_inc[, features]), y = as.factor(train_inc$correcte),
+  ntree = 500,
+)
+
+test_inc$proba_rf <- predict(rf_incertains, as.data.frame(test_inc[, features]), type = "prob")[, "1"]
+
+choix_rf <- test_inc %>%
+  group_by(ligne) %>%
+  slice_max(proba_rf, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+borne_haute_test_inc <- test_inc %>%
+  group_by(ligne) %>% summarise(possible = max(correcte)) %>%
+  pull(possible) %>% mean()
+
+sirus_sur_test_inc <- table_produit_nouveau %>%
+  filter(ligne %in% unique(test_inc$ligne))
+
+data.frame(
+  Modele = c(
+    "SIRUS (référence, mêmes produits test)",
+    "Random Forest (sous-ensemble incertain, test)",
+    "Borne haute (mêmes produits test)"
+  ),
+  Accuracy_produit = c(
+    mean(sirus_sur_test_inc$sirus_correct),
+    mean(choix_rf$correcte),
+    borne_haute_test_inc
+  )
+) %>% mutate(Accuracy_produit = sprintf("%.1f%%", Accuracy_produit * 100))
+```
+
+Importance des features pour le RF (à quoi s'accroche-t-il pour
+départager des cas que SIRUS ne différencie pas) :
+
+```{r}
+importance(rf_incertains) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("feature") %>%
+  arrange(desc(MeanDecreaseGini))
+```
+
+### Avec ou sans `budget`, `shop_type_name`, `source` ?
+
+Ces variables sont constantes par produit (même valeur pour tous ses
+candidats) — inutiles pour SIRUS (déjà testé, ça perturbait la sélection
+de règles), mais un RF peut les exploiter en interaction avec les
+features candidat-level. Même split, mêmes produits de test ; `budget`
+imputé par la médiane du train uniquement (pas de fuite).
+
+```{r}
+features_etendues <- c(features, "budget", "shop_type_name", "source")
+mediane_budget_train <- median(train_inc$budget, na.rm = TRUE)
+
+train_inc_etendu <- train_inc %>%
+  mutate(
+    budget = coalesce(budget, mediane_budget_train),
+    shop_type_name = as.factor(shop_type_name),
+    source = as.factor(source)
+  )
+test_inc_etendu <- test_inc %>%
+  mutate(
+    budget = coalesce(budget, mediane_budget_train),
+    shop_type_name = factor(shop_type_name, levels = levels(train_inc_etendu$shop_type_name)),
+    source = factor(source, levels = levels(train_inc_etendu$source))
+  )
+
+# NB : si shop_type_name a plus de 53 modalites, randomForest() renverra une
+# erreur explicite -- regrouper les modalites rares serait alors necessaire.
+rf_incertains_etendu <- randomForest(
+  x = as.data.frame(train_inc_etendu[, features_etendues]), y = as.factor(train_inc_etendu$correcte),
+  ntree = 500,
+)
+
+test_inc_etendu$proba_rf_etendu <- predict(
+  rf_incertains_etendu, as.data.frame(test_inc_etendu[, features_etendues]), type = "prob"
+)[, "1"]
+
+choix_rf_etendu <- test_inc_etendu %>%
+  group_by(ligne) %>%
+  slice_max(proba_rf_etendu, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+data.frame(
+  Modele = c(
+    "SIRUS (référence)",
+    "RF (features de base)",
+    "RF (+ budget, shop_type_name, source)",
+    "Borne haute"
+  ),
+  Accuracy_produit = c(
+    mean(sirus_sur_test_inc$sirus_correct),
+    mean(choix_rf$correcte),
+    mean(choix_rf_etendu$correcte),
+    borne_haute_test_inc
+  )
+) %>% mutate(Accuracy_produit = sprintf("%.1f%%", Accuracy_produit * 100))
+```
+
+```{r}
+importance(rf_incertains_etendu) %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("feature") %>%
+  arrange(desc(MeanDecreaseGini))
+```
+
+**Lecture** : si le RF dépasse nettement SIRUS sur ces mêmes produits (et
+se rapproche de la borne haute), ça confirme qu'un second modèle
+spécialisé sur la zone incertaine vaut la peine. Si l'écart est faible ou
+nul, la limite n'est pas le manque d'expressivité du modèle mais bien le
+manque de signal dans les features disponibles pour ces cas — auquel cas
+il faudrait plutôt de nouvelles features que changer de modèle.
+
+### Faux positifs ou faux négatifs ?
+
+L'accuracy produit (le bon candidat est-il choisi ?) mélange deux types
+d'erreur au niveau candidat : un **faux positif** (le modèle croit à tort
+qu'un mauvais candidat est le bon — dangereux s'il obtient la proba la
+plus haute du produit) et un **faux négatif** (le modèle rejette à tort le
+candidat qui était en fait le bon). Matrices de confusion candidat-level
+(seuil 0.5), RF et SIRUS sur les mêmes lignes de `test_inc`, pour comparer.
+
+```{r}
+stats_confusion <- function(vrai, proba, seuil = 0.5) {
+  pred <- as.integer(proba > seuil)
+  tp <- sum(pred == 1 & vrai == 1)
+  fp <- sum(pred == 1 & vrai == 0)
+  fn <- sum(pred == 0 & vrai == 1)
+  tn <- sum(pred == 0 & vrai == 0)
+  data.frame(
+    Vrais_positifs = tp, Faux_positifs = fp, Faux_negatifs = fn, Vrais_negatifs = tn,
+    Precision = tp / (tp + fp), Rappel = tp / (tp + fn)
+  )
+}
+
+bind_rows(
+  data.frame(Modele = "RF", stats_confusion(test_inc$correcte, test_inc$proba_rf)),
+  data.frame(Modele = "SIRUS", stats_confusion(test_inc$correcte, test_inc$proba)),
+) %>% mutate(across(c(Precision, Rappel), ~ sprintf("%.1f%%", . * 100)))
+```
+
+**Lecture** : `Rappel` bas = beaucoup de faux négatifs (le modèle laisse
+passer des candidats qui étaient pourtant les bons) ; `Precision` basse =
+beaucoup de faux positifs (le modèle valide à tort des candidats faux,
+qui risquent alors d'être choisis). Vu le déséquilibre des classes (un
+seul candidat correct par produit au mieux, contre 1 à 3 candidats faux),
+les faux positifs sont structurellement plus fréquents en valeur absolue
+— la vraie question est de savoir si le rappel (est-ce qu'on identifie
+bien le bon candidat quand il existe) est suffisant.
+
+## Décision finale : code automatique ou reprise manuelle ?
+
+Système à deux sorties basé sur `proba_gagnant` : au-dessus du seuil, on
+accepte le choix de SIRUS (code automatique, avec un taux de faux
+positifs assumé) ; en dessous, on envoie en reprise manuelle ou au
+LLM-judge plutôt que de forcer un choix peu fiable. `seuil = 0.6` est un
+point de départ raisonnable (63 % du volume auto-codé à 80 % de
+fiabilité) — à ajuster selon le coût réel d'une reprise vs celui d'un
+code faux.
+
+```{r}
+decider_code <- function(table_produit, seuil = 0.6) {
+  table_produit %>%
+    mutate(decision = if_else(proba_gagnant >= seuil, "Code automatique", "Reprise manuelle / LLM"))
+}
+
+decisions_nouveau <- decider_code(table_produit_nouveau, seuil = 0.6)
+
+decisions_nouveau %>%
+  group_by(decision) %>%
+  summarise(
+    n = n(), pct_volume = n() / nrow(decisions_nouveau), fiabilite = mean(sirus_correct), .groups = "drop"
+  ) %>%
+  mutate(pct_volume = sprintf("%.1f%%", pct_volume * 100), fiabilite = sprintf("%.1f%%", fiabilite * 100))
+```
+
+Avec ce seuil unique, la fiabilité (80.1 %) et le volume de reprise
+(37.1 %) sont liés par un seul levier — impossible d'améliorer les deux
+en même temps. Le RF, qui rattrape une partie de la zone où SIRUS
+abandonne (rappel 59.7 % contre 17.5 % sur ces mêmes cas, section
+précédente), permet de sortir de ce compromis à un seul levier.
+
+### Cascade à 2 étages : SIRUS confiant → RF sur les incertains → reprise
+
+Le RF n'a été validé que sur `test_inc` (20 % de la zone incertaine, non
+vu à l'entraînement) : ses taux ci-dessous sont extrapolés à l'ensemble
+de la zone incertaine, en supposant que `test_inc` en est un échantillon
+représentatif (split aléatoire par produit) — à confirmer sur un
+échantillon plus grand si le résultat est retenu.
+
+```{r}
+seuil_sirus <- 0.6
+confiants_sirus <- table_produit_nouveau %>% filter(proba_gagnant >= seuil_sirus)
+
+n_total_nouveau <- nrow(table_produit_nouveau)
+pct_confiant_sirus <- nrow(confiants_sirus) / n_total_nouveau
+pct_incertain <- 1 - pct_confiant_sirus
+
+courbe_seuil_rf <- function(seuils = seq(0, 0.9, by = 0.1)) {
+  bind_rows(lapply(seuils, function(s) {
+    garde <- choix_rf$proba_rf >= s
+    data.frame(
+      seuil = s,
+      pct_retenu_parmi_incertains = mean(garde),
+      fiabilite_retenus = if (sum(garde) > 0) mean(choix_rf$correcte[garde]) else NA_real_
+    )
+  }))
+}
+
+courbe_seuil_rf() %>% mutate(across(-seuil, ~ sprintf("%.1f%%", . * 100)))
+```
+
+Choisir `seuil_rf` en lisant le tableau ci-dessus (même logique que pour
+SIRUS : fiabilité des retenus vs volume qu'on rattrape), puis bilan
+global du système à 2 étages :
+
+```{r}
+seuil_rf <- 0.5  # a ajuster selon le tableau precedent
+
+retenus_rf <- choix_rf$proba_rf >= seuil_rf
+pct_rf_retenu_parmi_incertains <- mean(retenus_rf)
+fiabilite_rf_retenus <- mean(choix_rf$correcte[retenus_rf])
+
+pct_rf_retenu_total <- pct_incertain * pct_rf_retenu_parmi_incertains
+pct_reprise_total <- pct_incertain * (1 - pct_rf_retenu_parmi_incertains)
+
+fiabilite_globale <- (
+  pct_confiant_sirus * mean(confiants_sirus$sirus_correct) +
+  pct_rf_retenu_total * fiabilite_rf_retenus
+) / (pct_confiant_sirus + pct_rf_retenu_total)
+
+bilan_cascade <- data.frame(
+  Etape = c("SIRUS confiant (auto)", "RF confiant sur incertains (auto)", "Reprise manuelle / LLM"),
+  Pct_volume_total = c(pct_confiant_sirus, pct_rf_retenu_total, pct_reprise_total),
+  Fiabilite = c(mean(confiants_sirus$sirus_correct), fiabilite_rf_retenus, NA)
+)
+bilan_cascade %>%
+  mutate(
+    Pct_volume_total = sprintf("%.1f%%", Pct_volume_total * 100),
+    Fiabilite = ifelse(is.na(Fiabilite), "-", sprintf("%.1f%%", Fiabilite * 100))
+  )
+```
+
+```{r}
+cat(sprintf("Fiabilite globale de l'auto-codage (SIRUS + RF confiants) : %.1f%%\n", fiabilite_globale * 100))
+cat(sprintf(
+  "Volume envoye en reprise : %.1f%%  (contre %.1f%% avec SIRUS seul au meme seuil 0.6)\n",
+  pct_reprise_total * 100, (1 - pct_confiant_sirus) * 100
+))
+```
+
+**Lecture** : compare `fiabilite_globale` et le volume de reprise à la
+version SIRUS seul (80.1 % de fiabilité, 37.1 % de reprise). Si les deux
+s'améliorent, la cascade est un net progrès ; si le gain de fiabilité
+globale est faible ou nul, ajuster `seuil_rf` à la hausse (moins de
+volume rattrapé par le RF, mais plus fiable) plutôt que d'abandonner
+l'idée.
+
+**Le point le plus important à garder à l'esprit** : ce système optimise
+la décision *en aval*, avec les classifieurs de base tels qu'ils sont
+aujourd'hui sur ce run. Il ne corrige pas la cause identifiée en premier
+lieu — la dégradation de RAG-ANN, qui réduit directement la borne haute
+(76.4 % contre 96.6 % sur l'ancien run). Aucun seuil, aucun second modèle
+ne peut récupérer les produits pour lesquels le bon code n'est proposé
+par aucun classifieur. Ce système réduit le volume de reprise nécessaire
+et rend le pipeline actuel plus sûr à utiliser, mais la vraie correction
+reste en amont.
