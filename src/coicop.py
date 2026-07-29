@@ -10,6 +10,37 @@ Convention de niveau (nombre de chiffres significatifs = niveau + 1) :
 import pandas as pd
 
 
+DIVISIONS_COICOP = {
+    "01": "Produits alimentaires et boissons non alcoolisées",
+    "02": "Boissons alcoolisées, tabac et stupéfiants",
+    "03": "Articles d'habillement et chaussures",
+    "04": "Logement, eau, gaz, électricité et autres combustibles",
+    "05": "Meubles, articles de ménage et entretien courant du foyer",
+    "06": "Santé",
+    "07": "Transports",
+    "08": "Information et communication",
+    "09": "Loisirs, sport et culture",
+    "10": "Services de l'enseignement",
+    "11": "Services de restauration et d'hébergement",
+    "12": "Assurance et services financiers",
+    "13": "Soins corporels, protection sociale et biens et services divers",
+    "98": "Produit indéterminé/illisible",
+    "99": "Hors COICOP (dons, impôts, opérations bancaires...)",
+}
+
+
+def libelle_division(code):
+    """
+    Renvoie "Libellé (XX)" pour un code de division COICOP à 2 chiffres.
+    Renvoie `code` inchangé s'il n'est pas reconnu (ex. "TOTAL", NaN).
+    """
+    if pd.isna(code):
+        return code
+    code = str(code)
+    libelle = DIVISIONS_COICOP.get(code)
+    return f"{libelle} ({code})" if libelle else code
+
+
 def tronquer_niveau(code, niveau=4):
     """
     Tronque un code COICOP au niveau demandé.

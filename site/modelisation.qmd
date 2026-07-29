@@ -30,7 +30,7 @@ from sklearn.metrics import classification_report
 import plotly.graph_objects as go
 
 from data.load_data import charger_donnees, CHEMIN_S3_MODELISATION
-from src.coicop import tronquer_niveau
+from src.coicop import tronquer_niveau, libelle_division
 from src.baseline import (
     baseline_majorite_ttc, evaluer_baseline, preparer_donnees, entrainer_evaluer,
     entrainer_evaluer_cv, tuner_hyperparametres, courbe_precision_rappel, courbe_roc,
@@ -38,6 +38,7 @@ from src.baseline import (
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 200)
+pd.set_option("display.max_colwidth", None)
 ```
 
 ```{python}
@@ -118,6 +119,8 @@ acc_division = pd.DataFrame({
     "n": division.value_counts(),
     "baseline_correcte (%)": (y.groupby(division).mean() * 100).round(1),
 }).sort_index()
+acc_division.index = acc_division.index.map(libelle_division)
+acc_division.index.name = "Division"
 acc_division
 ```
 
@@ -403,7 +406,10 @@ tab_division = erreurs_baseline.assign(division=division_erreurs).groupby(
 tab_division["taux_manquee (%)"] = (
     tab_division.get("Manquée (RF dit correcte)", 0) / tab_division.sum(axis=1) * 100
 ).round(1)
-tab_division.sort_values("taux_manquee (%)", ascending=False)
+tab_division = tab_division.sort_values("taux_manquee (%)", ascending=False)
+tab_division.index = tab_division.index.map(libelle_division)
+tab_division.index.name = "Division"
+tab_division
 ```
 
 #### Détail des cas manqués

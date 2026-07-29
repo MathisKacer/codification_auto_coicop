@@ -28,6 +28,6 @@ repartition = (
     .rename_axis("division").reset_index(name="n")
 )
 repartition["%"] = (repartition["n"] / len(df) * 100).round(1)
-repartition
+joli(repartition)
 ```
 

@@ -164,7 +164,7 @@ libellé brut du produit).
 det = pd.DataFrame({
     "Ligne": df.loc[ttc1_seul, col_ligne].values,
     "Code vrai": vrai[ttc1_seul].values,
-    "Division": vrai[ttc1_seul].str[:2].values,
+    "Division": vrai[ttc1_seul].str[:2].map(libelle_division).values,
 })
 display(HTML(
     f'<div style="max-height:400px;overflow-y:auto;border:1px solid #ddd;border-radius:6px;">'
