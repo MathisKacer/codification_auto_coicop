@@ -47,6 +47,11 @@ def tronquer_niveau(code, niveau=4):
 
     Gère les NaN et les sentinels du preprocessing
     ("AUCUNE_SUGGESTION", "NON_CODABLE") qui sont préservés tels quels.
+
+    Un "0" terminal ne correspond a aucune vraie sous-categorie (convention
+    COICOP "pas de sous-classe/groupe plus precise", ex. 13.9.0 == 13.9) :
+    il est retire en cascade, aussi bien sur les codes predits que sur le
+    vrai code, pour que les deux soient compares sur la meme base.
     """
     if pd.isna(code):
         return code
@@ -67,7 +72,10 @@ def tronquer_niveau(code, niveau=4):
         else:
             if chiffres < n_chiffres_cible:
                 out.append(c)
-    return "".join(out)
+    resultat = "".join(out)
+    while resultat.endswith(".0"):
+        resultat = resultat[:-2]
+    return resultat
 
 
 def niveau_atteint(code) -> int:
