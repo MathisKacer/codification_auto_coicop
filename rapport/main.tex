@@ -1,0 +1,81 @@
+\documentclass{rapportCS}
+
+\title{Note d'étape - Stage 2A Fonctionnaire}
+
+\begin{document}
+
+%----------- Informations du rapport ---------
+\titre{Création d'un classifieur permettant la codification automatique  de libellés de produit dans la nomenclature COICOP\\[0.3cm]\large Note d'étape}
+\mention{STAGE 2A FONCTIONNAIRE}
+\eleve{KACER \textsc{Mathis}}
+\filiere{}
+\master{}
+
+% Tuteurs école (à adapter selon ton encadrant ENSAI si tu en as un)
+\tuteuruniv{
+    \textsc{Anysia THOMAS} \\
+    anysia.thomas@insee.fr
+}
+
+% Tuteurs entreprise
+\tuteurentreprise{
+    \textsc{Julien PRAMIL} \\
+    julien.pramil@insee.fr
+}
+
+% Logo INSEE pour la couverture
+\logoentreprisecouverture{
+    \centering\includegraphics[height=2.5cm]{logos/logo_insee.png}
+}
+
+% Logo INSEE pour les marges
+\logoentreprise{
+    \includegraphics[height=0.6cm]{logos/logo_insee.png}
+}
+
+%----------- Initialisation -------------------
+\fairemarges
+\fairecouverture
+\pagenumbering{arabic}
+
+
+ \newpage
+\section{Description de l'environnement de travail}
+
+J'effectue mon stage à la direction générale de l'INSEE à Montrouge, plus préisemment au sein du SSP Lab, qui fait partie de la DMCSI (Direction de la Méthodologie et de la Coordination Statistique et Internationale). \newline
+
+Le SSP Lab est une unité d'innovation en datascience au service du SSP (Service Statistique Français). Ses missions s'articulent autour de trois axes : assurer une veille technologique et diffuser les méthodes et technologies innovantes pertinentes pour la statistique publique ; explorer, au travers d'expérimentations concrètes, le potentiel des nouvelles sources de données et des nouvelles méthodes de data science ; et animer les réseaux d'innovation statistique, notamment le réseau des data scientists de la statistique publique, via des événements, des formations ou encore une newsletter. \newline
+
+Le SSP Lab mobilise des modes d'action variés : expérimentations en partenariat avec les équipes métier, animation de réseaux, formations, publications de documents de travail, participation à des hackathons et création de hackathons pédagogiques, conférences et projets nationaux et internationaux. Son objectif est de contribuer au développement de l'innovation à l'INSEE. Mon stage s'inscrit dans ce premier mode d'action. Il s'intègre dans un projet de codification automatique mené par le SSP Lab pour l'enquête Budget De Famille dans la nomenclature COICOP (Classification of Individual Consumption by Purpose).
+
+\section{Présentation du projet}
+
+L'enquête Budget de Famille (BdF) vise à décrire l'ensemble des dépenses et des ressources des ménages résidant en France. Dans ce cadre, chaque dépense déclarée doit être associée à un poste de la nomenclature COICOP afin de pouvoir agréger ces dépenses de manière cohérente et produire des statistiques pertinentes à différents niveaux de détail. \newline
+
+Les dépenses proviennent de trois sources distinctes : des carnets remplis à la main par les ménages, des tickets de caisse, et des produits renseignés directement sur une application dotée d'un système de suggestion. Chacune présente ses propres spécificités de format et de qualité des libellés. Traditionnellement, la codification est réalisée manuellement : à partir d'un libellé décrit en clair, un gestionnaire d'enquête attribue le code COICOP correspondant. Ce processus est coûteux en temps, sujet à des incohérences et difficilement soutenable face au volume à traiter. \newline
+
+L'objectif du projet est d'automatiser cette codification à l'aide de méthodes de datascience et d'apprentissage automatique. À partir d'un libellé textuel en entrée, le modèle doit prédire le poste COICOP le plus approprié. L'approche repose sur quatre classifieurs construits sur des modèles différents, dont les prédictions sont ensuite départagées par une étape de LLM \textit{as a judge} : un grand modèle de langage arbitre entre les propositions pour retenir la codification la plus pertinente. Cette architecture combine la complémentarité des différents modèles avec la capacité de raisonnement contextuel du LLM afin d'améliorer la fiabilité de la prédiction finale. \newline
+
+Mon stage vise à trouver une alternative à cette étape de LLM \textit{as a judge}. En effet, si l'arbitrage par un modèle de langage offre de bons résultats, il s'avère très coûteux en ressources et en temps de calcul. Il est par ailleurs difficile de comprendre comment il prend ses décisions, avec des scores de confiance qui peuvent parfois sembler hasardeux. L'objectif est donc d'entraîner un modèle plus léger et plus interprétable, capable de reproduire cette fonction d'arbitrage entre les classifieurs à moindre coût, tout en préservant la qualité de la codification finale. 
+
+\section{Travaux du stage}
+
+Mon travail s'est articulé autour de plusieurs étapes progressives. Dans un premier temps, j'ai consacré une phase initiale à la découverte de l'enquête Budget de Famille, des différentes bases de données mobilisées, de la nomenclature COICOP et, surtout, du pipeline de codification existant. Ce dernier s'est révélé relativement complexe, notamment dans son articulation des quatre classifieurs construits sur des modèles différents, dont il m'a fallu saisir le fonctionnement et les spécificités respectives. \newline
+
+J'ai ensuite mis en place une analyse statistique descriptive afin de dresser un état des lieux de la situation : celle-ci visait à visualiser les performances des différents modèles et à identifier leurs comportements dans différents cas de figure, en particulier les situations d'accord et de désaccord entre classifieurs. Ce travail exploratoire poursuit également un autre objectif du stage : permettre d'établir des règles métier à suivre pour la codification, et dégager des pistes sur les directions à privilégier pour la suite du projet. \newline
+
+Sur cette base, j'ai développé un classifieur dont l'objectif est de concurrencer l'étape de LLM as a judge. Celui-ci vise à attribuer un code COICOP ; dans sa version actuelle, il reste volontairement simple et repose principalement sur la majorité des classifieurs, en tranchant, en cas de désaccord, en faveur du classifieur auquel on accorde le plus de confiance. \newline
+
+J'ai ensuite entrepris l'évaluation de ce classifieur, complété par un modèle de type Random Forest cherchant à déterminer si la prédiction est correcte ou non. L'enjeu est ici de pouvoir distinguer les cas « sûrs », pour lesquels on peut faire confiance au classifieur, des cas plus incertains qui nécessitent un autre traitement. Celui-ci pourrait ainsi permettre de filtrer fortement les cas à donner au LLM, limitant de fait l'usage du LLM. \newline
+
+Enfin, une autre mission a consisté à développer un site de type Quarto, construit et hébergé via  \href{https://mathiskacer.github.io/codification_auto_coicop}{GitHub Pages} destiné à donner mes différents résultats. Ce site est actualisé au fur et à mesure de mes nouveaux résultats et peut facilement être mis à jour avec les nouvelles données issues de l'enquête.
+
+\section{Travaux à venir}
+
+Pour la suite du stage, plusieurs pistes de travail se dessinent. Je compte d'abord poursuivre l'alimentation du site en statistiques descriptives et en visualisations de données, selon les besoins de l'équipe ou la bonne compréhension de mes modèles. \newline
+
+Je souhaite ensuite améliorer mes modèles, qu'il s'agisse du classifieur ou de la Random Forest. Une attention particulière est portée à la réduction des faux positifs, c'est-à-dire les cas que la Random Forest considère comme bien codifiés par le classifieur alors qu'ils ne le sont pas. Il s'agit là d'un arbitrage à trouver : réduire ces faux positifs impose généralement de renvoyer davantage de cas vers le LLM, ce qui va à l'encontre de l'objectif initial de limiter son usage coûteux. C'est donc un arbitrage à établir. \newline
+
+Enfin, il est envisagé par la suite d'explorer d'autres modèles susceptibles d'améliorer la qualité de la classification et/ou de permettre de dégager des règles métier plus performantes. Ceux-ci pourraient ainsi consolider la codification sur une base facilement interprétable et plus économe des ressources.
+
+\end{document}

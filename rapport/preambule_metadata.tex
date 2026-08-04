@@ -1,0 +1,38 @@
+% Neutralise le \maketitle par défaut de Pandoc : la page de garde est
+% entièrement gérée par \fairecouverture (gabarit ENSAI) plus bas.
+\renewcommand{\maketitle}{}
+
+%----------- Informations du rapport ---------
+\titre{Création d'un classifieur permettant la codification automatique de libellés de produit dans la nomenclature COICOP\\[0.3cm]\large Rapport de stage}
+\mention{STAGE 2A FONCTIONNAIRE}
+\eleve{KACER \textsc{Mathis}}
+\dates{Juin -- Août 2026}
+% \filiere et \master ne sont pas utilisés pour un stage 2A fonctionnaire :
+% on les initialise à vide pour que rapportCS.cls (qui les affiche sur la
+% couverture seulement s'ils sont non vides) les omette proprement.
+\filiere{}
+\master{}
+
+% Tuteurs école
+\tuteuruniv{
+    \textsc{Anysia THOMAS} \\
+    anysia.thomas@insee.fr
+}
+
+% Tuteurs entreprise
+\tuteurentreprise{
+    \textsc{Julien PRAMIL} \\
+    julien.pramil@insee.fr
+}
+
+% Logo INSEE pour la couverture
+\logoentreprisecouverture{
+    \centering\includegraphics[height=2.5cm]{logos/logo_insee.png}
+}
+
+% Logo INSEE pour les marges
+\logoentreprise{
+    \includegraphics[height=0.6cm]{logos/logo_insee.png}
+}
+
+\fairemarges

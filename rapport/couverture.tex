@@ -1,0 +1,14 @@
+% Pandoc force ces intitulés en anglais par défaut (sans "lang: fr", qui
+% entrerait en conflit avec le \RequirePackage[french]{babel} du gabarit) :
+% on les repasse en français ici, après le bloc de préambule de Pandoc
+% (include-before-body est inséré après \begin{document}, donc après ce
+% bloc), pour avoir le dernier mot.
+\renewcommand{\contentsname}{Table des matières}
+\renewcommand{\listfigurename}{Table des figures}
+\renewcommand{\listtablename}{Liste des tableaux}
+\renewcommand{\figurename}{Figure}
+\renewcommand{\tablename}{Tableau}
+
+\fairecouverture
+\pagenumbering{arabic}
+\tabledematieres
