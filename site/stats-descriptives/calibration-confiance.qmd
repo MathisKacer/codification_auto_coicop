@@ -13,7 +13,7 @@ correspond réellement à une part plus grande de bonnes réponses ? C'est la
 question centrale avant d'utiliser un seuil de confiance pour décider quand
 faire confiance à un classifieur et quand escalader (reprise manuelle ou
 LLM-judge) — cf. le
-[compromis précision/rappel](../modelisation.qmd#compromis-précisionrappel)
+[compromis précision/rappel](../modelisation/index.qmd#compromis-précisionrappel)
 déjà utilisé pour la Random Forest.
 
 ```{python}

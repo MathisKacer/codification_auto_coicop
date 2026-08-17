@@ -176,7 +176,7 @@ display(HTML(
 ## Pour la modélisation
 
 Ces chiffres motivent directement l'ajout de features dérivées du top-3 de TTC
-(cf. [modélisation](../modelisation.qmd) et le notebook SIRUS) : le rang auquel
+(cf. [modélisation](../modelisation/index.qmd) et la [synthèse SIRUS](../modelisation/sirus.qmd)) : le rang auquel
 un code candidat apparaît chez TTC (`ttc_rang`) et la confiance associée
 portent un signal réel, puisque le vrai code est présent dans le top-3 bien plus
 souvent qu'en rang 1 seul, et que la confiance des rangs 2/3 sépare les bons des

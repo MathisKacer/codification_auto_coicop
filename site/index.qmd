@@ -60,7 +60,7 @@ lorsque c'est vraiment nécessaire.
 2. **Un modèle pour savoir quand lui faire confiance** : une Random Forest
    entraînée à prédire si cette baseline a trouvé le bon code, à partir de
    caractéristiques disponibles sans appel au LLM (accords entre
-   classifieurs, scores de confiance...) — cf. [Modélisation](modelisation.qmd).
+   classifieurs, scores de confiance...) — cf. [Modélisation](modelisation/index.qmd).
 3. **Une analyse de fiabilité pour en tirer des règles métier** : repérer
    des situations où un classifieur (ou un type d'accord/désaccord entre
    eux) est quasi systématiquement fiable ou au contraire à risque, selon
@@ -78,7 +78,7 @@ Ce site présente l'avancement des travaux en deux temps :
   TTC) et de l'apport du LLM-judge — taux d'accord, faux positifs, cas de
   désaccord — identifie où l'on peut leur faire confiance, selon le niveau
   de granularité de la nomenclature COICOP (division à sous-classe).
-- **[Modélisation](modelisation.qmd)** : mise en place et évaluation de la
+- **[Modélisation](modelisation/index.qmd)** : mise en place et évaluation de la
   baseline (vote majoritaire + TTC), puis d'une Random Forest visant à
   prédire quand lui faire confiance plutôt que de solliciter le LLM-judge.
 

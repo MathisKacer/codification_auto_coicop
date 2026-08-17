@@ -87,8 +87,8 @@ display(Markdown(
     "erreur de fond : si le 4e segment de la vérité vaut `0` (convention "
     "COICOP \"pas de sous-classe plus précise\"), le classifieur n'a rien "
     "affirmé d'incorrect en s'arrêtant avant — voir "
-    "[modélisation](../modelisation.qmd) pour la mesure d'accuracy qui en "
-    "tient compte."
+    "[troncature niveau 4](troncature-niveau4.qmd) pour la preuve que ce cas "
+    "est bien géré (fix cascade) sans fausser la mesure d'accuracy."
 ))
 ```
 

@@ -6,7 +6,7 @@ date: today
 
 Cette page documente la lecture des résultats du run
 `s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet`
-(voir [résultats bruts](../modelisation.qmd) — qui peuvent refléter un run plus
+(voir [résultats bruts](../modelisation/index.qmd) — qui peuvent refléter un run plus
 récent si `CHEMIN_S3_MODELISATION` a changé depuis).
 
 ## Analyse des erreurs de la baseline

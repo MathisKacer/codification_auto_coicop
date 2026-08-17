@@ -6,7 +6,7 @@ date: today
 
 ## Objectif
 
-Un nouveau classifieur simple a été mis en place, avec comme objectif de compléter le LLM-as-a-judge, voire de la concurrencer. Celui-ci s'appuie sur une idée simple : suivre l'avis majoritaire des classifieurs (cf. [Accords unanimes des 4 classifieurs](stats-descriptives/accords-unanimes.qmd) et [3 classifieurs contre 1 dissident](stats-descriptives/trois-contre-un.qmd)) et TorchTextClassifier en cas d'égalité (cf. [classifieurs seuls](stats-descriptives/seul-correct.qmd)).
+Un nouveau classifieur simple a été mis en place, avec comme objectif de compléter le LLM-as-a-judge, voire de la concurrencer. Celui-ci s'appuie sur une idée simple : suivre l'avis majoritaire des classifieurs (cf. [Accords unanimes des 4 classifieurs](../stats-descriptives/accords-unanimes.qmd) et [3 classifieurs contre 1 dissident](../stats-descriptives/trois-contre-un.qmd)) et TorchTextClassifier en cas d'égalité (cf. [classifieurs seuls](../stats-descriptives/seul-correct.qmd)).
 
 Le but est ensuite d'en étudier les performances, notamment via une Random Forest, afin d'établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l'intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.
 
@@ -15,7 +15,7 @@ Le but est ensuite d'en étudier les performances, notamment via une Random Fore
 
 ```{python}
 import sys, os
-sys.path.append(os.path.abspath(".."))
+sys.path.append(os.path.abspath("../.."))
 
 import io
 from collections import Counter
@@ -669,4 +669,3 @@ table_mecanisme
 ```
 
 </details>
-

@@ -15,7 +15,7 @@ website:
         text: Accueil
       - href: stats-descriptives/index.qmd
         text: "Fiabilité des classifieurs"
-      - href: modelisation.qmd
+      - href: modelisation/index.qmd
         text: Modélisation
       - href: interpretation/index.qmd
         text: Interprétation
@@ -31,7 +31,14 @@ website:
         - stats-descriptives/seul-correct.qmd
         - stats-descriptives/ttc-top3.qmd
         - stats-descriptives/profondeur-codes.qmd
+        - stats-descriptives/troncature-niveau4.qmd
         - stats-descriptives/calibration-confiance.qmd
+    - id: modelisation
+      title: "Modélisation"
+      style: docked
+      contents:
+        - modelisation/index.qmd
+        - modelisation/sirus.qmd
 
 format:
   html:
