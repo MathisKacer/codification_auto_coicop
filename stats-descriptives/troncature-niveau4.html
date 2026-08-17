@@ -8,7 +8,7 @@
 
 <meta name="dcterms.date" content="2026-08-17">
 
-<title>Aperçu des données – Codification automatique COICOP</title>
+<title>Troncature niveau 4 : le fix cascade des “0” terminaux – Codification automatique COICOP</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -27,10 +27,45 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -74,9 +109,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
-
-<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
 
 </head>
@@ -125,7 +157,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../stats-descriptives/apercu-donnees.html">Aperçu des données</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../stats-descriptives/troncature-niveau4.html">Troncature niveau 4 : le fix cascade des “0” terminaux</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -139,7 +171,7 @@ ul.task-list li input[type="checkbox"] {
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../stats-descriptives/apercu-donnees.html" class="sidebar-item-text sidebar-link active">
+  <a href="../stats-descriptives/apercu-donnees.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Aperçu des données</span></a>
   </div>
 </li>
@@ -181,7 +213,7 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../stats-descriptives/troncature-niveau4.html" class="sidebar-item-text sidebar-link">
+  <a href="../stats-descriptives/troncature-niveau4.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Troncature niveau 4 : le fix cascade des “0” terminaux</span></a>
   </div>
 </li>
@@ -196,24 +228,16 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul>
-  <li><a href="#jeu-de-données" id="toc-jeu-de-données" class="nav-link active" data-scroll-target="#jeu-de-données">Jeu de données</a></li>
-  <li><a href="#aperçu-des-premières-lignes" id="toc-aperçu-des-premières-lignes" class="nav-link" data-scroll-target="#aperçu-des-premières-lignes">Aperçu des premières lignes</a></li>
-  <li><a href="#répartition-par-division-coicop-niveau-1-vrai-code" id="toc-répartition-par-division-coicop-niveau-1-vrai-code" class="nav-link" data-scroll-target="#répartition-par-division-coicop-niveau-1-vrai-code">Répartition par division COICOP (niveau 1, vrai code)</a></li>
-  </ul>
-</nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Aperçu des données</h1>
-<p class="subtitle lead">Jeu de données utilisé et statistiques descriptives de base</p>
+<h1 class="title">Troncature niveau 4 : le fix cascade des “0” terminaux</h1>
+<p class="subtitle lead">Pourquoi retirer les “0” finaux ne fausse aucune mesure d’accuracy du site</p>
 </div>
 
 
@@ -236,219 +260,108 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div id="576cc01b" class="cell" data-execution_count="1">
+<p>Ce fix n’est pas propre à un classifieur ou à une analyse en particulier : il est implémenté dans <code>tronquer_niveau()</code>, la fonction de troncature utilisée <strong>par toutes les pages de ce site</strong> (<code>src/coicop.py::tronquer_niveau</code> côté Python, logique identique côté R pour les analyses SIRUS). Toute mesure d’accuracy au niveau 4 affichée ici — <a href="../stats-descriptives/index.html">fiabilité des classifieurs</a>, <a href="../stats-descriptives/profondeur-codes.html">profondeur des codes</a>, <a href="../modelisation/index.html">modélisation</a> — en dépend. Cette page démontre que ce fix est légitime, une fois pour toutes, plutôt que de le supposer dans chaque analyse qui l’utilise.</p>
+<p><strong>Constat de départ</strong> : la troncature au niveau 4 garde 5 chiffres significatifs d’un code COICOP. Deux codes qui ne différaient que par un “0” terminal (<code>"01.1.1.0"</code> vs <code>"01.1.1"</code>) étaient comptés comme des catégories différentes par simple comparaison de chaînes, alors que ce “0” est un artefact de troncature (“pas de subdivision à ce niveau”), pas une vraie sous-catégorie. <strong>Fix</strong> : retrait en cascade des “0” terminaux, à n’importe quel niveau de la hiérarchie.</p>
+<p><strong>Question posée</strong> : après ce fix, l’accuracy mesurée augmente fortement — est-ce légitime, ou le fix fusionne-t-il à tort des catégories réellement distinctes ?</p>
+<p><strong>Méthode de vérification retenue</strong> (après une fausse piste initiale, cf. détails ci-dessous) : pour chaque position de chiffre effectivement atteinte par la troncature niveau 4 (donc jamais au-delà du 5e chiffre, qui est de toute façon coupé avant même que la cascade s’exécute), on vérifie si “0” est <strong>en concurrence avec un chiffre non nul</strong> au même endroit, sous le même préfixe — c’est-à-dire si la cascade risque de fusionner une vraie sous-catégorie (un “1”, “2”, “3”… qui existe réellement à cette position) avec le cas “0”. Si “0” n’est <em>jamais</em> observé en concurrence avec une autre valeur à une position donnée, le retirer ne peut pas faire perdre d’information : il n’y avait rien d’autre à cette position pour ce préfixe.</p>
+<p><em>(Une première tentative avait consisté à vérifier si “0” avait des “enfants” – un chiffre supplémentaire après lui – mais ces chiffres supplémentaires sont au-delà du 5e chiffre, donc hors du périmètre de la troncature niveau 4 : ce critère était incorrect et a été abandonné.)</em></p>
+<div class="cell">
+<details class="code-fold">
+<summary>Voir le code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>niveau <span class="ot">&lt;-</span> <span class="dv">4</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>bucket_s3   <span class="ot">&lt;-</span> <span class="st">"projet-budget-famille"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>endpoint_s3 <span class="ot">&lt;-</span> <span class="st">"minio.lab.sspcloud.fr"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>objet_s3_ancien   <span class="ot">&lt;-</span> <span class="st">"data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>objet_s3_nouveau1 <span class="ot">&lt;-</span> <span class="st">"data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet"</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>objet_s3_nouveau2 <span class="ot">&lt;-</span> <span class="st">"data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>charger_run <span class="ot">&lt;-</span> <span class="cf">function</span>(objet_s3) {</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> aws.s3<span class="sc">::</span><span class="fu">s3read_using</span>(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">FUN =</span> arrow<span class="sc">::</span>read_parquet, <span class="at">object =</span> objet_s3, <span class="at">bucket =</span> bucket_s3,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">opts =</span> <span class="fu">list</span>(<span class="at">region =</span> <span class="st">""</span>, <span class="at">base_url =</span> endpoint_s3),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="st">"ligne"</span> <span class="sc">%in%</span> <span class="fu">names</span>(df)) df<span class="sc">$</span>ligne <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(df)) <span class="sc">-</span> <span class="dv">1</span>L</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  df</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Voir le code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df_ancien   <span class="ot">&lt;-</span> <span class="fu">charger_run</span>(objet_s3_ancien)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>df_nouveau1 <span class="ot">&lt;-</span> <span class="fu">charger_run</span>(objet_s3_nouveau1)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df_nouveau2 <span class="ot">&lt;-</span> <span class="fu">charger_run</span>(objet_s3_nouveau2)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>tous_codes <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">c</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  df_ancien<span class="sc">$</span>code, df_ancien<span class="sc">$</span>lcs_code, df_ancien<span class="sc">$</span>rag_code, df_ancien<span class="sc">$</span>ragann_code, df_ancien<span class="sc">$</span>ttc_code_1,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  df_nouveau1<span class="sc">$</span>code, df_nouveau1<span class="sc">$</span>lcs_code, df_nouveau1<span class="sc">$</span>rag_code, df_nouveau1<span class="sc">$</span>ragann_code, df_nouveau1<span class="sc">$</span>ttc_code_1,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  df_nouveau2<span class="sc">$</span>code, df_nouveau2<span class="sc">$</span>lcs_code, df_nouveau2<span class="sc">$</span>rag_code, df_nouveau2<span class="sc">$</span>ragann_code, df_nouveau2<span class="sc">$</span>ttc_code_1</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>tous_codes <span class="ot">&lt;-</span> tous_codes[<span class="sc">!</span><span class="fu">is.na</span>(tous_codes) <span class="sc">&amp;</span> <span class="sc">!</span>tous_codes <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"AUCUNE_SUGGESTION"</span>, <span class="st">"NON_CODABLE"</span>)]</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>diviser_groupes <span class="ot">&lt;-</span> <span class="cf">function</span>(code) {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  chiffres <span class="ot">&lt;-</span> <span class="fu">str_extract_all</span>(code, <span class="st">"[0-9]"</span>)[[<span class="dv">1</span>]]</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(chiffres) <span class="sc">&lt;</span> <span class="dv">2</span>) <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fu">paste</span>(chiffres[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="at">collapse =</span> <span class="st">""</span>), chiffres[<span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>)])</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>n_chiffres_cible <span class="ot">&lt;-</span> niveau <span class="sc">+</span> <span class="dv">1</span>  <span class="co"># 5</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>lignes_struct <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">lapply</span>(tous_codes, <span class="cf">function</span>(code) {</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">diviser_groupes</span>(code)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">length</span>(g)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (n <span class="sc">&lt;</span> <span class="dv">3</span>) <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  n_chiffres_cumules <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span> <span class="sc">+</span> <span class="fu">seq_len</span>(<span class="fu">max</span>(<span class="dv">0</span>, n <span class="sc">-</span> <span class="dv">1</span>)))</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  positions_valides <span class="ot">&lt;-</span> <span class="fu">which</span>(n_chiffres_cumules <span class="sc">&lt;=</span> n_chiffres_cible <span class="sc">&amp;</span> <span class="fu">seq_along</span>(g) <span class="sc">&gt;=</span> <span class="dv">3</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(positions_valides) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">lapply</span>(positions_valides, <span class="cf">function</span>(i) {</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">prefixe =</span> <span class="fu">paste</span>(g[<span class="dv">1</span><span class="sc">:</span>(i <span class="sc">-</span> <span class="dv">1</span>)], <span class="at">collapse =</span> <span class="st">"."</span>), <span class="at">chiffre =</span> g[i], <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  }))</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>bilan_positions <span class="ot">&lt;-</span> lignes_struct <span class="sc">%&gt;%</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(prefixe, chiffre) <span class="sc">%&gt;%</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(prefixe) <span class="sc">%&gt;%</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">valeurs =</span> <span class="fu">paste</span>(<span class="fu">sort</span>(<span class="fu">unique</span>(chiffre)), <span class="at">collapse =</span> <span class="st">","</span>), <span class="at">n_valeurs =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>positions_a_risque <span class="ot">&lt;-</span> bilan_positions <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="fu">grepl</span>(<span class="st">"0"</span>, valeurs) <span class="sc">&amp;</span> n_valeurs <span class="sc">&gt;</span> <span class="dv">1</span>)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Codes distincts examinés (3 runs, vrai code + 4 candidats de chaque classifieur) : %d</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">length</span>(tous_codes)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[charger_donnees] projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet → shape = (5825, 38)</code></pre>
+<pre><code>Codes distincts examinés (3 runs, vrai code + 4 candidats de chaque classifieur) : 713</code></pre>
+</div>
+<details class="code-fold">
+<summary>Voir le code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Positions (préfixe, chiffre) atteignables par la troncature niveau 4 : %d</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">nrow</span>(bilan_positions)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Positions (préfixe, chiffre) atteignables par la troncature niveau 4 : 181</code></pre>
+</div>
+<details class="code-fold">
+<summary>Voir le code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Positions où '0' est en concurrence avec un chiffre non nul (= vrai risque de sur-fusion) : %d</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(positions_a_risque)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Positions où '0' est en concurrence avec un chiffre non nul (= vrai risque de sur-fusion) : 0</code></pre>
 </div>
 </div>
-<section id="jeu-de-données" class="level2">
-<h2 class="anchored" data-anchor-id="jeu-de-données">Jeu de données</h2>
-<div id="c7c8acd5" class="cell" data-execution_count="2">
-<div class="cell-output cell-output-display cell-output-markdown">
-<p><strong>5825 observations</strong> — classifieurs de base : <code>lcs_code, rag_code, ragann_code, ttc_code_1</code> — LLM-judge : <code>llm_code</code></p>
-</div>
-<div class="cell-output cell-output-display cell-output-markdown">
-<p>Source : <code>s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet</code></p>
-</div>
-</div>
-</section>
-<section id="aperçu-des-premières-lignes" class="level2">
-<h2 class="anchored" data-anchor-id="aperçu-des-premières-lignes">Aperçu des premières lignes</h2>
-<div id="dce7a73c" class="cell" data-execution_count="3">
-<div class="cell-output cell-output-display" data-execution_count="3">
-<div>
+<p><strong>Conclusion</strong> : aucune position à risque trouvée. Le “0” terminal ne sert jamais à distinguer une vraie sous-catégorie à un niveau atteint par la troncature niveau 4 — <strong>le fix cascade est légitime</strong>, pas une sur-correction. C’est cette conclusion que <code>tronquer_niveau()</code> (R et Python) applique partout sur ce site.</p>
+<p><strong>Depuis le run <code>codif-x98xl</code> (2026-07-30)</strong>, une colonne <code>code_lvl4</code> est calculée en amont du pipeline pour le vrai code, et correspond à 100 % à ce même fix cascade (vérification détaillée dans la <a href="../modelisation/sirus.html#troncature-niveau-4-le-fix-cascade-des-0-terminaux">synthèse SIRUS</a>, qui l’utilise directement).</p>
 
 
-<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">code</th>
-<th data-quarto-table-cell-role="th">lcs_code</th>
-<th data-quarto-table-cell-role="th">rag_code</th>
-<th data-quarto-table-cell-role="th">ragann_code</th>
-<th data-quarto-table-cell-role="th">ttc_code_1</th>
-<th data-quarto-table-cell-role="th">llm_code</th>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">ligne</th>
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th"></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">0</th>
-<td>07.4.1.1</td>
-<td>07.4.1.1</td>
-<td>None</td>
-<td>07.4.1.1</td>
-<td>07.4.1.1</td>
-<td>07.4.1.1</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">1</th>
-<td>01.1.4.8.1</td>
-<td>01.1.4.8.1</td>
-<td>01.1.4.8</td>
-<td>01.1.4.8</td>
-<td>01.1.4.8</td>
-<td>01.1.4.8.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">2</th>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-<td>None</td>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">3</th>
-<td>09.7.1</td>
-<td>09.7.1</td>
-<td>09.7.1.9</td>
-<td>09.7.1</td>
-<td>09.7.4.0</td>
-<td>09.7.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">4</th>
-<td>01.1.6.4.1</td>
-<td>01.1.9.1.1</td>
-<td>01.1.6.4</td>
-<td>01.1.6.4</td>
-<td>01.1.6.4</td>
-<td>01.1.6.4.1</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
-</div>
-</section>
-<section id="répartition-par-division-coicop-niveau-1-vrai-code" class="level2">
-<h2 class="anchored" data-anchor-id="répartition-par-division-coicop-niveau-1-vrai-code">Répartition par division COICOP (niveau 1, vrai code)</h2>
-<div id="c359103c" class="cell" data-execution_count="4">
-<div class="cell-output cell-output-display" data-execution_count="4">
-<div>
-
-
-<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
-<thead>
-<tr class="header">
-<th data-quarto-table-cell-role="th"></th>
-<th data-quarto-table-cell-role="th">Division</th>
-<th data-quarto-table-cell-role="th">Effectif</th>
-<th data-quarto-table-cell-role="th">%</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">0</th>
-<td>Produits alimentaires et boissons non alcoolisées (01)</td>
-<td>3266</td>
-<td>56.1</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">1</th>
-<td>Boissons alcoolisées, tabac et stupéfiants (02)</td>
-<td>124</td>
-<td>2.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">2</th>
-<td>Articles d'habillement et chaussures (03)</td>
-<td>159</td>
-<td>2.7</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">3</th>
-<td>Logement, eau, gaz, électricité et autres combustibles (04)</td>
-<td>126</td>
-<td>2.2</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">4</th>
-<td>Meubles, articles de ménage et entretien courant du foyer (05)</td>
-<td>301</td>
-<td>5.2</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">5</th>
-<td>Santé (06)</td>
-<td>129</td>
-<td>2.2</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">6</th>
-<td>Transports (07)</td>
-<td>286</td>
-<td>4.9</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">7</th>
-<td>Information et communication (08)</td>
-<td>88</td>
-<td>1.5</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">8</th>
-<td>Loisirs, sport et culture (09)</td>
-<td>398</td>
-<td>6.8</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">9</th>
-<td>Services de l'enseignement (10)</td>
-<td>9</td>
-<td>0.2</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">10</th>
-<td>Services de restauration et d'hébergement (11)</td>
-<td>323</td>
-<td>5.5</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">11</th>
-<td>Assurance et services financiers (12)</td>
-<td>76</td>
-<td>1.3</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">12</th>
-<td>Soins corporels, protection sociale et biens et services divers (13)</td>
-<td>251</td>
-<td>4.3</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">13</th>
-<td>Produit indéterminé/illisible (98)</td>
-<td>209</td>
-<td>3.6</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">14</th>
-<td>Hors COICOP (dons, impôts, opérations bancaires...) (99)</td>
-<td>80</td>
-<td>1.4</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-</div>
-</div>
-
-
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

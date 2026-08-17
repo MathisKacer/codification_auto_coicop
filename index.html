@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-04">
+<meta name="dcterms.date" content="2026-08-17">
 
 <title>Codification automatique de la nomenclature COICOP – Codification automatique COICOP</title>
 <style>
@@ -46,7 +46,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-225458a1be0f37acf6464685485adff7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-505cb934e192d125575319552c8b77a8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -104,7 +104,7 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Fiabilité des classifieurs</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./modelisation.html"> 
+    <a class="nav-link" href="./modelisation/index.html"> 
 <span class="menu-text">Modélisation</span></a>
   </li>  
   <li class="nav-item">
@@ -152,7 +152,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 4, 2026</p>
+      <p class="date">August 17, 2026</p>
     </div>
   </div>
   
@@ -193,7 +193,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Le travail présenté sur ce site explore une piste dans ce cadre : proposer une alternative moins coûteuse au LLM-as-a-judge, à ne solliciter que lorsque c’est vraiment nécessaire.</p>
 <ol type="1">
 <li><strong>Une baseline simple</strong> : le vote majoritaire des 4 classifieurs de base, TTC arbitrant les égalités — rapide et gratuite, mais pas toujours correcte (cf.&nbsp;<a href="./stats-descriptives/index.html">Fiabilité des classifieurs</a>).</li>
-<li><strong>Un modèle pour savoir quand lui faire confiance</strong> : une Random Forest entraînée à prédire si cette baseline a trouvé le bon code, à partir de caractéristiques disponibles sans appel au LLM (accords entre classifieurs, scores de confiance…) — cf.&nbsp;<a href="./modelisation.html">Modélisation</a>.</li>
+<li><strong>Un modèle pour savoir quand lui faire confiance</strong> : une Random Forest entraînée à prédire si cette baseline a trouvé le bon code, à partir de caractéristiques disponibles sans appel au LLM (accords entre classifieurs, scores de confiance…) — cf.&nbsp;<a href="./modelisation/index.html">Modélisation</a>.</li>
 <li><strong>Une analyse de fiabilité pour en tirer des règles métier</strong> : repérer des situations où un classifieur (ou un type d’accord/désaccord entre eux) est quasi systématiquement fiable ou au contraire à risque, selon la division COICOP ou le cas de figure — pour coder directement ces cas par une règle simple, sans passer par le LLM — cf. <a href="./stats-descriptives/index.html">Fiabilité des classifieurs</a>.</li>
 </ol>
 </section>
@@ -202,7 +202,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Ce site présente l’avancement des travaux en deux temps :</p>
 <ul>
 <li><strong><a href="./stats-descriptives/index.html">Fiabilité des classifieurs</a></strong> : à partir de l’accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN, TTC) et de l’apport du LLM-judge — taux d’accord, faux positifs, cas de désaccord — identifie où l’on peut leur faire confiance, selon le niveau de granularité de la nomenclature COICOP (division à sous-classe).</li>
-<li><strong><a href="./modelisation.html">Modélisation</a></strong> : mise en place et évaluation de la baseline (vote majoritaire + TTC), puis d’une Random Forest visant à prédire quand lui faire confiance plutôt que de solliciter le LLM-judge.</li>
+<li><strong><a href="./modelisation/index.html">Modélisation</a></strong> : mise en place et évaluation de la baseline (vote majoritaire + TTC), puis d’une Random Forest visant à prédire quand lui faire confiance plutôt que de solliciter le LLM-judge.</li>
 </ul>
 <blockquote class="blockquote">
 <p>Pour la documentation complète du pipeline de codification (au-delà de ce travail de stage), voir <a href="https://inseefrlab.github.io/codif-coicop-bdf/">inseefrlab.github.io/codif-coicop-bdf</a>.</p>

@@ -1,51 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/index.html</loc>
-    <lastmod>2026-08-04T14:37:11.173Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/index.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/accords-unanimes.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/trois-contre-un.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/apercu-donnees.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/interpretation/index.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/modelisation/sirus.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
   </url>
   <url>
     <loc>https://MathisKacer.github.io/codification_auto_coicop.git/interpretation/2026-06-29.html</loc>
-    <lastmod>2026-08-04T14:37:11.173Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/modelisation.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/ttc-top3.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/seul-correct.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
-  </url>
-  <url>
-    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/calibration-confiance.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
   </url>
   <url>
     <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/profondeur-codes.html</loc>
-    <lastmod>2026-08-04T14:37:11.174Z</lastmod>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/ttc-top3.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/index.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/trois-contre-un.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/calibration-confiance.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/index.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/apercu-donnees.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/troncature-niveau4.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/accords-unanimes.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/stats-descriptives/seul-correct.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/interpretation/index.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
+  </url>
+  <url>
+    <loc>https://MathisKacer.github.io/codification_auto_coicop.git/modelisation/index.html</loc>
+    <lastmod>2026-08-17T15:00:38.111Z</lastmod>
   </url>
 </urlset>
