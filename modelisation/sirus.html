@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-17">
+<meta name="dcterms.date" content="2026-08-18">
 
 <title>SIRUS — synthèse finale – Codification automatique COICOP</title>
 <style>
@@ -26,41 +26,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -191,13 +156,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#troncature-niveau-4-le-fix-cascade-des-0-terminaux" id="toc-troncature-niveau-4-le-fix-cascade-des-0-terminaux" class="nav-link active" data-scroll-target="#troncature-niveau-4-le-fix-cascade-des-0-terminaux">1. Troncature niveau 4 : le fix cascade des “0” terminaux</a></li>
-  <li><a href="#modèle-principal-run-ancien-codif-vvkv9" id="toc-modèle-principal-run-ancien-codif-vvkv9" class="nav-link" data-scroll-target="#modèle-principal-run-ancien-codif-vvkv9">2. Modèle principal (run ancien, <code>codif-vvkv9</code>)</a></li>
-  <li><a href="#b.-sentinelles-de-confiance-quand-un-classifieur-na-pas-voté" id="toc-b.-sentinelles-de-confiance-quand-un-classifieur-na-pas-voté" class="nav-link" data-scroll-target="#b.-sentinelles-de-confiance-quand-un-classifieur-na-pas-voté">2b. Sentinelles de confiance quand un classifieur n’a pas voté</a></li>
-  <li><a href="#features-additionnelles-budget-shop_type_name-source" id="toc-features-additionnelles-budget-shop_type_name-source" class="nav-link" data-scroll-target="#features-additionnelles-budget-shop_type_name-source">3. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></a></li>
-  <li><a href="#généralisation-à-deux-nouveaux-runs" id="toc-généralisation-à-deux-nouveaux-runs" class="nav-link" data-scroll-target="#généralisation-à-deux-nouveaux-runs">4. Généralisation à deux nouveaux runs</a></li>
-  <li><a href="#hyperparamètres-sirus" id="toc-hyperparamètres-sirus" class="nav-link" data-scroll-target="#hyperparamètres-sirus">5. Hyperparamètres SIRUS</a></li>
-  <li><a href="#impact-concret-du-fix-de-troncature-sur-les-lignes-mal-classées" id="toc-impact-concret-du-fix-de-troncature-sur-les-lignes-mal-classées" class="nav-link" data-scroll-target="#impact-concret-du-fix-de-troncature-sur-les-lignes-mal-classées">6. Impact concret du fix de troncature sur les lignes mal classées</a></li>
+  <li><a href="#pourquoi-sirus" id="toc-pourquoi-sirus" class="nav-link active" data-scroll-target="#pourquoi-sirus">1. Pourquoi SIRUS ?</a></li>
+  <li><a href="#organisation-des-données-la-table-longue-candidat-level" id="toc-organisation-des-données-la-table-longue-candidat-level" class="nav-link" data-scroll-target="#organisation-des-données-la-table-longue-candidat-level">2. Organisation des données : la table longue candidat-level</a></li>
+  <li><a href="#modèle-principal-run-ancien-codif-vvkv9" id="toc-modèle-principal-run-ancien-codif-vvkv9" class="nav-link" data-scroll-target="#modèle-principal-run-ancien-codif-vvkv9">3. Modèle principal (run ancien, <code>codif-vvkv9</code>)</a></li>
+  <li><a href="#features-additionnelles-budget-shop_type_name-source" id="toc-features-additionnelles-budget-shop_type_name-source" class="nav-link" data-scroll-target="#features-additionnelles-budget-shop_type_name-source">4. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></a></li>
+  <li><a href="#généralisation-à-deux-nouveaux-runs" id="toc-généralisation-à-deux-nouveaux-runs" class="nav-link" data-scroll-target="#généralisation-à-deux-nouveaux-runs">5. Généralisation à deux nouveaux runs</a></li>
+  <li><a href="#hyperparamètres-sirus" id="toc-hyperparamètres-sirus" class="nav-link" data-scroll-target="#hyperparamètres-sirus">6. Hyperparamètres SIRUS</a></li>
   <li><a href="#système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle" id="toc-système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle" class="nav-link" data-scroll-target="#système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle">7. Système à deux étages : SIRUS confiant → RF sur les incertains → reprise manuelle</a></li>
   <li><a href="#synthèse-et-recommandations" id="toc-synthèse-et-recommandations" class="nav-link" data-scroll-target="#synthèse-et-recommandations">8. Synthèse et recommandations</a></li>
   </ul>
@@ -209,7 +173,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">SIRUS — synthèse finale</h1>
-<p class="subtitle lead">Tous les résultats obtenus (troncature, modèle, généralisation, hyperparamètres, cascade de décision), sans répétition</p>
+<p class="subtitle lead">Pourquoi SIRUS, comment les données sont organisées, et tous les résultats obtenus (modèle, généralisation, hyperparamètres, cascade de décision), sans répétition</p>
 </div>
 
 
@@ -220,7 +184,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 17, 2026</p>
+      <p class="date">August 18, 2026</p>
     </div>
   </div>
   
@@ -237,217 +201,207 @@ Document de reference unique. Consolide dans l'ordre logique (pas
 chronologique) tout ce qui a ete etabli sur SIRUS, a travers synthese.qmd,
 synthese_bis.qmd, test.qmd, tentative_sirus.R et analyse_nouveau_run_x98xl.qmd :
 
-1. Le probleme de troncature niveau 4 et son fix (cascade des "0" terminaux)
-2. Le modele principal (ancien run) et ses features
-3. La generalisation a deux nouveaux runs, et le diagnostic de la baisse
+1. Pourquoi SIRUS : ce qu'est le modele et pourquoi il convient a l'objectif
+   de regles metier simples
+2. Comment les donnees sont organisees (table longue candidat-level) pour
+   alimenter ce modele
+3. Le modele principal (ancien run) et ses features
+4. La generalisation a deux nouveaux runs, et le diagnostic de la baisse
    d'accuracy (regression RAG-ANN)
-4. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
-5. L'impact concret du fix de troncature sur les lignes mal classees
+5. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
 6. Le systeme de decision a 2 etages (SIRUS confiant -> RF sur les cas
    incertains -> reprise manuelle), explore sur le premier nouveau run
+
+La gestion de la troncature des codes COICOP (retrait en cascade des "0"
+terminaux, cf. `src/coicop.py::tronquer_niveau`) est appliquee partout
+ci-dessous mais n'est pas re-detaillee sur ce site : elle a ete validee une
+fois pour toutes en amont et n'est plus un point d'attention actif.
 
 Certaines sections (hyperparametres via sirus.cv, cascade SIRUS+RF) sont
 couteuses en temps de calcul (plusieurs minutes) : leurs resultats sont
 rapportes tels qu'obtenus precedemment plutot que recalcules a chaque rendu,
 c'est signale explicitement a chaque fois.
 -->
+<section id="pourquoi-sirus" class="level2">
+<h2 class="anchored" data-anchor-id="pourquoi-sirus">1. Pourquoi SIRUS ?</h2>
+<p>Le fil directeur de ce stage (cf.&nbsp;<a href="../index.html">Accueil</a> et <a href="../stats-descriptives/index.html">Fiabilité des classifieurs</a>) n’est pas seulement de prédire quand faire confiance aux classifieurs de base, mais d’en tirer des <strong>règles métier simples</strong> : des conditions du type “si tel classifieur tranche seul dans telle division, on le suit directement”, que quelqu’un du métier peut lire, valider et documenter, sans avoir besoin de comprendre un modèle de machine learning pour ça.</p>
+<p>C’est précisément ce que ne permet pas la Random Forest utilisée dans <a href="../modelisation/index.html">Modélisation</a> pour détecter les erreurs de la baseline : elle prédit bien, mais reste une forêt de centaines d’arbres. Ses importances de features (section <a href="../modelisation/index.html#importances-des-features">Importances des features</a>) disent <em>quelle</em> variable compte, jamais <em>à partir de quel seuil</em> ni <em>en combinaison avec quoi</em> – impossible à relire comme une règle, encore moins à figer et documenter comme telle.</p>
+<p><strong>SIRUS</strong> (<em>Stable and Interpretable RUle Set</em>, Bénard et al.) comble ce manque en gardant la logique d’une forêt aléatoire, mais avec une étape d’extraction en plus :</p>
+<ol type="1">
+<li>Il entraîne une forêt d’arbres CART, comme une Random Forest classique (rééchantillonnage, sous-ensemble de variables tirées à chaque nœud).</li>
+<li>Il en extrait tous les chemins de décision (règles du type <code>si conf_ttc &lt; 0.78 et nb_votants &lt;= 1 alors ...</code>) jusqu’à une profondeur limitée (<code>max.depth</code>, 2 ici – des règles à 2 conditions maximum).</li>
+<li>Il ne garde que les règles <strong>stables</strong> : celles qui reviennent souvent d’un arbre à l’autre, donc peu sensibles au tirage aléatoire précis de l’échantillon d’apprentissage – contrairement à une règle isolée d’un seul arbre, qui ne généraliserait pas. C’est cette garantie de stabilité (démontrée théoriquement par les auteurs) qui distingue SIRUS d’une extraction de règles “à la main” depuis une RF.</li>
+<li>Il combine cette poignée de règles retenues (<code>num_regles</code>, 10 ici) par une régression linéaire simple sur leurs sorties, pour produire une probabilité calibrée.</li>
+</ol>
+<p>Le résultat concret (<code>sirus.print(modele)</code>, section 3) est directement une liste de conditions lisibles, chacune avec son poids – exactement le format d’une règle métier, pas une boîte noire. C’est pour ça que SIRUS est choisi ici plutôt qu’une RF classique ou qu’un réglage plus fin de celle-ci : l’enjeu n’est pas de gagner quelques points d’accuracy, mais d’obtenir un modèle dont la décision peut être <strong>relue, auditée et figée</strong> comme convention de codage, condition nécessaire pour qu’elle remplace un appel au LLM-judge en confiance.</p>
+</section>
+<section id="organisation-des-données-la-table-longue-candidat-level" class="level2">
+<h2 class="anchored" data-anchor-id="organisation-des-données-la-table-longue-candidat-level">2. Organisation des données : la table longue candidat-level</h2>
+<p>Le point de départ est un run du pipeline stocké sur le S3 (bucket <code>projet-budget-famille</code>), un fichier <code>predictions.parquet</code> par run, une ligne par produit (<code>ligne</code>) : pour chacun, le vrai code, et pour chacun des 4 classifieurs de base son code proposé plus un score (confiance ou distance selon le classifieur).</p>
+<p>Ce format “large” (une colonne de code et une colonne de score <em>par classifieur</em>) n’est pas directement exploitable pour la question posée ici : on ne veut pas prédire “quel classifieur croire”, mais “ce candidat précis est-il le bon code”, une question générique qui doit pouvoir se poser pour n’importe lequel des candidats proposés, peu importe lequel des 4 classifieurs l’a proposé. Coder ça dans un format large obligerait à dupliquer la même logique 4 fois (une par classifieur), avec une notion de “confiance” différente à chaque fois.</p>
+<p><strong>Solution retenue</strong> : un passage en format long, implémenté dans <code>construire_table_long()</code> (chargée dans le chunk de setup ci-dessus) – une ligne par <strong>candidat distinct</strong> proposé par au moins un des 4 classifieurs pour un produit donné (donc plusieurs lignes par produit s’ils proposent des codes différents, une seule s’ils sont tous d’accord). Chaque ligne agrège, pour ce candidat précis :</p>
+<ul>
+<li><strong>quels classifieurs ont voté pour lui</strong> (<code>vote_lcs/rag/ragann/ttc</code>, 0/1) et leur nombre (<code>nb_votants</code>) ;</li>
+<li><strong>leur score de confiance associé</strong>, seulement pour les classifieurs qui ont effectivement voté pour ce candidat (cf.&nbsp;sentinelles ci-dessous) ;</li>
+<li>la <strong>division du candidat</strong> (<code>code_candidat_n1</code>, troncature niveau 1) ;</li>
+<li>si ce candidat est <strong>effectivement le bon code</strong> (<code>correcte</code>), la cible du modèle.</li>
+</ul>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sirus)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(randomForest)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>niveau <span class="ot">&lt;-</span> <span class="dv">4</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>num_regles <span class="ot">&lt;-</span> <span class="dv">10</span>     <span class="co"># nombre de regles SIRUS (num.rule) -- change ici pour tout le document</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>profondeur_max <span class="ot">&lt;-</span> <span class="dv">2</span>  <span class="co"># profondeur max des arbres SIRUS (max.depth, defaut/recommande = 2)</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>bucket_s3   <span class="ot">&lt;-</span> <span class="st">"projet-budget-famille"</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>endpoint_s3 <span class="ot">&lt;-</span> <span class="st">"minio.lab.sspcloud.fr"</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>objet_s3_ancien   <span class="ot">&lt;-</span> <span class="st">"data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>objet_s3_nouveau1 <span class="ot">&lt;-</span> <span class="st">"data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet"</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>objet_s3_nouveau2 <span class="ot">&lt;-</span> <span class="st">"data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>charger_run <span class="ot">&lt;-</span> <span class="cf">function</span>(objet_s3) {</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> aws.s3<span class="sc">::</span><span class="fu">s3read_using</span>(</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">FUN =</span> arrow<span class="sc">::</span>read_parquet, <span class="at">object =</span> objet_s3, <span class="at">bucket =</span> bucket_s3,</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">opts =</span> <span class="fu">list</span>(<span class="at">region =</span> <span class="st">""</span>, <span class="at">base_url =</span> endpoint_s3),</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="st">"ligne"</span> <span class="sc">%in%</span> <span class="fu">names</span>(df)) df<span class="sc">$</span>ligne <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(df)) <span class="sc">-</span> <span class="dv">1</span>L</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  df</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Troncature niveau 4 AVEC cascade des "0" terminaux -- version validee (cf.</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># section 1). Necessaire pour les codes candidats (lcs/rag/ragann/ttc), qui</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># n'ont pas d'equivalent "_lvl4" pre-calcule.</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>tronquer_niveau_un <span class="ot">&lt;-</span> <span class="cf">function</span>(code, <span class="at">niveau =</span> <span class="dv">4</span>) {</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.na</span>(code)) <span class="fu">return</span>(<span class="cn">NA_character_</span>)</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">as.character</span>(code)</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (s <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"AUCUNE_SUGGESTION"</span>, <span class="st">"NON_CODABLE"</span>)) <span class="fu">return</span>(s)</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  n_chiffres_cible <span class="ot">&lt;-</span> niveau <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  chiffres <span class="ot">&lt;-</span> <span class="dv">0</span>L</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">character</span>(<span class="dv">0</span>)</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (ch <span class="cf">in</span> <span class="fu">strsplit</span>(s, <span class="st">""</span>)[[<span class="dv">1</span>]]) {</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">grepl</span>(<span class="st">"[0-9]"</span>, ch)) {</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (chiffres <span class="sc">==</span> n_chiffres_cible) <span class="cf">break</span></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>      chiffres <span class="ot">&lt;-</span> chiffres <span class="sc">+</span> <span class="dv">1</span>L</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>      out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, ch)</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="cf">if</span> (chiffres <span class="sc">&lt;</span> n_chiffres_cible) {</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>      out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, ch)</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>  resultat <span class="ot">&lt;-</span> <span class="fu">paste</span>(out, <span class="at">collapse =</span> <span class="st">""</span>)</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (<span class="fu">grepl</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.0$"</span>, resultat)) resultat <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.0$"</span>, <span class="st">""</span>, resultat)</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>  resultat</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>tronquer_niveau <span class="ot">&lt;-</span> <span class="cf">function</span>(codes, <span class="at">niveau =</span> <span class="dv">4</span>) {</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vapply</span>(codes, tronquer_niveau_un, <span class="fu">character</span>(<span class="dv">1</span>), <span class="at">niveau =</span> niveau, <span class="at">USE.NAMES =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>tronquer_sans_cascade <span class="ot">&lt;-</span> <span class="cf">function</span>(codes, <span class="at">niveau =</span> <span class="dv">4</span>) {</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vapply</span>(codes, <span class="cf">function</span>(code) {</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">is.na</span>(code)) <span class="fu">return</span>(<span class="cn">NA_character_</span>)</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    s <span class="ot">&lt;-</span> <span class="fu">as.character</span>(code)</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (s <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"AUCUNE_SUGGESTION"</span>, <span class="st">"NON_CODABLE"</span>)) <span class="fu">return</span>(s)</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    n_chiffres_cible <span class="ot">&lt;-</span> niveau <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    chiffres <span class="ot">&lt;-</span> <span class="dv">0</span>L; out <span class="ot">&lt;-</span> <span class="fu">character</span>(<span class="dv">0</span>)</span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (ch <span class="cf">in</span> <span class="fu">strsplit</span>(s, <span class="st">""</span>)[[<span class="dv">1</span>]]) {</span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (<span class="fu">grepl</span>(<span class="st">"[0-9]"</span>, ch)) {</span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (chiffres <span class="sc">==</span> n_chiffres_cible) <span class="cf">break</span></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>        chiffres <span class="ot">&lt;-</span> chiffres <span class="sc">+</span> <span class="dv">1</span>L; out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, ch)</span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> <span class="cf">if</span> (chiffres <span class="sc">&lt;</span> n_chiffres_cible) out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, ch)</span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste</span>(out, <span class="at">collapse =</span> <span class="st">""</span>)</span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>  }, <span class="fu">character</span>(<span class="dv">1</span>), <span class="at">USE.NAMES =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>construire_table_long <span class="ot">&lt;-</span> <span class="cf">function</span>(df, <span class="at">niveau =</span> <span class="dv">4</span>, <span class="at">fn_tronquer =</span> tronquer_niveau) {</span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>  <span class="co"># vrai_n4 doit deja exister dans df (code_lvl4 si dispo, sinon fn_tronquer(code)).</span></span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>  <span class="co"># fn_tronquer parametrable pour pouvoir rejouer le pipeline SANS le fix</span></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>  <span class="co"># cascade (tronquer_sans_cascade), a des fins de comparaison (section 6).</span></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>      <span class="at">lcs_n4    =</span> <span class="fu">fn_tronquer</span>(lcs_code, niveau),</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>      <span class="at">rag_n4    =</span> <span class="fu">fn_tronquer</span>(rag_code, niveau),</span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>      <span class="at">ragann_n4 =</span> <span class="fu">fn_tronquer</span>(ragann_code, niveau),</span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>      <span class="at">ttc_n4    =</span> <span class="fu">fn_tronquer</span>(ttc_code_1, niveau),</span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>  candidats <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span></span>
-<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4, vrai_n4) <span class="sc">%&gt;%</span></span>
-<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(</span>
-<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>      <span class="at">cols =</span> <span class="fu">c</span>(lcs_n4, rag_n4, ragann_n4, ttc_n4),</span>
-<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>      <span class="at">names_to =</span> <span class="st">"classifieur"</span>, <span class="at">values_to =</span> <span class="st">"code_candidat"</span>,</span>
-<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(code_candidat)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(ligne, code_candidat, vrai_n4)</span>
-<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>  candidats <span class="sc">%&gt;%</span></span>
-<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(</span>
-<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>      df <span class="sc">%&gt;%</span> <span class="fu">select</span>(</span>
-<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>        ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4,</span>
-<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>        lcs_distance, rag_confidence, ragann_confidence, ttc_conf_1,</span>
-<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>        budget, shop_type_name, source,</span>
-<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>      <span class="at">by =</span> <span class="st">"ligne"</span>,</span>
-<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
-<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>      <span class="at">vote_lcs    =</span> <span class="fu">as.integer</span>(<span class="sc">!</span><span class="fu">is.na</span>(lcs_n4)    <span class="sc">&amp;</span> lcs_n4    <span class="sc">==</span> code_candidat),</span>
-<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>      <span class="at">vote_rag    =</span> <span class="fu">as.integer</span>(<span class="sc">!</span><span class="fu">is.na</span>(rag_n4)    <span class="sc">&amp;</span> rag_n4    <span class="sc">==</span> code_candidat),</span>
-<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>      <span class="at">vote_ragann =</span> <span class="fu">as.integer</span>(<span class="sc">!</span><span class="fu">is.na</span>(ragann_n4) <span class="sc">&amp;</span> ragann_n4 <span class="sc">==</span> code_candidat),</span>
-<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>      <span class="at">vote_ttc    =</span> <span class="fu">as.integer</span>(<span class="sc">!</span><span class="fu">is.na</span>(ttc_n4)    <span class="sc">&amp;</span> ttc_n4    <span class="sc">==</span> code_candidat),</span>
-<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>      <span class="at">nb_votants  =</span> vote_lcs <span class="sc">+</span> vote_rag <span class="sc">+</span> vote_ragann <span class="sc">+</span> vote_ttc,</span>
-<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>      <span class="at">correcte    =</span> <span class="fu">as.integer</span>(<span class="sc">!</span><span class="fu">is.na</span>(vrai_n4) <span class="sc">&amp;</span> code_candidat <span class="sc">==</span> vrai_n4),</span>
-<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>      <span class="at">code_candidat_n1 =</span> <span class="fu">fn_tronquer</span>(code_candidat, <span class="at">niveau =</span> <span class="dv">1</span>),</span>
-<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>      <span class="at">conf_rag    =</span> <span class="fu">if_else</span>(vote_rag <span class="sc">==</span> <span class="dv">1</span>L,    <span class="fu">coalesce</span>(rag_confidence, <span class="sc">-</span><span class="dv">1</span>),    <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>      <span class="at">conf_ragann =</span> <span class="fu">if_else</span>(vote_ragann <span class="sc">==</span> <span class="dv">1</span>L, <span class="fu">coalesce</span>(ragann_confidence, <span class="sc">-</span><span class="dv">1</span>), <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>      <span class="at">conf_ttc    =</span> <span class="fu">if_else</span>(vote_ttc <span class="sc">==</span> <span class="dv">1</span>L,    <span class="fu">coalesce</span>(ttc_conf_1, <span class="sc">-</span><span class="dv">1</span>),        <span class="sc">-</span><span class="dv">1</span>),</span>
-<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a>      <span class="at">dist_lcs    =</span> <span class="fu">if_else</span>(vote_lcs <span class="sc">==</span> <span class="dv">1</span>L,    <span class="fu">coalesce</span>(lcs_distance, <span class="fl">1.5</span>),     <span class="fl">1.5</span>),</span>
-<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>      <span class="at">shop_type_name =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(shop_type_name), <span class="st">"INCONNU"</span>, shop_type_name),</span>
-<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a>      <span class="at">source         =</span> <span class="fu">if_else</span>(<span class="fu">is.na</span>(source), <span class="st">"INCONNU"</span>, source),</span>
-<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
-<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(</span>
-<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>      ligne, code_candidat, code_candidat_n1,</span>
-<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>      vote_lcs, vote_rag, vote_ragann, vote_ttc, nb_votants,</span>
-<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>      conf_rag, conf_ragann, conf_ttc, dist_lcs, correcte,</span>
-<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>      budget, shop_type_name, source,</span>
-<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>features <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>  <span class="st">"vote_lcs"</span>, <span class="st">"vote_rag"</span>, <span class="st">"vote_ragann"</span>, <span class="st">"vote_ttc"</span>, <span class="st">"nb_votants"</span>,</span>
-<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>  <span class="st">"conf_rag"</span>, <span class="st">"conf_ragann"</span>, <span class="st">"conf_ttc"</span>, <span class="st">"dist_lcs"</span>, <span class="st">"code_candidat_n1"</span></span>
-<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>df_ancien   <span class="ot">&lt;-</span> <span class="fu">charger_run</span>(objet_s3_ancien)</span>
-<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>df_nouveau1 <span class="ot">&lt;-</span> <span class="fu">charger_run</span>(objet_s3_nouveau1)</span>
-<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>df_nouveau2 <span class="ot">&lt;-</span> <span class="fu">charger_run</span>(objet_s3_nouveau2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>5825 produits (run ancien) -&gt; 11658 lignes candidat-level (2.00 candidat distinct en moyenne par produit).</code></pre>
 </div>
-<section id="troncature-niveau-4-le-fix-cascade-des-0-terminaux" class="level2">
-<h2 class="anchored" data-anchor-id="troncature-niveau-4-le-fix-cascade-des-0-terminaux">1. Troncature niveau 4 : le fix cascade des “0” terminaux</h2>
-<p>Ce fix (retrait en cascade des “0” terminaux dans <code>tronquer_niveau()</code>) n’est pas spécifique à SIRUS : c’est la même logique que <code>src/coicop.py::tronquer_niveau()</code>, utilisée par toutes les pages de ce site. Sa légitimité structurelle (aucune position, sur les 3 runs, où “0” entre en concurrence avec un vrai chiffre) est démontrée une fois pour toutes dans <a href="../stats-descriptives/troncature-niveau4.html">Troncature niveau 4</a> plutôt que répétée ici.</p>
-<p>Ce qui est spécifique à ce document : depuis le run <code>codif-x98xl</code> (2026-07-30), une colonne <code>code_lvl4</code> est calculée en amont du pipeline pour le vrai code. Vérification qu’elle correspond bien au fix cascade (nécessaire puisque <code>code_lvl4</code>, pas <code>code</code> brut, sert de vérité terrain dans tout le reste de ce document, section 4 comprise) :</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>verif <span class="ot">&lt;-</span> df_nouveau2 <span class="sc">%&gt;%</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">manuel_sans_cascade =</span> <span class="fu">tronquer_sans_cascade</span>(code, niveau),</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">manuel_avec_cascade =</span> <span class="fu">tronquer_niveau</span>(code, niveau),</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Comparaison =</span> <span class="fu">c</span>(<span class="st">"code_lvl4 == troncature SANS cascade"</span>, <span class="st">"code_lvl4 == troncature AVEC cascade (fix)"</span>),</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">Correspondance =</span> <span class="fu">c</span>(<span class="fu">mean</span>(verif<span class="sc">$</span>code_lvl4 <span class="sc">==</span> verif<span class="sc">$</span>manuel_sans_cascade), <span class="fu">mean</span>(verif<span class="sc">$</span>code_lvl4 <span class="sc">==</span> verif<span class="sc">$</span>manuel_avec_cascade)),</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">N_NA =</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(verif<span class="sc">$</span>code_lvl4))</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Correspondance =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, Correspondance <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 2%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 43%">
+<col style="width: 6%">
+</colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;">Comparaison</th>
-<th style="text-align: left;">Correspondance</th>
-<th style="text-align: right;">N_NA</th>
+<th style="text-align: right;">ligne</th>
+<th style="text-align: left;">code_candidat</th>
+<th style="text-align: left;">code_candidat_n1</th>
+<th style="text-align: right;">vote_lcs</th>
+<th style="text-align: right;">vote_rag</th>
+<th style="text-align: right;">vote_ragann</th>
+<th style="text-align: right;">vote_ttc</th>
+<th style="text-align: right;">nb_votants</th>
+<th style="text-align: right;">conf_rag</th>
+<th style="text-align: right;">conf_ragann</th>
+<th style="text-align: right;">conf_ttc</th>
+<th style="text-align: right;">dist_lcs</th>
+<th style="text-align: right;">correcte</th>
+<th style="text-align: right;">budget</th>
+<th style="text-align: left;">shop_type_name</th>
+<th style="text-align: left;">source</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">code_lvl4 == troncature SANS cascade</td>
-<td style="text-align: left;">86.9%</td>
 <td style="text-align: right;">0</td>
+<td style="text-align: left;">07.4.1.1</td>
+<td style="text-align: left;">07</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">-1.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">56.48</td>
+<td style="text-align: left;">Services publics (administrations, établissements scolaires et gardes d’enfants, organismes publics de logement (OPAC, HLM…))</td>
+<td style="text-align: left;">manual_from_app</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">code_lvl4 == troncature AVEC cascade (fix)</td>
-<td style="text-align: left;">100.0%</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">01.1.4.8</td>
+<td style="text-align: left;">01</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.6000000</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.41</td>
+<td style="text-align: left;">Supermarchés, magasins multi-commerces</td>
+<td style="text-align: left;">receipts_from_app</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">05.6.1.1</td>
+<td style="text-align: left;">05</td>
+<td style="text-align: right;">1</td>
 <td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">-1.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.2500000</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">10.42</td>
+<td style="text-align: left;">INCONNU</td>
+<td style="text-align: left;">receipts_from_app</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">09.7.1</td>
+<td style="text-align: left;">09</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">-1.0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-1.00</td>
+<td style="text-align: right;">0.1666667</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">25.00</td>
+<td style="text-align: left;">Grande surface spécialisée Loisir, Culture et TIC</td>
+<td style="text-align: left;">manual_from_app</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">09.7.1.9</td>
+<td style="text-align: left;">09</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.9</td>
+<td style="text-align: right;">-1</td>
+<td style="text-align: right;">-1.00</td>
+<td style="text-align: right;">1.5000000</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">25.00</td>
+<td style="text-align: left;">Grande surface spécialisée Loisir, Culture et TIC</td>
+<td style="text-align: left;">manual_from_app</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p><code>code_lvl4</code> correspond à 100 % au fix cascade, sans valeur manquante : il remplace valablement la troncature manuelle <strong>côté vrai code</strong> pour les runs qui l’incluent. Les codes candidats (<code>lcs_code</code>, <code>rag_code</code>, <code>ragann_code</code>, <code>ttc_code_1</code>) n’ont pas d’équivalent <code>_lvl4</code> : ils sont tronqués manuellement (avec cascade) dans tout ce document.</p>
+<p>Ce choix a deux conséquences directement utiles pour la suite : le modèle n’a qu’une seule décision à apprendre (“ce candidat est-il le bon ?”), peu importe combien de candidats concurrents il y a ; et au moment de prédire, il suffit de garder, pour chaque produit, le candidat de plus haute probabilité (<code>slice_max</code>, section 3) pour obtenir une décision au niveau produit à partir de décisions au niveau candidat.</p>
+<section id="sentinelles-de-confiance-quand-un-classifieur-na-pas-voté" class="level3">
+<h3 class="anchored" data-anchor-id="sentinelles-de-confiance-quand-un-classifieur-na-pas-voté">Sentinelles de confiance quand un classifieur n’a pas voté</h3>
+<p>Quand un classifieur ne vote pas pour un candidat donné, sa confiance est mise à une sentinelle hors de la plage réelle des valeurs (<code>-1</code> pour les confiances, bornées <code>[0, 1]</code> en pratique ; <code>1.5</code> pour <code>lcs_distance</code>, bornée <code>[0, 0.8]</code>) plutôt qu’à 0 ou <code>NA</code>. Vérifié non problématique pour un modèle à seuils comme SIRUS :</p>
+<ul>
+<li>Sentinelle toujours hors plage réelle (pas de collision avec une vraie valeur).</li>
+<li>Redondant avec <code>vote_lcs/rag/ragann/ttc</code> (0/1) : aucune perte d’information, et permet à SIRUS de fusionner en une seule règle “vote faible OU absent” (ex. <code>if conf_ttc &lt; 0.78</code>), ce qui est le sens voulu.</li>
+<li>Cas limite vérifié sur données réelles : 0 occurrence où un classifieur a voté (code non manquant) mais avec une confiance <code>NA</code> – le <code>coalesce()</code> de secours ne se déclenche jamais actuellement.</li>
+</ul>
+</section>
 </section>
 <section id="modèle-principal-run-ancien-codif-vvkv9" class="level2">
-<h2 class="anchored" data-anchor-id="modèle-principal-run-ancien-codif-vvkv9">2. Modèle principal (run ancien, <code>codif-vvkv9</code>)</h2>
-<p>Format long : une ligne par candidat proposé par au moins un des 4 classifieurs de base (LCS, RAG, RAG-ANN, TTC). Features : votes de chaque classifieur, confiances/distance (sentinelle hors plage si le classifieur n’a pas voté pour ce candidat précis – cf.&nbsp;section 2b), troncature niveau 1 du candidat. Split 80/20 par produit, seed 42.</p>
+<h2 class="anchored" data-anchor-id="modèle-principal-run-ancien-codif-vvkv9">3. Modèle principal (run ancien, <code>codif-vvkv9</code>)</h2>
+<p>La table longue construite ci-dessus (<code>table_long</code>) sert directement de base d’entraînement. Split 80/20 par produit (pas par ligne candidat, pour ne pas répartir les candidats d’un même produit entre train et test), seed 42.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df_ancien <span class="ot">&lt;-</span> df_ancien <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">vrai_n4 =</span> <span class="fu">tronquer_niveau</span>(code, niveau))</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>table_long <span class="ot">&lt;-</span> <span class="fu">construire_table_long</span>(df_ancien, niveau) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">code_candidat_n1 =</span> <span class="fu">as.factor</span>(code_candidat_n1))</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>lignes_uniques <span class="ot">&lt;-</span> <span class="fu">unique</span>(table_long<span class="sc">$</span>ligne)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>lignes_train <span class="ot">&lt;-</span> <span class="fu">sample</span>(lignes_uniques, <span class="at">size =</span> <span class="fu">round</span>(<span class="fl">0.8</span> <span class="sc">*</span> <span class="fu">length</span>(lignes_uniques)))</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> table_long <span class="sc">%&gt;%</span> <span class="fu">filter</span>(ligne <span class="sc">%in%</span> lignes_train)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>test  <span class="ot">&lt;-</span> table_long <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>ligne <span class="sc">%in%</span> lignes_train)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>modele <span class="ot">&lt;-</span> <span class="fu">sirus.fit</span>(<span class="fu">as.data.frame</span>(train[, features]), train<span class="sc">$</span>correcte, <span class="at">type =</span> <span class="st">"classif"</span>, <span class="at">num.rule =</span> num_regles, <span class="at">max.depth =</span> profondeur_max, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sirus.print</span>(modele)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1] "Proportion of class 1 = 0.489 - Sample size n = 9359"                          
  [2] "if vote_ragann &lt; 1 then 0.0121 (n=4716) else 0.974 (n=4643)"                   
@@ -461,17 +415,6 @@ c'est signale explicitement a chaque fois.
 [10] "if vote_ragann &gt;= 1 &amp; conf_ttc &gt;= 0.77 then 0.992 (n=3144) else 0.235 (n=6215)"
 [11] "if vote_ttc &lt; 1 then 0.239 (n=4699) else 0.741 (n=4660)"                       </code></pre>
 </div>
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>test<span class="sc">$</span>proba <span class="ot">&lt;-</span> <span class="fu">sirus.predict</span>(modele, <span class="fu">as.data.frame</span>(test[, features]))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>choix_par_produit <span class="ot">&lt;-</span> test <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">slice_max</span>(proba, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>borne_haute <span class="ot">&lt;-</span> test <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">possible =</span> <span class="fu">max</span>(correcte), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(possible) <span class="sc">%&gt;%</span> <span class="fu">mean</span>()</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Indicateur =</span> <span class="fu">c</span>(<span class="st">"Accuracy candidat-level"</span>, <span class="st">"Accuracy produit-level"</span>, <span class="st">"Borne haute"</span>),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">Valeur =</span> <span class="fu">c</span>(<span class="fu">mean</span>(<span class="fu">as.integer</span>(test<span class="sc">$</span>proba <span class="sc">&gt;</span> <span class="fl">0.5</span>) <span class="sc">==</span> test<span class="sc">$</span>correcte), <span class="fu">mean</span>(choix_par_produit<span class="sc">$</span>correcte), borne_haute)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Valeur =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, Valeur <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
@@ -503,23 +446,6 @@ c'est signale explicitement a chaque fois.
 <section id="calibration-de-la-confiance" class="level3">
 <h3 class="anchored" data-anchor-id="calibration-de-la-confiance">Calibration de la confiance</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>table_produit <span class="ot">&lt;-</span> test <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(proba), <span class="at">.by_group =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_candidats =</span> <span class="fu">n</span>(), <span class="at">proba_gagnant =</span> <span class="fu">first</span>(proba),</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">proba_second =</span> <span class="cf">if</span> (<span class="fu">n</span>() <span class="sc">&gt;=</span> <span class="dv">2</span>) <span class="fu">nth</span>(proba, <span class="dv">2</span>) <span class="cf">else</span> <span class="cn">NA_real_</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">sirus_correct =</span> <span class="fu">first</span>(correcte), <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>table_produit <span class="sc">%&gt;%</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tranche =</span> <span class="fu">cut</span>(proba_gagnant, <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="at">include.lowest =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(tranche) <span class="sc">%&gt;%</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">pct_correct =</span> <span class="fu">mean</span>(sirus_correct), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">pct_correct =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, pct_correct <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
@@ -569,48 +495,10 @@ c'est signale explicitement a chaque fois.
 <p>Deux zones nettes : une zone fiable (confiance élevée, &gt;98 % correct) et une zone incertaine (confiance faible, ~60-65 % correct) — un seuil simple sur <code>proba_gagnant</code> est directement exploitable comme critère d’escalade vers une reprise manuelle ou un LLM-judge (cf.&nbsp;section 7).</p>
 </section>
 </section>
-<section id="b.-sentinelles-de-confiance-quand-un-classifieur-na-pas-voté" class="level2">
-<h2 class="anchored" data-anchor-id="b.-sentinelles-de-confiance-quand-un-classifieur-na-pas-voté">2b. Sentinelles de confiance quand un classifieur n’a pas voté</h2>
-<p>Quand un classifieur ne vote pas pour un candidat donné, sa confiance est mise à une sentinelle hors de la plage réelle des valeurs (<code>-1</code> pour les confiances, bornées <code>[0, 1]</code> en pratique ; <code>1.5</code> pour <code>lcs_distance</code>, bornée <code>[0, 0.8]</code>) plutôt qu’à 0 ou <code>NA</code>. Vérifié non problématique pour un modèle à seuils comme SIRUS :</p>
-<ul>
-<li>Sentinelle toujours hors plage réelle (pas de collision avec une vraie valeur).</li>
-<li>Redondant avec <code>vote_lcs/rag/ragann/ttc</code> (0/1) : aucune perte d’information, et permet à SIRUS de fusionner en une seule règle “vote faible OU absent” (ex. <code>if conf_ttc &lt; 0.78</code>), ce qui est le sens voulu.</li>
-<li>Cas limite vérifié sur données réelles : 0 occurrence où un classifieur a voté (code non manquant) mais avec une confiance <code>NA</code> – le <code>coalesce()</code> de secours ne se déclenche jamais actuellement.</li>
-</ul>
-</section>
 <section id="features-additionnelles-budget-shop_type_name-source" class="level2">
-<h2 class="anchored" data-anchor-id="features-additionnelles-budget-shop_type_name-source">3. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></h2>
+<h2 class="anchored" data-anchor-id="features-additionnelles-budget-shop_type_name-source">4. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></h2>
 <p>Même split train/test que le modèle principal. <code>budget</code> imputé par la médiane du train uniquement (pas de fuite) ; <code>shop_type_name</code> et <code>source</code> en facteurs avec niveaux cohérents train/test.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>features_etendues <span class="ot">&lt;-</span> <span class="fu">c</span>(features, <span class="st">"budget"</span>, <span class="st">"shop_type_name"</span>, <span class="st">"source"</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>mediane_budget_train <span class="ot">&lt;-</span> <span class="fu">median</span>(train<span class="sc">$</span>budget, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>train_etendu <span class="ot">&lt;-</span> train <span class="sc">%&gt;%</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">budget =</span> <span class="fu">coalesce</span>(budget, mediane_budget_train),</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">shop_type_name =</span> <span class="fu">as.factor</span>(shop_type_name),</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">source =</span> <span class="fu">as.factor</span>(source),</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>test_etendu <span class="ot">&lt;-</span> test <span class="sc">%&gt;%</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">budget =</span> <span class="fu">coalesce</span>(budget, mediane_budget_train),</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">shop_type_name =</span> <span class="fu">factor</span>(shop_type_name, <span class="at">levels =</span> <span class="fu">levels</span>(train_etendu<span class="sc">$</span>shop_type_name)),</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">source =</span> <span class="fu">factor</span>(source, <span class="at">levels =</span> <span class="fu">levels</span>(train_etendu<span class="sc">$</span>source)),</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>modele_etendu <span class="ot">&lt;-</span> <span class="fu">sirus.fit</span>(<span class="fu">as.data.frame</span>(train_etendu[, features_etendues]), train_etendu<span class="sc">$</span>correcte, <span class="at">type =</span> <span class="st">"classif"</span>, <span class="at">num.rule =</span> num_regles, <span class="at">max.depth =</span> profondeur_max, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>test_etendu<span class="sc">$</span>proba <span class="ot">&lt;-</span> <span class="fu">sirus.predict</span>(modele_etendu, <span class="fu">as.data.frame</span>(test_etendu[, features_etendues]))</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>choix_etendu <span class="ot">&lt;-</span> test_etendu <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">slice_max</span>(proba, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">Run =</span> <span class="st">"ancien"</span>,</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">Modele =</span> <span class="fu">c</span>(<span class="st">"SIRUS (features de base)"</span>, <span class="st">"SIRUS (+ budget/shop_type/source)"</span>),</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">Accuracy_produit =</span> <span class="fu">c</span>(<span class="fu">mean</span>(choix_par_produit<span class="sc">$</span>correcte), <span class="fu">mean</span>(choix_etendu<span class="sc">$</span>correcte))</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Accuracy_produit =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, Accuracy_produit <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
@@ -638,83 +526,17 @@ c'est signale explicitement a chaque fois.
 </div>
 </div>
 <p><strong>Aucun gain</strong>, confirmé une seconde fois sur le run <code>x98xl</code> (où TTC et RAG-ANN sont pourtant proches en performance, hypothèse initiale que le contexte d’achat pourrait aider à arbitrer – infirmée aussi) : aucune des règles retenues par SIRUS n’utilise ces 3 variables, sur aucun des deux runs testés. Tout le signal utile est déjà dans les confiances des classifieurs eux-mêmes.</p>
-<p><em>Limite de portée</em> : ce test est fait à <code>profondeur_max = 2</code> (règles à au plus 2 conditions), donc SIRUS a peu de marge pour combiner ces variables avec les autres. Un gain à plus grande profondeur n’est pas exclu par ce résultat – non prioritaire vu le diagnostic de la section 4 (le plafond vient d’ailleurs), mais à garder en tête si <code>profondeur_max</code> est un jour augmenté.</p>
+<p><em>Limite de portée</em> : ce test est fait à <code>profondeur_max = 2</code> (règles à au plus 2 conditions), donc SIRUS a peu de marge pour combiner ces variables avec les autres. Un gain à plus grande profondeur n’est pas exclu par ce résultat – non prioritaire vu le diagnostic de la section 5 (le plafond vient d’ailleurs), mais à garder en tête si <code>profondeur_max</code> est un jour augmenté.</p>
 </section>
 <section id="généralisation-à-deux-nouveaux-runs" class="level2">
-<h2 class="anchored" data-anchor-id="généralisation-à-deux-nouveaux-runs">4. Généralisation à deux nouveaux runs</h2>
+<h2 class="anchored" data-anchor-id="généralisation-à-deux-nouveaux-runs">5. Généralisation à deux nouveaux runs</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>df_nouveau2 <span class="ot">&lt;-</span> df_nouveau2 <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">vrai_n4 =</span> code_lvl4)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>table_long_nouveau2 <span class="ot">&lt;-</span> <span class="fu">construire_table_long</span>(df_nouveau2, niveau) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">code_candidat_n1 =</span> <span class="fu">as.factor</span>(code_candidat_n1))</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Modele ancien applique tel quel sur x98xl (recalage de code_candidat_n1 sur</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># les niveaux connus du modele ancien -- categorie absente -&gt; NA).</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>table_long_n2_pour_ancien <span class="ot">&lt;-</span> table_long_nouveau2 <span class="sc">%&gt;%</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">code_candidat_n1 =</span> <span class="fu">factor</span>(code_candidat_n1, <span class="at">levels =</span> <span class="fu">levels</span>(table_long<span class="sc">$</span>code_candidat_n1)))</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>table_long_n2_pour_ancien<span class="sc">$</span>proba <span class="ot">&lt;-</span> <span class="fu">sirus.predict</span>(modele, <span class="fu">as.data.frame</span>(table_long_n2_pour_ancien[, features]))</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>choix_n2_ancien <span class="ot">&lt;-</span> table_long_n2_pour_ancien <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">slice_max</span>(proba, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>borne_haute_n2 <span class="ot">&lt;-</span> table_long_nouveau2 <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">possible =</span> <span class="fu">max</span>(correcte), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(possible) <span class="sc">%&gt;%</span> <span class="fu">mean</span>()</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Diagnostic du recalage : combien de candidats ont une categorie n1 inconnue</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># de l'ancien modele (-&gt; NA, proba potentiellement mal estimee), et surtout</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># combien de PRODUITS ont TOUS leurs candidats dans ce cas (le choix de</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co"># slice_max devient alors arbitraire -- premiere ligne du groupe -- plutot</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co"># qu'informatif). Si ce dernier chiffre est negligeable, le recalage ne biaise</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co"># pas la comparaison ci-dessous ; sinon, l'accuracy "modele ancien sur x98xl"</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co"># est a relativiser.</span></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>n_candidats_na <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(table_long_n2_pour_ancien<span class="sc">$</span>code_candidat_n1))</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>lignes_tout_na <span class="ot">&lt;-</span> table_long_n2_pour_ancien <span class="sc">%&gt;%</span></span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">tout_na =</span> <span class="fu">all</span>(<span class="fu">is.na</span>(code_candidat_n1)), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Candidats avec categorie n1 inconnue de l'ancien modele : %d / %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  n_candidats_na, <span class="fu">nrow</span>(table_long_n2_pour_ancien), <span class="dv">100</span> <span class="sc">*</span> n_candidats_na <span class="sc">/</span> <span class="fu">nrow</span>(table_long_n2_pour_ancien)</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Candidats avec categorie n1 inconnue de l'ancien modele : 0 / 11836 (0.0%)</code></pre>
 </div>
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Produits ou TOUS les candidats sont dans ce cas (choix slice_max arbitraire) : %d / %d (%.1f%%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(lignes_tout_na<span class="sc">$</span>tout_na), <span class="fu">nrow</span>(lignes_tout_na), <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(lignes_tout_na<span class="sc">$</span>tout_na)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Produits ou TOUS les candidats sont dans ce cas (choix slice_max arbitraire) : 0 / 5881 (0.0%)</code></pre>
 </div>
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Modele reentraine directement sur x98xl</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>lignes_uniques_n2 <span class="ot">&lt;-</span> <span class="fu">unique</span>(table_long_nouveau2<span class="sc">$</span>ligne)</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>lignes_train_n2 <span class="ot">&lt;-</span> <span class="fu">sample</span>(lignes_uniques_n2, <span class="at">size =</span> <span class="fu">round</span>(<span class="fl">0.8</span> <span class="sc">*</span> <span class="fu">length</span>(lignes_uniques_n2)))</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>train_n2 <span class="ot">&lt;-</span> table_long_nouveau2 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(ligne <span class="sc">%in%</span> lignes_train_n2)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>test_n2  <span class="ot">&lt;-</span> table_long_nouveau2 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>ligne <span class="sc">%in%</span> lignes_train_n2)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>modele_n2 <span class="ot">&lt;-</span> <span class="fu">sirus.fit</span>(<span class="fu">as.data.frame</span>(train_n2[, features]), train_n2<span class="sc">$</span>correcte, <span class="at">type =</span> <span class="st">"classif"</span>, <span class="at">num.rule =</span> num_regles, <span class="at">max.depth =</span> profondeur_max, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>test_n2<span class="sc">$</span>proba <span class="ot">&lt;-</span> <span class="fu">sirus.predict</span>(modele_n2, <span class="fu">as.data.frame</span>(test_n2[, features]))</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>choix_n2_reentraine <span class="ot">&lt;-</span> test_n2 <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">slice_max</span>(proba, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>borne_haute_test_n2 <span class="ot">&lt;-</span> test_n2 <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">summarise</span>(<span class="at">possible =</span> <span class="fu">max</span>(correcte), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(possible) <span class="sc">%&gt;%</span> <span class="fu">mean</span>()</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Meme sous-ensemble (test 20% x98xl, meme split que le modele reentraine) evalue</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># avec le modele ancien -- comparaison directe sur le meme echantillon plutot</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># que ancien-sur-integral vs reentraine-sur-test-20% (bases non comparables).</span></span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>test_n2_pour_ancien <span class="ot">&lt;-</span> table_long_n2_pour_ancien <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>ligne <span class="sc">%in%</span> lignes_train_n2)</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>choix_n2_ancien_test <span class="ot">&lt;-</span> test_n2_pour_ancien <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">slice_max</span>(proba, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">Modele =</span> <span class="fu">c</span>(</span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Entraîné ancien, testé ancien (test 20%)"</span>,</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Entraîné ancien, testé sur x98xl (test 20%, même split que réentraîné)"</span>,</span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Entraîné directement sur x98xl (test 20%)"</span></span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">Accuracy_produit =</span> <span class="fu">c</span>(<span class="fu">mean</span>(choix_par_produit<span class="sc">$</span>correcte), <span class="fu">mean</span>(choix_n2_ancien_test<span class="sc">$</span>correcte), <span class="fu">mean</span>(choix_n2_reentraine<span class="sc">$</span>correcte)),</span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">Borne_haute =</span> <span class="fu">c</span>(borne_haute, borne_haute_test_n2, borne_haute_test_n2)</span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, . <span class="sc">*</span> <span class="dv">100</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
@@ -750,13 +572,6 @@ c'est signale explicitement a chaque fois.
 </table>
 </div>
 </div>
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="sc">\n</span><span class="st">(Pour reference, accuracy du modele ancien sur l'integralite du run x98xl [%d produits, pas seulement le test 20%%] : %.1f%%.)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(choix_n2_ancien), <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(choix_n2_ancien<span class="sc">$</span>correcte)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 (Pour reference, accuracy du modele ancien sur l'integralite du run x98xl [5881 produits, pas seulement le test 20%] : 77.7%.)</code></pre>
@@ -766,24 +581,6 @@ c'est signale explicitement a chaque fois.
 <section id="diagnostic-quel-classifieur-décroche" class="level3">
 <h3 class="anchored" data-anchor-id="diagnostic-quel-classifieur-décroche">Diagnostic : quel classifieur décroche ?</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>diagnostiquer_run <span class="ot">&lt;-</span> <span class="cf">function</span>(df, vrai_n4, nom_run) {</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">lapply</span>(<span class="fu">c</span>(<span class="st">"lcs_code"</span>, <span class="st">"rag_code"</span>, <span class="st">"ragann_code"</span>, <span class="st">"ttc_code_1"</span>), <span class="cf">function</span>(col) {</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    cand_n4 <span class="ot">&lt;-</span> <span class="fu">tronquer_niveau</span>(df[[col]], niveau)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    taux <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="sc">!</span><span class="fu">is.na</span>(cand_n4) <span class="sc">&amp;</span> <span class="sc">!</span>cand_n4 <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"AUCUNE_SUGGESTION"</span>, <span class="st">"NON_CODABLE"</span>) <span class="sc">&amp;</span> cand_n4 <span class="sc">==</span> vrai_n4, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">run =</span> nom_run, <span class="at">classifieur =</span> col, <span class="at">taux_match =</span> taux)</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  }))</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diagnostiquer_run</span>(df_ancien, df_ancien<span class="sc">$</span>vrai_n4, <span class="st">"ancien (2026-06-29)"</span>),</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diagnostiquer_run</span>(df_nouveau1, <span class="fu">tronquer_niveau</span>(df_nouveau1<span class="sc">$</span>code, niveau), <span class="st">"nouveau-1 (2026-07-23, 8m8jn)"</span>),</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diagnostiquer_run</span>(df_nouveau2, df_nouveau2<span class="sc">$</span>vrai_n4, <span class="st">"nouveau-2 (2026-07-30, x98xl)"</span>),</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> run, <span class="at">values_from =</span> taux_match) <span class="sc">%&gt;%</span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, . <span class="sc">*</span> <span class="dv">100</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
@@ -835,28 +632,10 @@ c'est signale explicitement a chaque fois.
 </section>
 </section>
 <section id="hyperparamètres-sirus" class="level2">
-<h2 class="anchored" data-anchor-id="hyperparamètres-sirus">5. Hyperparamètres SIRUS</h2>
+<h2 class="anchored" data-anchor-id="hyperparamètres-sirus">6. Hyperparamètres SIRUS</h2>
 <p><code>num_regles</code> (<code>num.rule</code>, défaut 10) et <code>profondeur_max</code> (<code>max.depth</code>, défaut/recommandé 2) sont paramétrables en tête de ce document pour tout retester en un seul endroit.</p>
 <p><strong><code>sirus.cv()</code> sur le train set <code>x98xl</code></strong> (nfold=10, ncv=10 – ~8 min de calcul, résultat obtenu précédemment, non relancé automatiquement ici) :</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Resultats obtenus (log complet : sirus_cv_x98xl.log) :</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   p0.pred (minimise erreur, recommande classif) = 0.0336 -&gt; ~18 regles, erreur CV 6.7%</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   p0.stab (compromis stabilite)                 = 0.1116 -&gt; ~4 regles,  erreur CV 7.6%</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   Accuracy produit avec p0.pred (18 regles)     : 78.6%</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   Accuracy produit avec num.rule=10 (actuel)    : 78.5%</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Modele =</span> <span class="fu">c</span>(<span class="st">"num.rule = 10 (actuel)"</span>, <span class="st">"p0.pred (18 règles, cross-validées)"</span>),</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Nb_regles =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">18</span>),</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Accuracy_produit_x98xl =</span> <span class="fu">c</span>(<span class="st">"78.5%"</span>, <span class="st">"78.6%"</span>)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
@@ -888,100 +667,7 @@ c'est signale explicitement a chaque fois.
 </div>
 </div>
 </div>
-<p><strong>Conclusion</strong> : la cross-validation confirme que <code>num.rule = 10</code> était déjà quasi-optimal – ajouter des règles (jusqu’à 18) n’apporte rien de mesurable. Ça élimine le nombre de règles comme levier d’amélioration : le plafond de performance vient de la borne haute (RAG-ANN dégradé, section 4), pas d’un sous-ajustement de SIRUS. Pour la même raison, augmenter <code>profondeur_max</code> au-delà de 2 (règles à 3 conditions plutôt que 2) n’a pas été testé en priorité – le goulot d’étranglement n’est pas la capacité du modèle.</p>
-</section>
-<section id="impact-concret-du-fix-de-troncature-sur-les-lignes-mal-classées" class="level2">
-<h2 class="anchored" data-anchor-id="impact-concret-du-fix-de-troncature-sur-les-lignes-mal-classées">6. Impact concret du fix de troncature sur les lignes mal classées</h2>
-<p>Comparaison directe, mêmes données (run ancien) et même split (seed 42) : le modèle avec le fix cascade (ci-dessus, section 2) vs le même pipeline <strong>sans</strong> le fix (<code>tentative_sirus.R</code>, troncature par comparaison de chaînes brute).</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>mal_classees_avec_fix <span class="ot">&lt;-</span> choix_par_produit <span class="sc">%&gt;%</span> <span class="fu">filter</span>(correcte <span class="sc">==</span> <span class="dv">0</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Meme construction que la table_long principale (section 2), mais avec</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># fn_tronquer = tronquer_sans_cascade : reproduit fidelement le pipeline</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># SANS le fix (tentative_sirus.R), sur les memes lignes/split.</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>df_ancien_sans_fix <span class="ot">&lt;-</span> df_ancien <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">vrai_n4 =</span> <span class="fu">tronquer_sans_cascade</span>(code, niveau))</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>table_long_sans_fix <span class="ot">&lt;-</span> <span class="fu">construire_table_long</span>(df_ancien_sans_fix, niveau, <span class="at">fn_tronquer =</span> tronquer_sans_cascade) <span class="sc">%&gt;%</span></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">code_candidat_n1 =</span> <span class="fu">as.factor</span>(code_candidat_n1))</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>train_sf <span class="ot">&lt;-</span> table_long_sans_fix <span class="sc">%&gt;%</span> <span class="fu">filter</span>(ligne <span class="sc">%in%</span> lignes_train)</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>test_sf  <span class="ot">&lt;-</span> table_long_sans_fix <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span>ligne <span class="sc">%in%</span> lignes_train)</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>modele_sf <span class="ot">&lt;-</span> <span class="fu">sirus.fit</span>(<span class="fu">as.data.frame</span>(train_sf[, features]), train_sf<span class="sc">$</span>correcte, <span class="at">type =</span> <span class="st">"classif"</span>, <span class="at">num.rule =</span> num_regles, <span class="at">max.depth =</span> profondeur_max, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>test_sf<span class="sc">$</span>proba <span class="ot">&lt;-</span> <span class="fu">sirus.predict</span>(modele_sf, <span class="fu">as.data.frame</span>(test_sf[, features]))</span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>choix_sf <span class="ot">&lt;-</span> test_sf <span class="sc">%&gt;%</span> <span class="fu">group_by</span>(ligne) <span class="sc">%&gt;%</span> <span class="fu">slice_max</span>(proba, <span class="at">n =</span> <span class="dv">1</span>, <span class="at">with_ties =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">ungroup</span>()</span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Un candidat mal classe est-il exactement l'artefact ".0" ? -- i.e. le vrai</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="co"># code (sans le fix) prive de ses "0" terminaux redevient-il egal au candidat ?</span></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>retirer_zeros_un <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.na</span>(x)) <span class="fu">return</span>(<span class="cn">NA_character_</span>)</span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> (<span class="fu">grepl</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.0$"</span>, x)) x <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">.0$"</span>, <span class="st">""</span>, x)</span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  x</span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>retirer_zeros <span class="ot">&lt;-</span> <span class="cf">function</span>(xs) <span class="fu">vapply</span>(xs, retirer_zeros_un, <span class="fu">character</span>(<span class="dv">1</span>), <span class="at">USE.NAMES =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>vrai_n4_par_ligne_sf <span class="ot">&lt;-</span> df_ancien_sans_fix <span class="sc">%&gt;%</span> <span class="fu">distinct</span>(ligne, vrai_n4)</span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>mal_classees_sans_fix <span class="ot">&lt;-</span> choix_sf <span class="sc">%&gt;%</span></span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(correcte <span class="sc">==</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(vrai_n4_par_ligne_sf, <span class="at">by =</span> <span class="st">"ligne"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">artefact_point_zero =</span> code_candidat <span class="sc">==</span> <span class="fu">retirer_zeros</span>(vrai_n4))</span>
-<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(</span>
-<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">Pipeline =</span> <span class="fu">c</span>(<span class="st">"Avec fix cascade (section 2)"</span>, <span class="st">"Sans fix cascade (tentative_sirus.R)"</span>),</span>
-<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">N_test =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(choix_par_produit), <span class="fu">nrow</span>(choix_sf)),</span>
-<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">N_mal_classees =</span> <span class="fu">c</span>(<span class="fu">nrow</span>(mal_classees_avec_fix), <span class="fu">nrow</span>(mal_classees_sans_fix)),</span>
-<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">Accuracy_produit =</span> <span class="fu">c</span>(<span class="fu">mean</span>(choix_par_produit<span class="sc">$</span>correcte), <span class="fu">mean</span>(choix_sf<span class="sc">$</span>correcte))</span>
-<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">Accuracy_produit =</span> <span class="fu">sprintf</span>(<span class="st">"%.1f%%"</span>, Accuracy_produit <span class="sc">*</span> <span class="dv">100</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div class="kable-table">
-<table class="caption-top table table-sm table-striped small">
-<colgroup>
-<col style="width: 48%">
-<col style="width: 9%">
-<col style="width: 19%">
-<col style="width: 22%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Pipeline</th>
-<th style="text-align: right;">N_test</th>
-<th style="text-align: right;">N_mal_classees</th>
-<th style="text-align: left;">Accuracy_produit</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Avec fix cascade (section 2)</td>
-<td style="text-align: right;">1165</td>
-<td style="text-align: right;">39</td>
-<td style="text-align: left;">96.7%</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Sans fix cascade (tentative_sirus.R)</td>
-<td style="text-align: right;">1165</td>
-<td style="text-align: right;">183</td>
-<td style="text-align: left;">84.3%</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<details class="code-fold">
-<summary>Voir le code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="sc">\n</span><span class="st">Sans le fix : %d erreurs sur %d (%.1f%%) sont exactement l'artefact '.0' -- corrigees par le fix cascade.</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(mal_classees_sans_fix<span class="sc">$</span>artefact_point_zero), <span class="fu">nrow</span>(mal_classees_sans_fix),</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100</span> <span class="sc">*</span> <span class="fu">mean</span>(mal_classees_sans_fix<span class="sc">$</span>artefact_point_zero)</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-Sans le fix : 145 erreurs sur 183 (79.2%) sont exactement l'artefact '.0' -- corrigees par le fix cascade.</code></pre>
-</div>
-</div>
-<p><strong>Lecture</strong> : l’écart d’accuracy entre les deux pipelines s’explique majoritairement par l’artefact de troncature “.0” – les erreurs restantes sont de vraies erreurs de classification, indépendantes du fix.</p>
+<p><strong>Conclusion</strong> : la cross-validation confirme que <code>num.rule = 10</code> était déjà quasi-optimal – ajouter des règles (jusqu’à 18) n’apporte rien de mesurable. Ça élimine le nombre de règles comme levier d’amélioration : le plafond de performance vient de la borne haute (RAG-ANN dégradé, section 5), pas d’un sous-ajustement de SIRUS. Pour la même raison, augmenter <code>profondeur_max</code> au-delà de 2 (règles à 3 conditions plutôt que 2) n’a pas été testé en priorité – le goulot d’étranglement n’est pas la capacité du modèle.</p>
 </section>
 <section id="système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle" class="level2">
 <h2 class="anchored" data-anchor-id="système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle">7. Système à deux étages : SIRUS confiant → RF sur les incertains → reprise manuelle</h2>
@@ -1017,15 +703,15 @@ Sans le fix : 145 erreurs sur 183 (79.2%) sont exactement l'artefact '.0' -- cor
 </tr>
 </tbody>
 </table>
-<p>Comparé à SIRUS seul au même seuil (80.1 % de fiabilité globale, 37.1 % de volume en reprise), la cascade à 2 étages réduit le volume de reprise nécessaire pour une fiabilité globale comparable ou meilleure – à confirmer sur un échantillon plus grand (le RF n’a été validé que sur 20 % de la zone incertaine). <strong>Non recalculé sur <code>x98xl</code></strong> : la zone incertaine et les performances du RF dépendraient de la régression RAG-ANN identifiée section 4, à ré-évaluer si cette piste est reprise.</p>
+<p>Comparé à SIRUS seul au même seuil (80.1 % de fiabilité globale, 37.1 % de volume en reprise), la cascade à 2 étages réduit le volume de reprise nécessaire pour une fiabilité globale comparable ou meilleure – à confirmer sur un échantillon plus grand (le RF n’a été validé que sur 20 % de la zone incertaine). <strong>Non recalculé sur <code>x98xl</code></strong> : la zone incertaine et les performances du RF dépendraient de la régression RAG-ANN identifiée section 5, à ré-évaluer si cette piste est reprise.</p>
 <p><strong>Rappel du message le plus important</strong> de cette exploration : ce système optimise la décision <em>en aval</em>, avec les classifieurs de base tels qu’ils sont. Il ne corrige pas la régression RAG-ANN elle-même – aucun seuil, aucun second modèle ne peut récupérer les produits pour lesquels le bon code n’est proposé par aucun classifieur.</p>
 </section>
 <section id="synthèse-et-recommandations" class="level2">
 <h2 class="anchored" data-anchor-id="synthèse-et-recommandations">8. Synthèse et recommandations</h2>
 <ul>
-<li><strong>Le fix de troncature “.0” est légitime</strong> (section 1), validé structurellement sur l’ensemble des codes observés (0 position à risque sur 3 runs) – et maintenant remplacé en amont par <code>code_lvl4</code> sur les runs qui l’incluent.</li>
-<li><strong>Le modèle SIRUS de base (10 règles, profondeur 2) est déjà quasi-optimal</strong> (section 5) : ni plus de règles, ni de features additionnelles (<code>budget</code>/<code>shop_type_name</code>/<code>source</code>, section 3) n’apportent de gain mesurable.</li>
-<li><strong>Le vrai facteur limitant est en amont</strong> : la régression RAG-ANN, présente depuis le 23 juillet et toujours non corrigée au 30 juillet (section 4), plafonne la borne haute à ~88 % contre ~98 % sur l’ancien run. Aucun réglage de SIRUS ne peut compenser un candidat qui n’est simplement pas proposé.</li>
+<li><strong>SIRUS livre bien l’objectif visé</strong> (section 1) : une poignée de règles seuils lisibles (<code>sirus.print(modele)</code>, section 3), directement exploitables comme convention de codage, là où une Random Forest classique ne donnerait que des importances de features.</li>
+<li><strong>Le modèle SIRUS de base (10 règles, profondeur 2) est déjà quasi-optimal</strong> (section 6) : ni plus de règles, ni de features additionnelles (<code>budget</code>/<code>shop_type_name</code>/<code>source</code>, section 4) n’apportent de gain mesurable.</li>
+<li><strong>Le vrai facteur limitant est en amont</strong> : la régression RAG-ANN, présente depuis le 23 juillet et toujours non corrigée au 30 juillet (section 5), plafonne la borne haute à ~88 % contre ~98 % sur l’ancien run. Aucun réglage de SIRUS ne peut compenser un candidat qui n’est simplement pas proposé.</li>
 <li><strong>Prochaine étape recommandée</strong> : corriger RAG-ANN en amont plutôt que continuer à optimiser le re-ranking. En parallèle, le système à 2 étages (section 7) reste une option pour réduire le volume de reprise manuelle en attendant, à re-valider sur <code>x98xl</code> si retenu.</li>
 </ul>
 

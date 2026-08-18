@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-17">
+<meta name="dcterms.date" content="2026-08-18">
 
 <title>Profondeur et qualité des codes – Codification automatique COICOP</title>
 <style>
@@ -181,14 +181,14 @@ ul.task-list li input[type="checkbox"] {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../stats-descriptives/troncature-niveau4.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Troncature niveau 4 : le fix cascade des “0” terminaux</span></a>
+  <a href="../stats-descriptives/calibration-confiance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Calibration des scores de confiance</span></a>
   </div>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../stats-descriptives/calibration-confiance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Calibration des scores de confiance</span></a>
+  <a href="../stats-descriptives/accuracy-prix-collecte.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Accuracy par prix et mode de collecte</span></a>
   </div>
 </li>
     </ul>
@@ -225,7 +225,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 17, 2026</p>
+      <p class="date">August 18, 2026</p>
     </div>
   </div>
   
@@ -237,7 +237,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div id="312ea6b3" class="cell" data-execution_count="1">
+<div id="24c93ebe" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-stdout">
 <pre><code>[charger_donnees] projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet → shape = (5825, 38)</code></pre>
 </div>
@@ -251,7 +251,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="profondeur-réelle-des-codes-par-classifieur" class="level2">
 <h2 class="anchored" data-anchor-id="profondeur-réelle-des-codes-par-classifieur">Profondeur réelle des codes, par classifieur</h2>
 <p>Répartition de la profondeur effective de chaque code (avant toute troncature), en part du total des observations. <code>code</code> est la vérité terrain ; les autres colonnes sont les classifieurs (<code>ttc_code_2</code> et <code>ttc_code_3</code> sont les rangs 2 et 3 de TTC, cf.&nbsp;<a href="../stats-descriptives/ttc-top3.html">le top-3 de TTC</a>).</p>
-<div id="3461dc55" class="cell" data-execution_count="3">
+<div id="45686623" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display" data-execution_count="3">
 <div>
 
@@ -369,7 +369,7 @@ ul.task-list li input[type="checkbox"] {
 </section>
 <section id="codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4" class="level2">
 <h2 class="anchored" data-anchor-id="codes-incomplets-complets-ou-sur-précis-par-rapport-au-niveau-4">Codes incomplets, complets ou sur-précis par rapport au niveau 4</h2>
-<div id="bd676148" class="cell" data-execution_count="4">
+<div id="0c2e803e" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
 
@@ -454,16 +454,16 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="d57a1636" class="cell" data-execution_count="5">
+<div id="ecf4de96" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p>Un code <strong>incomplet</strong> (moins de 4 segments) n’est pas forcément une erreur de fond : si le 4e segment de la vérité vaut <code>0</code> (convention COICOP “pas de sous-classe plus précise”), le classifieur n’a rien affirmé d’incorrect en s’arrêtant avant — voir <a href="../stats-descriptives/troncature-niveau4.html">troncature niveau 4</a> pour la preuve que ce cas est bien géré (fix cascade) sans fausser la mesure d’accuracy.</p>
+<p>Un code <strong>incomplet</strong> (moins de 4 segments) n’est pas forcément une erreur de fond : si le 4e segment de la vérité vaut <code>0</code> (convention COICOP “pas de sous-classe plus précise”), le classifieur n’a rien affirmé d’incorrect en s’arrêtant avant. <code>tronquer_niveau()</code> (<code>src/coicop.py</code>), utilisée par toutes les analyses de ce site, retire ces “0” terminaux en cascade pour ne pas pénaliser ce cas.</p>
 </div>
 </div>
 </section>
 <section id="codes-absents-et-indicateurs-de-codabilité" class="level2">
 <h2 class="anchored" data-anchor-id="codes-absents-et-indicateurs-de-codabilité">Codes absents et indicateurs de codabilité</h2>
 <p>Au-delà de la profondeur, un classifieur peut ne renvoyer aucun code (<code>NaN</code>), ou exposer son propre indicateur booléen de codabilité.</p>
-<div id="73e6f702" class="cell" data-execution_count="6">
+<div id="e511fcd6" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Codes absents (NaN), par classifieur</p>
 </div>
@@ -521,7 +521,7 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 </div>
-<div id="1ec04411" class="cell" data-execution_count="7">
+<div id="77ab8703" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">Indicateurs de codabilité dédiés</p>
 </div>
@@ -559,7 +559,7 @@ ul.task-list li input[type="checkbox"] {
 <section id="divisions-spéciales-98-99-par-classifieur" class="level2">
 <h2 class="anchored" data-anchor-id="divisions-spéciales-98-99-par-classifieur">Divisions spéciales (98 / 99) par classifieur</h2>
 <p>Rappel : la division <code>98</code> signale un produit indéterminé/illisible, <code>99</code> un cas hors COICOP (dons, impôts, opérations bancaires…). Part des prédictions de chaque classifieur tombant dans l’une de ces deux divisions, comparée à la vérité terrain.</p>
-<div id="a42e64b1" class="cell" data-execution_count="8">
+<div id="d6508f25" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 
