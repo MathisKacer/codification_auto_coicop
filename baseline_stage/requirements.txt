@@ -1,0 +1,6 @@
+pandas
+scikit-learn
+scipy
+pyarrow
+s3fs
+joblib

@@ -39,6 +39,7 @@ website:
       contents:
         - modelisation/index.qmd
         - modelisation/sirus.qmd
+        - modelisation/comparaison.qmd
 
 format:
   html:

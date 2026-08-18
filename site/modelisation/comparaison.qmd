@@ -1,0 +1,487 @@
+---
+title: "Baseline+RF vs SIRUS"
+subtitle: "Comparaison directe sur les mêmes runs : qui choisit le meilleur code, et qui offre le meilleur compromis volume automatisé / fiabilité ?"
+date: today
+engine: knitr
+format:
+  html:
+    toc-depth: 2
+    df-print: kable
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+Cette page compare directement les deux alternatives au LLM-as-a-judge
+développées pendant le stage — [la baseline (vote majoritaire) filtrée par
+une Random Forest](index.qmd) et [SIRUS](sirus.qmd) — sur les mêmes 3 runs
+labellisés (`codif-vvkv9`, `codif-8m8jn`, `codif-x98xl`), calculées ici
+même (pas des chiffres recopiés) pour que les deux résultats soient
+strictement comparables.
+
+**Ce que les deux modèles ont en commun** : ils partent tous les deux des
+mêmes 4 classifieurs de base, et rendent tous les deux une probabilité de
+confiance servant à décider si on peut coder automatiquement ou s'il faut
+escalader (reprise manuelle / LLM-judge).
+
+**Ce qui les distingue structurellement** : la baseline+RF ne choisit
+jamais elle-même un code — la RF se contente de dire si on peut faire
+confiance au vote majoritaire (déjà figé en amont). SIRUS, lui, **reclasse
+les candidats des 4 classifieurs** et peut donc choisir un candidat
+différent du vote majoritaire. C'est ce qui explique l'essentiel de l'écart
+observé plus bas.
+
+```{r setup}
+library(arrow)
+library(dplyr)
+library(tidyr)
+library(sirus)
+library(reticulate)
+
+niveau <- 4
+num_regles <- 10
+profondeur_max <- 2
+seed_split <- 42
+
+bucket_s3   <- "projet-budget-famille"
+endpoint_s3 <- "minio.lab.sspcloud.fr"
+runs_labellises <- c(
+  "data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet",
+  "data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
+  "data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
+)
+
+tronquer_niveau_un <- function(code, niveau = 4) {
+  if (is.na(code)) return(NA_character_)
+  s <- as.character(code)
+  if (s %in% c("AUCUNE_SUGGESTION", "NON_CODABLE")) return(s)
+  n_chiffres_cible <- niveau + 1
+  chiffres <- 0L
+  out <- character(0)
+  for (ch in strsplit(s, "")[[1]]) {
+    if (grepl("[0-9]", ch)) {
+      if (chiffres == n_chiffres_cible) break
+      chiffres <- chiffres + 1L
+      out <- c(out, ch)
+    } else if (chiffres < n_chiffres_cible) {
+      out <- c(out, ch)
+    }
+  }
+  resultat <- paste(out, collapse = "")
+  while (grepl("\\.0$", resultat)) resultat <- sub("\\.0$", "", resultat)
+  resultat
+}
+tronquer_niveau <- function(codes, niveau = 4) {
+  vapply(codes, tronquer_niveau_un, character(1), niveau = niveau, USE.NAMES = FALSE)
+}
+
+charger_run <- function(objet_s3) {
+  df <- aws.s3::s3read_using(
+    FUN = arrow::read_parquet, object = objet_s3, bucket = bucket_s3,
+    opts = list(region = "", base_url = endpoint_s3),
+  )
+  if (!"ligne" %in% names(df)) df$ligne <- seq_len(nrow(df)) - 1L
+  df$vrai_n4 <- if ("code_lvl4" %in% names(df)) df$code_lvl4 else tronquer_niveau(df$code, niveau)
+  df
+}
+
+construire_table_long <- function(df, niveau = 4) {
+  df <- df %>%
+    mutate(
+      lcs_n4    = tronquer_niveau(lcs_code, niveau),
+      rag_n4    = tronquer_niveau(rag_code, niveau),
+      ragann_n4 = tronquer_niveau(ragann_code, niveau),
+      ttc_n4    = tronquer_niveau(ttc_code_1, niveau),
+    )
+  candidats <- df %>%
+    select(ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4, vrai_n4) %>%
+    pivot_longer(
+      cols = c(lcs_n4, rag_n4, ragann_n4, ttc_n4),
+      names_to = "classifieur", values_to = "code_candidat",
+    ) %>%
+    filter(!is.na(code_candidat)) %>%
+    distinct(ligne, code_candidat, vrai_n4)
+
+  candidats %>%
+    left_join(
+      df %>% select(
+        ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4,
+        lcs_distance, rag_confidence, ragann_confidence, ttc_conf_1,
+      ),
+      by = "ligne",
+    ) %>%
+    mutate(
+      vote_lcs    = as.integer(!is.na(lcs_n4)    & lcs_n4    == code_candidat),
+      vote_rag    = as.integer(!is.na(rag_n4)    & rag_n4    == code_candidat),
+      vote_ragann = as.integer(!is.na(ragann_n4) & ragann_n4 == code_candidat),
+      vote_ttc    = as.integer(!is.na(ttc_n4)    & ttc_n4    == code_candidat),
+      nb_votants  = vote_lcs + vote_rag + vote_ragann + vote_ttc,
+      correcte    = as.integer(!is.na(vrai_n4) & code_candidat == vrai_n4),
+      code_candidat_n1 = tronquer_niveau(code_candidat, niveau = 1),
+      conf_rag    = if_else(vote_rag == 1L,    coalesce(rag_confidence, -1),    -1),
+      conf_ragann = if_else(vote_ragann == 1L, coalesce(ragann_confidence, -1), -1),
+      conf_ttc    = if_else(vote_ttc == 1L,    coalesce(ttc_conf_1, -1),        -1),
+      dist_lcs    = if_else(vote_lcs == 1L,    coalesce(lcs_distance, 1.5),     1.5),
+    ) %>%
+    select(
+      ligne, code_candidat, code_candidat_n1,
+      vote_lcs, vote_rag, vote_ragann, vote_ttc, nb_votants,
+      conf_rag, conf_ragann, conf_ttc, dist_lcs, correcte,
+    )
+}
+
+FEATURES_SIRUS <- c(
+  "vote_lcs", "vote_rag", "vote_ragann", "vote_ttc", "nb_votants",
+  "conf_rag", "conf_ragann", "conf_ttc", "dist_lcs", "code_candidat_n1"
+)
+
+runs_r <- lapply(runs_labellises, charger_run)
+
+# Les runs doivent porter des observations disjointes (sinon accuracy
+# biaisee / fuite train-test) -- verifie via `id` (UUID stable par produit,
+# independant de `ligne` qui n'est qu'un indice relatif au run).
+if (all(vapply(runs_r, function(df) "id" %in% names(df), logical(1)))) {
+  tous_ids <- unlist(lapply(runs_r, function(df) df$id))
+  if (any(duplicated(tous_ids))) {
+    stop("Des id sont dupliqués entre les runs labellisés -- les runs ne sont plus disjoints.")
+  }
+}
+
+tables_long <- lapply(seq_along(runs_r), function(i) {
+  tl <- construire_table_long(runs_r[[i]], niveau)
+  tl$ligne <- paste0("run", i, "_", tl$ligne)
+  tl
+})
+table_long <- bind_rows(tables_long) %>% mutate(code_candidat_n1 = as.factor(code_candidat_n1))
+
+# Correspondance ligne <-> id (UUID), pour pouvoir aligner plus bas le split
+# train/test de SIRUS sur exactement le meme decoupage que celui fait cote
+# Python (necessaire pour comparer les deux modeles sur les memes produits,
+# ex. test de McNemar). `runs_r[[i]]$ligne` est encore l'indice brut
+# (0-indexe, avant prefixe) a ce stade -- meme construction que ci-dessus.
+id_map <- bind_rows(lapply(seq_along(runs_r), function(i) {
+  data.frame(
+    ligne = paste0("run", i, "_", runs_r[[i]]$ligne),
+    id = runs_r[[i]]$id,
+    stringsAsFactors = FALSE
+  )
+}))
+```
+
+```{python}
+import os
+import sys
+sys.path.append(os.path.abspath("../.."))
+
+import pandas as pd
+import s3fs
+from sklearn.model_selection import train_test_split
+
+from src.coicop import tronquer_niveau
+from src.baseline import baseline_majorite_ttc, construire_pipeline
+from src.baseline.preprocessing import construire_features, imputer_valeurs_manquantes
+
+NIVEAU = 4
+SEED_SPLIT = 42
+BUCKET_S3 = "projet-budget-famille"
+ENDPOINT_S3 = "https://minio.lab.sspcloud.fr"
+RUNS_LABELLISES = [
+    f"{BUCKET_S3}/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet",
+    f"{BUCKET_S3}/data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
+    f"{BUCKET_S3}/data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet",
+]
+
+fs = s3fs.S3FileSystem(client_kwargs={"endpoint_url": ENDPOINT_S3})
+runs_py = []
+for i, objet in enumerate(RUNS_LABELLISES):
+    df = pd.read_parquet(objet, filesystem=fs)
+    if "ligne" not in df.columns:
+        df["ligne"] = range(len(df))
+    if "code_lvl4" in df.columns:
+        df["vrai_n4"] = df["code_lvl4"]
+    else:
+        df["vrai_n4"] = df["code"].map(lambda x: tronquer_niveau(x, NIVEAU))
+    df["ligne"] = [f"run{i}_{ident}" for ident in df["ligne"]]
+    runs_py.append(df)
+df_total = pd.concat(runs_py, ignore_index=True)
+
+# Les runs doivent porter des observations disjointes (sinon accuracy
+# biaisee / fuite train-test) -- verifie via `id` (UUID stable par produit,
+# independant de `ligne` qui n'est qu'un indice relatif au run).
+if "id" in df_total.columns and df_total["id"].duplicated().any():
+    raise ValueError(
+        "Des id sont dupliqués entre les runs labellisés -- "
+        "les runs ne sont plus disjoints."
+    )
+
+cols_classifieurs = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
+y_pred_baseline = baseline_majorite_ttc(df_total, cols_classifieurs, "ttc_code_1", niveau=NIVEAU)
+correct_baseline = y_pred_baseline == df_total["vrai_n4"]
+
+X = imputer_valeurs_manquantes(construire_features(df_total, y_pred_baseline))
+y = correct_baseline.astype(int)
+
+# Le split (par produit, id) est fait ICI, une seule fois, puis exporté vers
+# R plus bas : SIRUS est entraîné/évalué sur exactement le même partage
+# train/test que la baseline+RF, condition nécessaire pour comparer les deux
+# modèles produit par produit (test de McNemar apparié).
+X_train, X_test, y_train, y_test, id_train, id_test = train_test_split(
+    X, y, df_total["id"], test_size=0.2, stratify=y, random_state=SEED_SPLIT,
+)
+pipe = construire_pipeline(random_state=SEED_SPLIT)
+pipe = pipe.fit(X_train, y_train)
+proba_rf = pipe.predict_proba(X_test)[:, 1]
+
+# Passage à R via des listes de types natifs uniquement (cf. note plus bas) :
+# le train/test split pour aligner SIRUS, et la correction de la baseline
+# sur le test set pour le test de McNemar.
+id_train_liste = [str(x) for x in id_train]
+id_test_liste = [str(x) for x in id_test]
+correct_baseline_test_liste = [int(x) for x in y_test]
+
+seuils_rf = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+
+def _ligne_sweep(s):
+    confiant = proba_rf >= s
+    fiabilite = float(y_test[confiant].mean()) if confiant.any() else float("nan")
+    return float(s), float(confiant.mean()), fiabilite
+
+
+_sweep = [_ligne_sweep(s) for s in seuils_rf]
+# Passage à R via des listes de types natifs uniquement (float/str) : les
+# DataFrames pandas et tableaux numpy ne se convertissent pas correctement
+# vers R dans cet environnement (colonnes "corrompues" côté reticulate) --
+# contrainte vérifiée empiriquement, pas une simplification de confort.
+sweep_rf_seuils = [s for s, _, _ in _sweep]
+sweep_rf_volumes = [v for _, v, _ in _sweep]
+sweep_rf_fiabilites = [f for _, _, f in _sweep]
+proba_rf_liste = [float(x) for x in proba_rf]
+```
+
+```{r sirus-fit}
+# Split aligné sur celui fait côté Python (même 80/20 par produit des deux
+# côtés) : `id_map` retrouve, pour chaque `id` du split Python, le `ligne`
+# correspondant dans `table_long` (cf. note dans le chunk `setup`). Condition
+# nécessaire pour comparer les deux modèles produit par produit (section
+# "Significativité de l'écart" plus bas).
+lignes_train <- id_map$ligne[id_map$id %in% py$id_train_liste]
+lignes_test  <- id_map$ligne[id_map$id %in% py$id_test_liste]
+
+train_sirus <- table_long %>% filter(ligne %in% lignes_train)
+test_sirus  <- table_long %>% filter(ligne %in% lignes_test)
+
+# sirus.fit() a sa propre part d'aléatoire (construction de la forêt sous-
+# jacente), indépendante du split ci-dessus -- sans ce seed, les résultats
+# de cette section (règles, statistique de McNemar) changeraient à chaque
+# rendu du site.
+set.seed(seed_split)
+modele_sirus <- sirus.fit(
+  as.data.frame(train_sirus[, FEATURES_SIRUS]), train_sirus$correcte,
+  type = "classif", num.rule = num_regles, max.depth = profondeur_max, verbose = FALSE,
+)
+test_sirus$proba <- sirus.predict(modele_sirus, as.data.frame(test_sirus[, FEATURES_SIRUS]))
+choix_sirus <- test_sirus %>%
+  group_by(ligne) %>%
+  slice_max(proba, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  left_join(id_map, by = "ligne")
+
+stopifnot(
+  "chaque produit du test set doit avoir exactement un candidat retenu par SIRUS" =
+    nrow(choix_sirus) == length(unique(lignes_test))
+)
+
+borne_haute_sirus <- test_sirus %>%
+  group_by(ligne) %>% summarise(possible = max(correcte), .groups = "drop") %>%
+  pull(possible) %>% mean()
+
+recap_sirus <- data.frame(
+  Modele = "SIRUS",
+  Accuracy_candidat = mean(as.integer(test_sirus$proba > 0.5) == test_sirus$correcte),
+  Accuracy_produit = mean(choix_sirus$correcte),
+  Borne_haute = borne_haute_sirus
+)
+
+seuils_sirus <- c(0.3, 0.4, 0.5, 0.6, 0.7)
+sweep_sirus <- do.call(rbind, lapply(seuils_sirus, function(s) {
+  confiant <- choix_sirus$proba >= s
+  data.frame(
+    Modele = "SIRUS", Seuil = s,
+    Volume_auto = mean(confiant),
+    Fiabilite_auto = if (any(confiant)) mean(choix_sirus$correcte[confiant]) else NA_real_
+  )
+}))
+```
+
+```{r mcnemar}
+correct_baseline_test <- data.frame(
+  id = py$id_test_liste,
+  correct_baseline = as.integer(py$correct_baseline_test_liste)
+)
+
+comparaison_appariee <- choix_sirus %>%
+  select(id, correct_sirus = correcte) %>%
+  inner_join(correct_baseline_test, by = "id")
+
+stopifnot(
+  "la comparaison appariée doit couvrir tout le test set" =
+    nrow(comparaison_appariee) == length(py$id_test_liste)
+)
+
+vers_facteur <- function(x) factor(x, levels = c(0, 1), labels = c("faux", "correct"))
+table_mcnemar <- table(
+  SIRUS = vers_facteur(comparaison_appariee$correct_sirus),
+  Baseline = vers_facteur(comparaison_appariee$correct_baseline)
+)
+test_mcnemar <- mcnemar.test(table_mcnemar, correct = TRUE)
+
+n_sirus_seul <- table_mcnemar["correct", "faux"]
+n_baseline_seul <- table_mcnemar["faux", "correct"]
+```
+
+## Précision du code proposé
+
+Accuracy du code effectivement proposé par chacune des deux approches, sur
+**le même test 20 %** (les deux modèles sont désormais évalués sur
+exactement les mêmes produits, cf. section suivante). Pour SIRUS, la "borne
+haute" est le plafond atteignable si on choisissait toujours le meilleur
+candidat disponible parmi les 4 classifieurs — elle n'existe pas pour la
+baseline, qui ne choisit jamais qu'un seul code fixé en amont (le vote
+majoritaire).
+
+```{r tableau-precision}
+# Accuracy de la baseline restreinte au même test set que SIRUS (pas sur
+# l'ensemble des 17 540 lignes) : condition pour une comparaison équitable
+# des deux "Accuracy produit-level" ci-dessous.
+acc_baseline_r <- mean(as.integer(py$correct_baseline_test_liste))
+recap_baseline <- data.frame(
+  Modele = "Baseline (vote majoritaire)",
+  Accuracy_candidat = NA_real_,
+  Accuracy_produit = acc_baseline_r,
+  Borne_haute = NA_real_
+)
+recap_precision <- bind_rows(recap_baseline, recap_sirus)
+recap_precision %>%
+  mutate(across(where(is.numeric), ~ ifelse(is.na(.), "—", sprintf("%.1f%%", . * 100)))) %>%
+  rename(
+    Modèle = Modele, `Accuracy candidat-level` = Accuracy_candidat,
+    `Accuracy produit-level` = Accuracy_produit, `Borne haute` = Borne_haute,
+  )
+```
+
+SIRUS re-classe les candidats des 4 classifieurs plutôt que de suivre le
+vote majoritaire figé : c'est ce qui lui permet de dépasser l'accuracy de
+la baseline (`r sprintf("%.1f%%", acc_baseline_r * 100)`), et d'approcher
+sa propre borne haute (`r sprintf("%.1f%%", recap_sirus$Borne_haute * 100)`).
+La baseline+RF, elle, ne peut structurellement jamais dépasser
+`r sprintf("%.1f%%", acc_baseline_r * 100)` : le RF ne change jamais le
+code proposé, il ne fait qu'estimer si ce code fixe est fiable.
+
+## Significativité de l'écart (test de McNemar)
+
+L'écart mesuré ci-dessus porte sur `r nrow(comparaison_appariee)` produits de
+test : est-il assez net pour ne pas être un simple effet d'échantillonnage ?
+Le [test de McNemar](https://fr.wikipedia.org/wiki/Test_de_McNemar) répond à
+cette question précise, en comparant les deux modèles **produit par
+produit** (contrairement aux sections précédentes, qui ne faisaient que
+comparer deux taux globaux) : il ne regarde que les cas où les deux modèles
+sont en désaccord, et teste si ce désaccord penche significativement du même
+côté à chaque fois.
+
+```{r tableau-mcnemar}
+table_mcnemar %>%
+  as.data.frame.matrix() %>%
+  tibble::rownames_to_column("SIRUS \\ Baseline")
+```
+
+Sur les `r nrow(comparaison_appariee)` produits du test, les deux modèles
+sont en désaccord dans `r n_sirus_seul + n_baseline_seul` cas : SIRUS seul a
+raison dans `r n_sirus_seul` cas, la baseline seule a raison dans
+`r n_baseline_seul` cas. Le test de McNemar (avec correction de continuité)
+donne :
+
+- statistique du test : `r sprintf("%.1f", test_mcnemar$statistic)`
+  (`r test_mcnemar$parameter` degré de liberté)
+- p-value : `r format.pval(test_mcnemar$p.value, digits = 3, eps = 1e-4)`
+
+```{r interpretation-mcnemar}
+significatif <- test_mcnemar$p.value < 0.05
+message_mcnemar <- if (significatif) {
+  paste(
+    "La p-value est très inférieure au seuil usuel de 5 % : l'avantage de",
+    "SIRUS sur la baseline n'est pas un effet du hasard d'échantillonnage —",
+    "il est statistiquement significatif, et concentré (comme attendu) dans",
+    "le sens où SIRUS rattrape des cas que la baseline rate, beaucoup plus",
+    "souvent que l'inverse."
+  )
+} else {
+  paste(
+    "La p-value dépasse le seuil usuel de 5 % : sur ce test set, l'écart",
+    "entre les deux modèles n'atteint pas la significativité statistique au",
+    "sens strict, malgré l'écart numérique observé plus haut."
+  )
+}
+```
+
+`r message_mcnemar`
+
+## Compromis volume automatisé / fiabilité
+
+Pour chaque modèle, part du volume qu'on peut coder automatiquement (sans
+LLM ni reprise manuelle) à un seuil de confiance donné, et fiabilité
+observée sur ce sous-ensemble.
+
+```{r tableau-seuils}
+sweep_rf_r <- data.frame(
+  Modele = "Baseline+RF",
+  Seuil = as.numeric(py$sweep_rf_seuils),
+  Volume_auto = as.numeric(py$sweep_rf_volumes),
+  Fiabilite_auto = as.numeric(py$sweep_rf_fiabilites)
+)
+sweep_tous <- bind_rows(sweep_sirus, sweep_rf_r) %>%
+  mutate(
+    Volume_auto = sprintf("%.1f%%", Volume_auto * 100),
+    Fiabilite_auto = ifelse(is.na(Fiabilite_auto), "—", sprintf("%.1f%%", Fiabilite_auto * 100)),
+  ) %>%
+  rename(Modèle = Modele, Seuil = Seuil, `Volume auto-codé` = Volume_auto, `Fiabilité` = Fiabilite_auto)
+sweep_tous
+```
+
+```{r plage-proba}
+plage_sirus <- range(choix_sirus$proba)
+plage_rf <- range(as.numeric(py$proba_rf_liste))
+```
+
+À seuil égal (0.6), les deux modèles donnent un volume et une fiabilité
+étonnamment proches. La différence structurelle apparaît aux seuils plus
+élevés : la RF explore toute la plage `[0, 1]` (ici observée entre
+`r sprintf("%.2f", plage_rf[1])` et `r sprintf("%.2f", plage_rf[2])`), et
+peut donc pousser la fiabilité au-delà de 99 % en sacrifiant du volume.
+SIRUS, avec seulement `r num_regles` règles de profondeur `r profondeur_max`,
+reste cantonné à une plage de confiance beaucoup plus étroite (observée
+entre `r sprintf("%.2f", plage_sirus[1])` et `r sprintf("%.2f", plage_sirus[2])`
+sur ces données) : au-delà de ~0.7, plus aucun candidat n'atteint ce niveau
+de confiance, le seuil devient inutilisable.
+
+## Ce que ça implique
+
+- **Pour la seule qualité du code proposé, SIRUS gagne, et l'écart est
+  statistiquement significatif** (test de McNemar, p < 0.001) : il choisit
+  activement le meilleur candidat plutôt que de suivre un vote figé.
+- **Pour le compromis volume/fiabilité à seuil modéré (~0.6), les deux se
+  valent** : environ deux tiers du volume automatisable à plus de 95 % de
+  fiabilité.
+- **La RF offre un réglage plus fin** aux seuils élevés (jusqu'à 99 %+ de
+  fiabilité en sacrifiant du volume), là où SIRUS plafonne structurellement.
+- **SIRUS reste le seul des deux lisible sous forme de règles auditables**
+  (cf. [Pourquoi SIRUS ?](sirus.qmd#pourquoi-sirus)) — la RF est une
+  boîte noire à ~300 arbres, seules ses importances de features sont
+  interprétables, pas une décision individuelle.
+
+Compte tenu de l'objectif du stage (réduire l'appel au LLM-judge **et**
+pouvoir documenter/auditer la règle de décision), SIRUS reste la piste
+recommandée pour la suite — la RF constitue une alternative de repli plus
+précise mais moins transparente, utile si l'auditabilité n'est pas un
+critère bloquant.

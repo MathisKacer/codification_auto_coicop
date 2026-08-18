@@ -1,0 +1,458 @@
+---
+title: "SIRUS — synthèse finale"
+subtitle: "Tous les résultats obtenus (modèle, généralisation, hyperparamètres, cascade de décision), sans répétition"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+    theme: flatly
+    code-fold: true
+    code-summary: "Voir le code"
+    df-print: kable
+execute:
+  warning: false
+  message: false
+---
+
+<!--
+Document de reference unique. Consolide dans l'ordre logique (pas
+chronologique) tout ce qui a ete etabli sur SIRUS, a travers synthese.qmd,
+synthese_bis.qmd, test.qmd, tentative_sirus.R et analyse_nouveau_run_x98xl.qmd :
+
+1. Le modele principal (ancien run) et ses features
+2. La generalisation a deux nouveaux runs, et le diagnostic de la baisse
+   d'accuracy (regression RAG-ANN)
+3. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
+4. Le systeme de decision a 2 etages (SIRUS confiant -> RF sur les cas
+   incertains -> reprise manuelle), explore sur le premier nouveau run
+5. L'etat actuel du pipeline de production, consolide dans fonctions_sirus.R
+   / evaluation_sirus.R / production_sirus.R (3 runs combines) -- voir
+   README.md pour l'usage courant
+
+La troncature niveau 4 (cascade de retrait des "0" terminaux) a fait l'objet
+d'une validation methodologique dediee, desormais close (les runs recents
+sont deja propres a ce niveau via `code_lvl4`) -- non repetee ici. Les
+fonctions de troncature restent neanmoins necessaires au pipeline (aucun
+equivalent precalcule pour les codes candidats lcs/rag/ragann/ttc) et sont
+donc conservees ci-dessous.
+
+Certaines sections (hyperparametres via sirus.cv, cascade SIRUS+RF) sont
+couteuses en temps de calcul (plusieurs minutes) : leurs resultats sont
+rapportes tels qu'obtenus precedemment plutot que recalcules a chaque rendu,
+c'est signale explicitement a chaque fois.
+-->
+
+```{r setup}
+library(arrow)
+library(dplyr)
+library(tidyr)
+library(sirus)
+library(randomForest)
+library(stringr)
+
+niveau <- 4
+num_regles <- 10     # nombre de regles SIRUS (num.rule) -- change ici pour tout le document
+profondeur_max <- 2  # profondeur max des arbres SIRUS (max.depth, defaut/recommande = 2)
+
+bucket_s3   <- "projet-budget-famille"
+endpoint_s3 <- "minio.lab.sspcloud.fr"
+objet_s3_ancien   <- "data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+objet_s3_nouveau1 <- "data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet"
+objet_s3_nouveau2 <- "data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
+
+charger_run <- function(objet_s3) {
+  df <- aws.s3::s3read_using(
+    FUN = arrow::read_parquet, object = objet_s3, bucket = bucket_s3,
+    opts = list(region = "", base_url = endpoint_s3),
+  )
+  if (!"ligne" %in% names(df)) df$ligne <- seq_len(nrow(df)) - 1L
+  df
+}
+
+df_ancien   <- charger_run(objet_s3_ancien)
+df_nouveau1 <- charger_run(objet_s3_nouveau1)
+df_nouveau2 <- charger_run(objet_s3_nouveau2)
+
+# Troncature niveau 4 avec cascade de retrait des "0" terminaux -- necessaire
+# pour les codes candidats (lcs/rag/ragann/ttc), qui n'ont pas d'equivalent
+# "_lvl4" pre-calcule.
+tronquer_niveau_un <- function(code, niveau = 4) {
+  if (is.na(code)) return(NA_character_)
+  s <- as.character(code)
+  if (s %in% c("AUCUNE_SUGGESTION", "NON_CODABLE")) return(s)
+  n_chiffres_cible <- niveau + 1
+  chiffres <- 0L
+  out <- character(0)
+  for (ch in strsplit(s, "")[[1]]) {
+    if (grepl("[0-9]", ch)) {
+      if (chiffres == n_chiffres_cible) break
+      chiffres <- chiffres + 1L
+      out <- c(out, ch)
+    } else if (chiffres < n_chiffres_cible) {
+      out <- c(out, ch)
+    }
+  }
+  resultat <- paste(out, collapse = "")
+  while (grepl("\\.0$", resultat)) resultat <- sub("\\.0$", "", resultat)
+  resultat
+}
+tronquer_niveau <- function(codes, niveau = 4) {
+  vapply(codes, tronquer_niveau_un, character(1), niveau = niveau, USE.NAMES = FALSE)
+}
+
+construire_table_long <- function(df, niveau = 4) {
+  # vrai_n4 doit deja exister dans df (code_lvl4 si dispo, sinon tronquer_niveau(code)).
+  df <- df %>%
+    mutate(
+      lcs_n4    = tronquer_niveau(lcs_code, niveau),
+      rag_n4    = tronquer_niveau(rag_code, niveau),
+      ragann_n4 = tronquer_niveau(ragann_code, niveau),
+      ttc_n4    = tronquer_niveau(ttc_code_1, niveau),
+    )
+  candidats <- df %>%
+    select(ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4, vrai_n4) %>%
+    pivot_longer(
+      cols = c(lcs_n4, rag_n4, ragann_n4, ttc_n4),
+      names_to = "classifieur", values_to = "code_candidat",
+    ) %>%
+    filter(!is.na(code_candidat)) %>%
+    distinct(ligne, code_candidat, vrai_n4)
+
+  candidats %>%
+    left_join(
+      df %>% select(
+        ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4,
+        lcs_distance, rag_confidence, ragann_confidence, ttc_conf_1,
+        budget, shop_type_name, source,
+      ),
+      by = "ligne",
+    ) %>%
+    mutate(
+      vote_lcs    = as.integer(!is.na(lcs_n4)    & lcs_n4    == code_candidat),
+      vote_rag    = as.integer(!is.na(rag_n4)    & rag_n4    == code_candidat),
+      vote_ragann = as.integer(!is.na(ragann_n4) & ragann_n4 == code_candidat),
+      vote_ttc    = as.integer(!is.na(ttc_n4)    & ttc_n4    == code_candidat),
+      nb_votants  = vote_lcs + vote_rag + vote_ragann + vote_ttc,
+      correcte    = as.integer(!is.na(vrai_n4) & code_candidat == vrai_n4),
+      code_candidat_n1 = tronquer_niveau(code_candidat, niveau = 1),
+      conf_rag    = if_else(vote_rag == 1L,    coalesce(rag_confidence, -1),    -1),
+      conf_ragann = if_else(vote_ragann == 1L, coalesce(ragann_confidence, -1), -1),
+      conf_ttc    = if_else(vote_ttc == 1L,    coalesce(ttc_conf_1, -1),        -1),
+      dist_lcs    = if_else(vote_lcs == 1L,    coalesce(lcs_distance, 1.5),     1.5),
+      shop_type_name = if_else(is.na(shop_type_name), "INCONNU", shop_type_name),
+      source         = if_else(is.na(source), "INCONNU", source),
+    ) %>%
+    select(
+      ligne, code_candidat, code_candidat_n1,
+      vote_lcs, vote_rag, vote_ragann, vote_ttc, nb_votants,
+      conf_rag, conf_ragann, conf_ttc, dist_lcs, correcte,
+      budget, shop_type_name, source,
+    )
+}
+
+features <- c(
+  "vote_lcs", "vote_rag", "vote_ragann", "vote_ttc", "nb_votants",
+  "conf_rag", "conf_ragann", "conf_ttc", "dist_lcs", "code_candidat_n1"
+)
+```
+
+## 1. Modèle principal (run ancien, `codif-vvkv9`)
+
+Format long : une ligne par candidat proposé par au moins un des 4
+classifieurs de base (LCS, RAG, RAG-ANN, TTC). Features : votes de chaque
+classifieur, confiances/distance (sentinelle hors plage si le classifieur
+n'a pas voté pour ce candidat précis -- cf. section 1b), troncature niveau
+1 du candidat. Split 80/20 par produit, seed 42.
+
+```{r modele-ancien}
+df_ancien <- df_ancien %>% mutate(vrai_n4 = tronquer_niveau(code, niveau))
+table_long <- construire_table_long(df_ancien, niveau) %>% mutate(code_candidat_n1 = as.factor(code_candidat_n1))
+
+set.seed(42)
+lignes_uniques <- unique(table_long$ligne)
+lignes_train <- sample(lignes_uniques, size = round(0.8 * length(lignes_uniques)))
+train <- table_long %>% filter(ligne %in% lignes_train)
+test  <- table_long %>% filter(!ligne %in% lignes_train)
+
+modele <- sirus.fit(as.data.frame(train[, features]), train$correcte, type = "classif", num.rule = num_regles, max.depth = profondeur_max, verbose = FALSE)
+sirus.print(modele)
+
+test$proba <- sirus.predict(modele, as.data.frame(test[, features]))
+choix_par_produit <- test %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+borne_haute <- test %>% group_by(ligne) %>% summarise(possible = max(correcte), .groups = "drop") %>% pull(possible) %>% mean()
+
+data.frame(
+  Indicateur = c("Accuracy candidat-level", "Accuracy produit-level", "Borne haute"),
+  Valeur = c(mean(as.integer(test$proba > 0.5) == test$correcte), mean(choix_par_produit$correcte), borne_haute)
+) %>% mutate(Valeur = sprintf("%.1f%%", Valeur * 100))
+```
+
+La borne haute borne toute amélioration possible du re-ranking : au-delà,
+il faudrait un meilleur candidat en amont (classifieurs de base), pas un
+meilleur modèle de choix.
+
+### Calibration de la confiance
+
+```{r calibration}
+table_produit <- test %>%
+  group_by(ligne) %>%
+  arrange(desc(proba), .by_group = TRUE) %>%
+  summarise(
+    n_candidats = n(), proba_gagnant = first(proba),
+    proba_second = if (n() >= 2) nth(proba, 2) else NA_real_,
+    sirus_correct = first(correcte), .groups = "drop"
+  )
+
+table_produit %>%
+  mutate(tranche = cut(proba_gagnant, breaks = seq(0, 1, by = 0.1), include.lowest = TRUE)) %>%
+  group_by(tranche) %>%
+  summarise(n = n(), pct_correct = mean(sirus_correct), .groups = "drop") %>%
+  mutate(pct_correct = sprintf("%.1f%%", pct_correct * 100))
+```
+
+Deux zones nettes : une zone fiable (confiance élevée, >98 % correct) et
+une zone incertaine (confiance faible, ~60-65 % correct) — un seuil simple
+sur `proba_gagnant` est directement exploitable comme critère d'escalade
+vers une reprise manuelle ou un LLM-judge (cf. section 5).
+
+## 1b. Sentinelles de confiance quand un classifieur n'a pas voté
+
+Quand un classifieur ne vote pas pour un candidat donné, sa confiance est
+mise à une sentinelle hors de la plage réelle des valeurs (`-1` pour les
+confiances, bornées `[0, 1]` en pratique ; `1.5` pour `lcs_distance`, bornée
+`[0, 0.8]`) plutôt qu'à 0 ou `NA`. Vérifié non problématique pour un modèle
+à seuils comme SIRUS :
+
+- Sentinelle toujours hors plage réelle (pas de collision avec une vraie
+  valeur).
+- Redondant avec `vote_lcs/rag/ragann/ttc` (0/1) : aucune perte
+  d'information, et permet à SIRUS de fusionner en une seule règle "vote
+  faible OU absent" (ex. `if conf_ttc < 0.78`), ce qui est le sens voulu.
+- Cas limite vérifié sur données réelles : 0 occurrence où un classifieur a
+  voté (code non manquant) mais avec une confiance `NA` -- le `coalesce()`
+  de secours ne se déclenche jamais actuellement.
+
+## 2. Features additionnelles : `budget`, `shop_type_name`, `source`
+
+Même split train/test que le modèle principal. `budget` imputé par la
+médiane du train uniquement (pas de fuite) ; `shop_type_name` et `source`
+en facteurs avec niveaux cohérents train/test.
+
+```{r features-etendues-ancien}
+features_etendues <- c(features, "budget", "shop_type_name", "source")
+mediane_budget_train <- median(train$budget, na.rm = TRUE)
+
+train_etendu <- train %>%
+  mutate(
+    budget = coalesce(budget, mediane_budget_train),
+    shop_type_name = as.factor(shop_type_name),
+    source = as.factor(source),
+  )
+test_etendu <- test %>%
+  mutate(
+    budget = coalesce(budget, mediane_budget_train),
+    shop_type_name = factor(shop_type_name, levels = levels(train_etendu$shop_type_name)),
+    source = factor(source, levels = levels(train_etendu$source)),
+  )
+
+modele_etendu <- sirus.fit(as.data.frame(train_etendu[, features_etendues]), train_etendu$correcte, type = "classif", num.rule = num_regles, max.depth = profondeur_max, verbose = FALSE)
+
+test_etendu$proba <- sirus.predict(modele_etendu, as.data.frame(test_etendu[, features_etendues]))
+choix_etendu <- test_etendu %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+
+data.frame(
+  Run = "ancien",
+  Modele = c("SIRUS (features de base)", "SIRUS (+ budget/shop_type/source)"),
+  Accuracy_produit = c(mean(choix_par_produit$correcte), mean(choix_etendu$correcte))
+) %>% mutate(Accuracy_produit = sprintf("%.1f%%", Accuracy_produit * 100))
+```
+
+**Aucun gain**, confirmé une seconde fois sur le run `x98xl` (où TTC et
+RAG-ANN sont pourtant proches en performance, hypothèse initiale que le
+contexte d'achat pourrait aider à arbitrer -- infirmée aussi) : aucune des
+règles retenues par SIRUS n'utilise ces 3 variables, sur aucun des deux
+runs testés. Tout le signal utile est déjà dans les confiances des
+classifieurs eux-mêmes.
+
+## 3. Généralisation à deux nouveaux runs
+
+```{r modele-nouveaux-runs}
+df_nouveau2 <- df_nouveau2 %>% mutate(vrai_n4 = code_lvl4)
+
+table_long_nouveau2 <- construire_table_long(df_nouveau2, niveau) %>% mutate(code_candidat_n1 = as.factor(code_candidat_n1))
+
+# Modele ancien applique tel quel sur x98xl (recalage de code_candidat_n1 sur
+# les niveaux connus du modele ancien -- categorie absente -> NA, signalee).
+table_long_n2_pour_ancien <- table_long_nouveau2 %>%
+  mutate(code_candidat_n1 = factor(code_candidat_n1, levels = levels(table_long$code_candidat_n1)))
+table_long_n2_pour_ancien$proba <- sirus.predict(modele, as.data.frame(table_long_n2_pour_ancien[, features]))
+choix_n2_ancien <- table_long_n2_pour_ancien %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+borne_haute_n2 <- table_long_nouveau2 %>% group_by(ligne) %>% summarise(possible = max(correcte), .groups = "drop") %>% pull(possible) %>% mean()
+
+# Modele reentraine directement sur x98xl
+set.seed(42)
+lignes_uniques_n2 <- unique(table_long_nouveau2$ligne)
+lignes_train_n2 <- sample(lignes_uniques_n2, size = round(0.8 * length(lignes_uniques_n2)))
+train_n2 <- table_long_nouveau2 %>% filter(ligne %in% lignes_train_n2)
+test_n2  <- table_long_nouveau2 %>% filter(!ligne %in% lignes_train_n2)
+modele_n2 <- sirus.fit(as.data.frame(train_n2[, features]), train_n2$correcte, type = "classif", num.rule = num_regles, max.depth = profondeur_max, verbose = FALSE)
+test_n2$proba <- sirus.predict(modele_n2, as.data.frame(test_n2[, features]))
+choix_n2_reentraine <- test_n2 %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
+borne_haute_test_n2 <- test_n2 %>% group_by(ligne) %>% summarise(possible = max(correcte), .groups = "drop") %>% pull(possible) %>% mean()
+
+data.frame(
+  Modele = c(
+    "Entraîné ancien, testé ancien (test 20%)",
+    "Entraîné ancien, testé sur x98xl (intégral)",
+    "Entraîné directement sur x98xl (test 20%)"
+  ),
+  Accuracy_produit = c(mean(choix_par_produit$correcte), mean(choix_n2_ancien$correcte), mean(choix_n2_reentraine$correcte)),
+  Borne_haute = c(borne_haute, borne_haute_n2, borne_haute_test_n2)
+) %>% mutate(across(where(is.numeric), ~ sprintf("%.1f%%", . * 100)))
+```
+
+**Réentraîner n'aide quasiment pas** (~1 pt d'écart) : ce n'est pas un
+défaut de généralisation de SIRUS, mais une baisse de la **borne haute**
+(moins de bons candidats disponibles en amont).
+
+### Diagnostic : quel classifieur décroche ?
+
+```{r diagnostic-classifieurs}
+diagnostiquer_run <- function(df, vrai_n4, nom_run) {
+  bind_rows(lapply(c("lcs_code", "rag_code", "ragann_code", "ttc_code_1"), function(col) {
+    cand_n4 <- tronquer_niveau(df[[col]], niveau)
+    taux <- mean(!is.na(cand_n4) & !cand_n4 %in% c("AUCUNE_SUGGESTION", "NON_CODABLE") & cand_n4 == vrai_n4, na.rm = TRUE)
+    data.frame(run = nom_run, classifieur = col, taux_match = taux)
+  }))
+}
+
+bind_rows(
+  diagnostiquer_run(df_ancien, df_ancien$vrai_n4, "ancien (2026-06-29)"),
+  diagnostiquer_run(df_nouveau1, tronquer_niveau(df_nouveau1$code, niveau), "nouveau-1 (2026-07-23, 8m8jn)"),
+  diagnostiquer_run(df_nouveau2, df_nouveau2$vrai_n4, "nouveau-2 (2026-07-30, x98xl)"),
+) %>%
+  pivot_wider(names_from = run, values_from = taux_match) %>%
+  mutate(across(where(is.numeric), ~ sprintf("%.1f%%", . * 100)))
+```
+
+**`ragann_code` (RAG-ANN) est le classifieur en cause** : son taux de
+correspondance avec le vrai code chute de ~97 % (ancien run) à ~70 % sur
+les **deux** runs récents, sans amélioration entre le 23 et le 30 juillet.
+LCS, RAG et TTC restent stables. C'est cette régression qui explique la
+baisse de borne haute (et donc d'accuracy), pas un problème de modèle
+SIRUS ni de généralisation -- la vraie correction est en amont (pipeline
+RAG-ANN), pas dans le re-ranking.
+
+## 4. Hyperparamètres SIRUS
+
+`num_regles` (`num.rule`, défaut 10) et `profondeur_max` (`max.depth`,
+défaut/recommandé 2) sont paramétrables en tête de ce document pour tout
+retester en un seul endroit.
+
+**`sirus.cv()` sur le train set `x98xl`** (nfold=10, ncv=10 -- ~8 min de
+calcul, résultat obtenu précédemment, non relancé automatiquement ici) :
+
+```{r resultats-cv, eval=FALSE}
+# Resultats obtenus (log complet : sirus_cv_x98xl.log) :
+#   p0.pred (minimise erreur, recommande classif) = 0.0336 -> ~18 regles, erreur CV 6.7%
+#   p0.stab (compromis stabilite)                 = 0.1116 -> ~4 regles,  erreur CV 7.6%
+#   Accuracy produit avec p0.pred (18 regles)     : 78.6%
+#   Accuracy produit avec num.rule=10 (actuel)    : 78.5%
+```
+
+```{r tableau-cv}
+data.frame(
+  Modele = c("num.rule = 10 (actuel)", "p0.pred (18 règles, cross-validées)"),
+  Nb_regles = c(10, 18),
+  Accuracy_produit_x98xl = c("78.5%", "78.6%")
+)
+```
+
+**Conclusion** : la cross-validation confirme que `num.rule = 10` était
+déjà quasi-optimal -- ajouter des règles (jusqu'à 18) n'apporte rien de
+mesurable. Ça élimine le nombre de règles comme levier d'amélioration : le
+plafond de performance vient de la borne haute (RAG-ANN dégradé, section
+4), pas d'un sous-ajustement de SIRUS. Pour la même raison, augmenter
+`profondeur_max` au-delà de 2 (règles à 3 conditions plutôt que 2) n'a pas
+été testé en priorité -- le goulot d'étranglement n'est pas la capacité du
+modèle.
+
+## 5. Système à deux étages : SIRUS confiant → RF sur les incertains → reprise manuelle
+
+Exploration menée dans `test.qmd` sur le run `codif-8m8jn` (premier nouveau
+run), non répétée depuis. Principe : sous le seuil `proba_gagnant = 0.6`
+(zone où SIRUS abandonne), un Random Forest entraîné spécifiquement sur ce
+sous-ensemble incertain rattrape une partie des cas (rappel 59.7 % contre
+17.5 % pour SIRUS seul sur les mêmes lignes de test). Bilan du système à 2
+étages, tel qu'obtenu dans `test.qmd` :
+
+| Étape | % volume total | Fiabilité |
+|---|---|---|
+| SIRUS confiant (auto) | ~63 % | ~98 % |
+| RF confiant sur incertains (auto) | variable selon `seuil_rf` | variable |
+| Reprise manuelle / LLM | le reste | — |
+
+Comparé à SIRUS seul au même seuil (80.1 % de fiabilité globale, 37.1 % de
+volume en reprise), la cascade à 2 étages réduit le volume de reprise
+nécessaire pour une fiabilité globale comparable ou meilleure -- à
+confirmer sur un échantillon plus grand (le RF n'a été validé que sur 20 %
+de la zone incertaine). **Non recalculé sur `x98xl`** : la zone incertaine
+et les performances du RF dépendraient de la régression RAG-ANN identifiée
+section 3, à ré-évaluer si cette piste est reprise.
+
+**Rappel du message le plus important** de cette exploration : ce système
+optimise la décision *en aval*, avec les classifieurs de base tels qu'ils
+sont. Il ne corrige pas la régression RAG-ANN elle-même -- aucun seuil,
+aucun second modèle ne peut récupérer les produits pour lesquels le bon
+code n'est proposé par aucun classifieur.
+
+## 6. Synthèse et recommandations
+
+- **Le modèle SIRUS de base (10 règles, profondeur 2) est déjà quasi-optimal**
+  (section 4) : ni plus de règles, ni de features additionnelles
+  (`budget`/`shop_type_name`/`source`, section 2) n'apportent de gain
+  mesurable.
+- **Le vrai facteur limitant est en amont** : la régression RAG-ANN,
+  présente depuis le 23 juillet et toujours non corrigée au 30 juillet
+  (section 3), plafonne la borne haute à ~88 % contre ~98 % sur l'ancien
+  run. Aucun réglage de SIRUS ne peut compenser un candidat qui n'est
+  simplement pas proposé.
+- **Prochaine étape recommandée** : corriger RAG-ANN en amont plutôt que
+  continuer à optimiser le re-ranking. En parallèle, le système à 2 étages
+  (section 5) reste une option pour réduire le volume de reprise manuelle
+  en attendant, à re-valider sur `x98xl` si retenu.
+
+## 7. Pipeline de production actuel
+
+Les sections précédentes documentent le cheminement méthodologique (analyses
+menées run par run, séparément). Ce travail a depuis été consolidé dans
+**trois scripts réutilisables** (`fonctions_sirus.R`, `evaluation_sirus.R`,
+`production_sirus.R` -- voir `README.md` pour leur usage), qui entraînent
+maintenant un modèle unique sur les **trois runs labellisés combinés**
+(`vvkv9`, `8m8jn`, `x98xl`) plutôt que de les traiter séparément comme
+ci-dessus.
+
+```{r pipeline-actuel}
+bundle <- readRDS("modele_sirus_production.rds")
+cat(sprintf(
+  "Modèle entraîné le %s sur %d run(s) : %s\n\n",
+  bundle$date_entrainement, length(bundle$runs_entrainement),
+  paste(basename(dirname(dirname(bundle$runs_entrainement))), collapse = ", ")
+))
+print(data.frame(
+  Indicateur = c("Accuracy candidat-level", "Accuracy produit-level", "Borne haute"),
+  Valeur = sprintf("%.1f%%", 100 * c(
+    bundle$accuracy_estimee$candidat,
+    bundle$accuracy_estimee$produit,
+    bundle$accuracy_estimee$borne_haute
+  ))
+))
+```
+
+Ces chiffres (mesurés par split 80/20 sur l'ensemble des trois runs combinés,
+cf. `evaluation_sirus.R`) sont la référence à jour -- ils remplacent ceux des
+sections 2 et 4 ci-dessus, obtenus run par run pendant la phase
+d'investigation. Pour réentraîner avec de nouvelles données labellisées,
+ajuster le seuil de décision, ou coder un nouveau run : voir `README.md`.
