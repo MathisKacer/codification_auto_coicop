@@ -1,0 +1,146 @@
+---
+title: "Accuracy par prix et mode de collecte"
+subtitle: "Les classifieurs sont-ils plus fiables sur certaines dépenses selon leur montant ou leur origine ?"
+date: today
+---
+
+{{< include _setup.qmd >}}
+
+Deux variables disponibles indépendamment du contenu du libellé peuvent
+influencer la difficulté de codification : le **montant de la dépense**
+(`budget`) et son **mode de collecte** (`source` — ticket de caisse
+scanné via l'appli, ou saisie manuelle dans un carnet/l'appli). Cette page
+ventile l'accuracy de chaque classifieur selon ces deux axes, sur le même
+principe que la ventilation par division COICOP
+([Fiabilité des classifieurs](index.qmd)).
+
+```{python}
+from src.stats_accord import accuracy_multi_classifieurs_par_groupe
+
+LIBELLES_SOURCE = {
+    "receipts_from_app": "Ticket de caisse (appli)",
+    "manual_from_book": "Saisie manuelle (carnet)",
+    "manual_from_app": "Saisie manuelle (appli)",
+}
+ORDRE_SOURCE = [*LIBELLES_SOURCE.values(), "TOTAL"]
+
+groupe_source = df["source"].map(LIBELLES_SOURCE).fillna("INCONNU")
+groupe_source.name = "source"
+
+BORNES_BUDGET = [0, 2, 5, 10, 20, 50, 100, float("inf")]
+LIBELLES_BUDGET = ["< 2 €", "2-5 €", "5-10 €", "10-20 €", "20-50 €", "50-100 €", "100 € et +"]
+ORDRE_BUDGET = [*LIBELLES_BUDGET, "Budget inconnu", "TOTAL"]
+
+tranche_budget = pd.cut(
+    df["budget"], bins=BORNES_BUDGET, labels=LIBELLES_BUDGET, include_lowest=True,
+)
+groupe_budget = tranche_budget.astype(str).replace("nan", "Budget inconnu")
+groupe_budget.name = "budget"
+```
+
+## Accuracy par mode de collecte
+
+`source` distingue les dépenses issues d'un ticket de caisse scanné dans
+l'application (`receipts_from_app`) de celles saisies manuellement, que ce
+soit dans le carnet papier (`manual_from_book`) ou directement dans
+l'application (`manual_from_app`). Un ticket scanné donne un libellé plus
+proche du texte de caisse d'origine ; une saisie manuelle dépend de la
+reformulation du déclarant — deux régimes de difficulté potentiellement
+différents pour les classifieurs.
+
+::: {.panel-tabset}
+
+### Niveau 4 — sous-classe
+
+```{python}
+titre("Accuracy par classifieur, par mode de collecte (niveau 4)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=4, verbose=False,
+).reindex(ORDRE_SOURCE)))
+```
+
+### Niveau 3 — classe
+
+```{python}
+titre("Accuracy par classifieur, par mode de collecte (niveau 3)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=3, verbose=False,
+).reindex(ORDRE_SOURCE)))
+```
+
+### Niveau 2 — groupe
+
+```{python}
+titre("Accuracy par classifieur, par mode de collecte (niveau 2)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=2, verbose=False,
+).reindex(ORDRE_SOURCE)))
+```
+
+### Niveau 1 — division
+
+```{python}
+titre("Accuracy par classifieur, par mode de collecte (niveau 1)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=1, verbose=False,
+).reindex(ORDRE_SOURCE)))
+```
+
+:::
+
+## Accuracy par tranche de budget
+
+Montant de la dépense (`budget`), découpé en tranches fixes plutôt qu'en
+quantiles pour rester lisible en euros. Les dépenses sans montant renseigné
+sont regroupées à part ("Budget inconnu") plutôt qu'exclues.
+
+```{python}
+display(Markdown(
+    f"**{int(df['budget'].isna().sum())}** dépenses sans montant renseigné "
+    f"sur **{len(df)}** ({df['budget'].isna().mean():.1%})."
+))
+```
+
+::: {.panel-tabset}
+
+### Niveau 4 — sous-classe
+
+```{python}
+titre("Accuracy par classifieur, par tranche de budget (niveau 4)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=4, verbose=False,
+).reindex(ORDRE_BUDGET)))
+```
+
+### Niveau 3 — classe
+
+```{python}
+titre("Accuracy par classifieur, par tranche de budget (niveau 3)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=3, verbose=False,
+).reindex(ORDRE_BUDGET)))
+```
+
+### Niveau 2 — groupe
+
+```{python}
+titre("Accuracy par classifieur, par tranche de budget (niveau 2)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=2, verbose=False,
+).reindex(ORDRE_BUDGET)))
+```
+
+### Niveau 1 — division
+
+```{python}
+titre("Accuracy par classifieur, par tranche de budget (niveau 1)")
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=1, verbose=False,
+).reindex(ORDRE_BUDGET)))
+```
+
+:::
+
+> _(Interprétation à compléter : les classifieurs sont-ils systématiquement
+> moins fiables sur les grosses dépenses ou sur la saisie manuelle, ou cet
+> effet est-il propre à certains d'entre eux ?)_

@@ -1,16 +1,14 @@
 ---
 title: "SIRUS — synthèse finale"
-subtitle: "Tous les résultats obtenus (troncature, modèle, généralisation, hyperparamètres, cascade de décision), sans répétition"
+subtitle: "Pourquoi SIRUS, comment les données sont organisées, et tous les résultats obtenus (modèle, généralisation, hyperparamètres, cascade de décision), sans répétition"
 date: today
 engine: knitr
 format:
   html:
     toc-depth: 2
-    code-fold: true
-    code-summary: "Voir le code"
     df-print: kable
 execute:
-  echo: true
+  echo: false
   warning: false
   message: false
 ---
@@ -20,14 +18,21 @@ Document de reference unique. Consolide dans l'ordre logique (pas
 chronologique) tout ce qui a ete etabli sur SIRUS, a travers synthese.qmd,
 synthese_bis.qmd, test.qmd, tentative_sirus.R et analyse_nouveau_run_x98xl.qmd :
 
-1. Le probleme de troncature niveau 4 et son fix (cascade des "0" terminaux)
-2. Le modele principal (ancien run) et ses features
-3. La generalisation a deux nouveaux runs, et le diagnostic de la baisse
+1. Pourquoi SIRUS : ce qu'est le modele et pourquoi il convient a l'objectif
+   de regles metier simples
+2. Comment les donnees sont organisees (table longue candidat-level) pour
+   alimenter ce modele
+3. Le modele principal (ancien run) et ses features
+4. La generalisation a deux nouveaux runs, et le diagnostic de la baisse
    d'accuracy (regression RAG-ANN)
-4. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
-5. L'impact concret du fix de troncature sur les lignes mal classees
+5. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
 6. Le systeme de decision a 2 etages (SIRUS confiant -> RF sur les cas
    incertains -> reprise manuelle), explore sur le premier nouveau run
+
+La gestion de la troncature des codes COICOP (retrait en cascade des "0"
+terminaux, cf. `src/coicop.py::tronquer_niveau`) est appliquee partout
+ci-dessous mais n'est pas re-detaillee sur ce site : elle a ete validee une
+fois pour toutes en amont et n'est plus un point d'attention actif.
 
 Certaines sections (hyperparametres via sirus.cv, cascade SIRUS+RF) sont
 couteuses en temps de calcul (plusieurs minutes) : leurs resultats sont
@@ -61,9 +66,10 @@ charger_run <- function(objet_s3) {
   df
 }
 
-# Troncature niveau 4 AVEC cascade des "0" terminaux -- version validee (cf.
-# section 1). Necessaire pour les codes candidats (lcs/rag/ragann/ttc), qui
-# n'ont pas d'equivalent "_lvl4" pre-calcule.
+# Troncature niveau 4, avec retrait en cascade des "0" terminaux (meme
+# logique que src/coicop.py::tronquer_niveau, cf. section 2). Necessaire ici
+# pour les codes candidats (lcs/rag/ragann/ttc), qui n'ont pas d'equivalent
+# "_lvl4" pre-calcule.
 tronquer_niveau_un <- function(code, niveau = 4) {
   if (is.na(code)) return(NA_character_)
   s <- as.character(code)
@@ -87,33 +93,15 @@ tronquer_niveau_un <- function(code, niveau = 4) {
 tronquer_niveau <- function(codes, niveau = 4) {
   vapply(codes, tronquer_niveau_un, character(1), niveau = niveau, USE.NAMES = FALSE)
 }
-tronquer_sans_cascade <- function(codes, niveau = 4) {
-  vapply(codes, function(code) {
-    if (is.na(code)) return(NA_character_)
-    s <- as.character(code)
-    if (s %in% c("AUCUNE_SUGGESTION", "NON_CODABLE")) return(s)
-    n_chiffres_cible <- niveau + 1
-    chiffres <- 0L; out <- character(0)
-    for (ch in strsplit(s, "")[[1]]) {
-      if (grepl("[0-9]", ch)) {
-        if (chiffres == n_chiffres_cible) break
-        chiffres <- chiffres + 1L; out <- c(out, ch)
-      } else if (chiffres < n_chiffres_cible) out <- c(out, ch)
-    }
-    paste(out, collapse = "")
-  }, character(1), USE.NAMES = FALSE)
-}
 
-construire_table_long <- function(df, niveau = 4, fn_tronquer = tronquer_niveau) {
-  # vrai_n4 doit deja exister dans df (code_lvl4 si dispo, sinon fn_tronquer(code)).
-  # fn_tronquer parametrable pour pouvoir rejouer le pipeline SANS le fix
-  # cascade (tronquer_sans_cascade), a des fins de comparaison (section 6).
+construire_table_long <- function(df, niveau = 4) {
+  # vrai_n4 doit deja exister dans df (code_lvl4 si dispo, sinon tronquer_niveau(code)).
   df <- df %>%
     mutate(
-      lcs_n4    = fn_tronquer(lcs_code, niveau),
-      rag_n4    = fn_tronquer(rag_code, niveau),
-      ragann_n4 = fn_tronquer(ragann_code, niveau),
-      ttc_n4    = fn_tronquer(ttc_code_1, niveau),
+      lcs_n4    = tronquer_niveau(lcs_code, niveau),
+      rag_n4    = tronquer_niveau(rag_code, niveau),
+      ragann_n4 = tronquer_niveau(ragann_code, niveau),
+      ttc_n4    = tronquer_niveau(ttc_code_1, niveau),
     )
   candidats <- df %>%
     select(ligne, lcs_n4, rag_n4, ragann_n4, ttc_n4, vrai_n4) %>%
@@ -140,7 +128,7 @@ construire_table_long <- function(df, niveau = 4, fn_tronquer = tronquer_niveau)
       vote_ttc    = as.integer(!is.na(ttc_n4)    & ttc_n4    == code_candidat),
       nb_votants  = vote_lcs + vote_rag + vote_ragann + vote_ttc,
       correcte    = as.integer(!is.na(vrai_n4) & code_candidat == vrai_n4),
-      code_candidat_n1 = fn_tronquer(code_candidat, niveau = 1),
+      code_candidat_n1 = tronquer_niveau(code_candidat, niveau = 1),
       conf_rag    = if_else(vote_rag == 1L,    coalesce(rag_confidence, -1),    -1),
       conf_ragann = if_else(vote_ragann == 1L, coalesce(ragann_confidence, -1), -1),
       conf_ttc    = if_else(vote_ttc == 1L,    coalesce(ttc_conf_1, -1),        -1),
@@ -166,53 +154,128 @@ df_nouveau1 <- charger_run(objet_s3_nouveau1)
 df_nouveau2 <- charger_run(objet_s3_nouveau2)
 ```
 
-## 1. Troncature niveau 4 : le fix cascade des "0" terminaux
+## 1. Pourquoi SIRUS ?
 
-Ce fix (retrait en cascade des "0" terminaux dans `tronquer_niveau()`)
-n'est pas spécifique à SIRUS : c'est la même logique que
-`src/coicop.py::tronquer_niveau()`, utilisée par toutes les pages de ce
-site. Sa légitimité structurelle (aucune position, sur les 3 runs, où "0"
-entre en concurrence avec un vrai chiffre) est démontrée une fois pour
-toutes dans [Troncature niveau 4](../stats-descriptives/troncature-niveau4.qmd)
-plutôt que répétée ici.
+Le fil directeur de ce stage (cf. [Accueil](../index.qmd) et [Fiabilité des
+classifieurs](../stats-descriptives/index.qmd)) n'est pas seulement de
+prédire quand faire confiance aux classifieurs de base, mais d'en tirer des
+**règles métier simples** : des conditions du type "si tel classifieur
+tranche seul dans telle division, on le suit directement", que quelqu'un du
+métier peut lire, valider et documenter, sans avoir besoin de comprendre un
+modèle de machine learning pour ça.
 
-Ce qui est spécifique à ce document : depuis le run `codif-x98xl`
-(2026-07-30), une colonne `code_lvl4` est calculée en amont du pipeline
-pour le vrai code. Vérification qu'elle correspond bien au fix cascade
-(nécessaire puisque `code_lvl4`, pas `code` brut, sert de vérité terrain
-dans tout le reste de ce document, section 4 comprise) :
+C'est précisément ce que ne permet pas la Random Forest utilisée dans
+[Modélisation](index.qmd) pour détecter les erreurs de la baseline : elle
+prédit bien, mais reste une forêt de centaines d'arbres. Ses importances de
+features (section [Importances des
+features](index.qmd#importances-des-features)) disent *quelle* variable
+compte, jamais *à partir de quel seuil* ni *en combinaison avec quoi* --
+impossible à relire comme une règle, encore moins à figer et documenter
+comme telle.
 
-```{r verif-code-lvl4}
-verif <- df_nouveau2 %>%
-  mutate(
-    manuel_sans_cascade = tronquer_sans_cascade(code, niveau),
-    manuel_avec_cascade = tronquer_niveau(code, niveau),
-  )
-data.frame(
-  Comparaison = c("code_lvl4 == troncature SANS cascade", "code_lvl4 == troncature AVEC cascade (fix)"),
-  Correspondance = c(mean(verif$code_lvl4 == verif$manuel_sans_cascade), mean(verif$code_lvl4 == verif$manuel_avec_cascade)),
-  N_NA = sum(is.na(verif$code_lvl4))
-) %>% mutate(Correspondance = sprintf("%.1f%%", Correspondance * 100))
-```
+**SIRUS** (*Stable and Interpretable RUle Set*, Bénard et al.) comble ce
+manque en gardant la logique d'une forêt aléatoire, mais avec une étape
+d'extraction en plus :
 
-`code_lvl4` correspond à 100 % au fix cascade, sans valeur manquante : il
-remplace valablement la troncature manuelle **côté vrai code** pour les
-runs qui l'incluent. Les codes candidats (`lcs_code`, `rag_code`,
-`ragann_code`, `ttc_code_1`) n'ont pas d'équivalent `_lvl4` : ils sont
-tronqués manuellement (avec cascade) dans tout ce document.
+1. Il entraîne une forêt d'arbres CART, comme une Random Forest classique
+   (rééchantillonnage, sous-ensemble de variables tirées à chaque nœud).
+2. Il en extrait tous les chemins de décision (règles du type
+   `si conf_ttc < 0.78 et nb_votants <= 1 alors ...`) jusqu'à une profondeur
+   limitée (`max.depth`, 2 ici -- des règles à 2 conditions maximum).
+3. Il ne garde que les règles **stables** : celles qui reviennent souvent
+   d'un arbre à l'autre, donc peu sensibles au tirage aléatoire précis de
+   l'échantillon d'apprentissage -- contrairement à une règle isolée d'un
+   seul arbre, qui ne généraliserait pas. C'est cette garantie de stabilité
+   (démontrée théoriquement par les auteurs) qui distingue SIRUS d'une
+   extraction de règles "à la main" depuis une RF.
+4. Il combine cette poignée de règles retenues (`num_regles`, 10 ici) par
+   une régression linéaire simple sur leurs sorties, pour produire une
+   probabilité calibrée.
 
-## 2. Modèle principal (run ancien, `codif-vvkv9`)
+Le résultat concret (`sirus.print(modele)`, section 3) est directement une
+liste de conditions lisibles, chacune avec son poids -- exactement le
+format d'une règle métier, pas une boîte noire. C'est pour ça que SIRUS est
+choisi ici plutôt qu'une RF classique ou qu'un réglage plus fin de celle-ci
+: l'enjeu n'est pas de gagner quelques points d'accuracy, mais d'obtenir un
+modèle dont la décision peut être **relue, auditée et figée** comme
+convention de codage, condition nécessaire pour qu'elle remplace un appel
+au LLM-judge en confiance.
 
-Format long : une ligne par candidat proposé par au moins un des 4
-classifieurs de base (LCS, RAG, RAG-ANN, TTC). Features : votes de chaque
-classifieur, confiances/distance (sentinelle hors plage si le classifieur
-n'a pas voté pour ce candidat précis -- cf. section 2b), troncature niveau
-1 du candidat. Split 80/20 par produit, seed 42.
+## 2. Organisation des données : la table longue candidat-level
 
-```{r modele-ancien}
+Le point de départ est un run du pipeline stocké sur le S3 (bucket
+`projet-budget-famille`), un fichier `predictions.parquet` par run, une
+ligne par produit (`ligne`) : pour chacun, le vrai code, et pour chacun des
+4 classifieurs de base son code proposé plus un score (confiance ou
+distance selon le classifieur).
+
+Ce format "large" (une colonne de code et une colonne de score *par
+classifieur*) n'est pas directement exploitable pour la question posée ici
+: on ne veut pas prédire "quel classifieur croire", mais "ce candidat
+précis est-il le bon code", une question générique qui doit pouvoir se
+poser pour n'importe lequel des candidats proposés, peu importe lequel des
+4 classifieurs l'a proposé. Coder ça dans un format large obligerait à
+dupliquer la même logique 4 fois (une par classifieur), avec une notion de
+"confiance" différente à chaque fois.
+
+**Solution retenue** : un passage en format long, implémenté dans
+`construire_table_long()` (chargée dans le chunk de setup ci-dessus) --
+une ligne par **candidat distinct** proposé par au moins un des 4
+classifieurs pour un produit donné (donc plusieurs lignes par produit s'ils
+proposent des codes différents, une seule s'ils sont tous d'accord). Chaque
+ligne agrège, pour ce candidat précis :
+
+- **quels classifieurs ont voté pour lui** (`vote_lcs/rag/ragann/ttc`,
+  0/1) et leur nombre (`nb_votants`) ;
+- **leur score de confiance associé**, seulement pour les classifieurs qui
+  ont effectivement voté pour ce candidat (cf. sentinelles ci-dessous) ;
+- la **division du candidat** (`code_candidat_n1`, troncature niveau 1) ;
+- si ce candidat est **effectivement le bon code** (`correcte`), la cible
+  du modèle.
+
+```{r apercu-table-longue}
 df_ancien <- df_ancien %>% mutate(vrai_n4 = tronquer_niveau(code, niveau))
 table_long <- construire_table_long(df_ancien, niveau) %>% mutate(code_candidat_n1 = as.factor(code_candidat_n1))
 
+cat(sprintf(
+  "%d produits (run ancien) -> %d lignes candidat-level (%.2f candidat distinct en moyenne par produit).\n",
+  nrow(df_ancien), nrow(table_long), nrow(table_long) / nrow(df_ancien)
+))
+head(table_long, 5)
+```
+
+Ce choix a deux conséquences directement utiles pour la suite : le modèle
+n'a qu'une seule décision à apprendre ("ce candidat est-il le bon ?"),
+peu importe combien de candidats concurrents il y a ; et au moment de
+prédire, il suffit de garder, pour chaque produit, le candidat de plus
+haute probabilité (`slice_max`, section 3) pour obtenir une décision au
+niveau produit à partir de décisions au niveau candidat.
+
+### Sentinelles de confiance quand un classifieur n'a pas voté
+
+Quand un classifieur ne vote pas pour un candidat donné, sa confiance est
+mise à une sentinelle hors de la plage réelle des valeurs (`-1` pour les
+confiances, bornées `[0, 1]` en pratique ; `1.5` pour `lcs_distance`, bornée
+`[0, 0.8]`) plutôt qu'à 0 ou `NA`. Vérifié non problématique pour un modèle
+à seuils comme SIRUS :
+
+- Sentinelle toujours hors plage réelle (pas de collision avec une vraie
+  valeur).
+- Redondant avec `vote_lcs/rag/ragann/ttc` (0/1) : aucune perte
+  d'information, et permet à SIRUS de fusionner en une seule règle "vote
+  faible OU absent" (ex. `if conf_ttc < 0.78`), ce qui est le sens voulu.
+- Cas limite vérifié sur données réelles : 0 occurrence où un classifieur a
+  voté (code non manquant) mais avec une confiance `NA` -- le `coalesce()`
+  de secours ne se déclenche jamais actuellement.
+
+## 3. Modèle principal (run ancien, `codif-vvkv9`)
+
+La table longue construite ci-dessus (`table_long`) sert directement de
+base d'entraînement. Split 80/20 par produit (pas par ligne candidat, pour
+ne pas répartir les candidats d'un même produit entre train et test), seed
+42.
+
+```{r modele-ancien}
 set.seed(42)
 lignes_uniques <- unique(table_long$ligne)
 lignes_train <- sample(lignes_uniques, size = round(0.8 * length(lignes_uniques)))
@@ -260,24 +323,7 @@ une zone incertaine (confiance faible, ~60-65 % correct) — un seuil simple
 sur `proba_gagnant` est directement exploitable comme critère d'escalade
 vers une reprise manuelle ou un LLM-judge (cf. section 7).
 
-## 2b. Sentinelles de confiance quand un classifieur n'a pas voté
-
-Quand un classifieur ne vote pas pour un candidat donné, sa confiance est
-mise à une sentinelle hors de la plage réelle des valeurs (`-1` pour les
-confiances, bornées `[0, 1]` en pratique ; `1.5` pour `lcs_distance`, bornée
-`[0, 0.8]`) plutôt qu'à 0 ou `NA`. Vérifié non problématique pour un modèle
-à seuils comme SIRUS :
-
-- Sentinelle toujours hors plage réelle (pas de collision avec une vraie
-  valeur).
-- Redondant avec `vote_lcs/rag/ragann/ttc` (0/1) : aucune perte
-  d'information, et permet à SIRUS de fusionner en une seule règle "vote
-  faible OU absent" (ex. `if conf_ttc < 0.78`), ce qui est le sens voulu.
-- Cas limite vérifié sur données réelles : 0 occurrence où un classifieur a
-  voté (code non manquant) mais avec une confiance `NA` -- le `coalesce()`
-  de secours ne se déclenche jamais actuellement.
-
-## 3. Features additionnelles : `budget`, `shop_type_name`, `source`
+## 4. Features additionnelles : `budget`, `shop_type_name`, `source`
 
 Même split train/test que le modèle principal. `budget` imputé par la
 médiane du train uniquement (pas de fuite) ; `shop_type_name` et `source`
@@ -322,11 +368,11 @@ classifieurs eux-mêmes.
 *Limite de portée* : ce test est fait à `profondeur_max = 2` (règles à au
 plus 2 conditions), donc SIRUS a peu de marge pour combiner ces variables
 avec les autres. Un gain à plus grande profondeur n'est pas exclu par ce
-résultat -- non prioritaire vu le diagnostic de la section 4 (le plafond
+résultat -- non prioritaire vu le diagnostic de la section 5 (le plafond
 vient d'ailleurs), mais à garder en tête si `profondeur_max` est un jour
 augmenté.
 
-## 4. Généralisation à deux nouveaux runs
+## 5. Généralisation à deux nouveaux runs
 
 ```{r modele-nouveaux-runs}
 df_nouveau2 <- df_nouveau2 %>% mutate(vrai_n4 = code_lvl4)
@@ -427,7 +473,7 @@ baisse de borne haute (et donc d'accuracy), pas un problème de modèle
 SIRUS ni de généralisation -- la vraie correction est en amont (pipeline
 RAG-ANN), pas dans le re-ranking.
 
-## 5. Hyperparamètres SIRUS
+## 6. Hyperparamètres SIRUS
 
 `num_regles` (`num.rule`, défaut 10) et `profondeur_max` (`max.depth`,
 défaut/recommandé 2) sont paramétrables en tête de ce document pour tout
@@ -456,67 +502,10 @@ data.frame(
 déjà quasi-optimal -- ajouter des règles (jusqu'à 18) n'apporte rien de
 mesurable. Ça élimine le nombre de règles comme levier d'amélioration : le
 plafond de performance vient de la borne haute (RAG-ANN dégradé, section
-4), pas d'un sous-ajustement de SIRUS. Pour la même raison, augmenter
+5), pas d'un sous-ajustement de SIRUS. Pour la même raison, augmenter
 `profondeur_max` au-delà de 2 (règles à 3 conditions plutôt que 2) n'a pas
 été testé en priorité -- le goulot d'étranglement n'est pas la capacité du
 modèle.
-
-## 6. Impact concret du fix de troncature sur les lignes mal classées
-
-Comparaison directe, mêmes données (run ancien) et même split (seed 42) :
-le modèle avec le fix cascade (ci-dessus, section 2) vs le même pipeline
-**sans** le fix (`tentative_sirus.R`, troncature par comparaison de
-chaînes brute).
-
-```{r comparaison-fix-mal-classees}
-mal_classees_avec_fix <- choix_par_produit %>% filter(correcte == 0)
-
-# Meme construction que la table_long principale (section 2), mais avec
-# fn_tronquer = tronquer_sans_cascade : reproduit fidelement le pipeline
-# SANS le fix (tentative_sirus.R), sur les memes lignes/split.
-df_ancien_sans_fix <- df_ancien %>% mutate(vrai_n4 = tronquer_sans_cascade(code, niveau))
-table_long_sans_fix <- construire_table_long(df_ancien_sans_fix, niveau, fn_tronquer = tronquer_sans_cascade) %>%
-  mutate(code_candidat_n1 = as.factor(code_candidat_n1))
-
-train_sf <- table_long_sans_fix %>% filter(ligne %in% lignes_train)
-test_sf  <- table_long_sans_fix %>% filter(!ligne %in% lignes_train)
-
-modele_sf <- sirus.fit(as.data.frame(train_sf[, features]), train_sf$correcte, type = "classif", num.rule = num_regles, max.depth = profondeur_max, verbose = FALSE)
-test_sf$proba <- sirus.predict(modele_sf, as.data.frame(test_sf[, features]))
-choix_sf <- test_sf %>% group_by(ligne) %>% slice_max(proba, n = 1, with_ties = FALSE) %>% ungroup()
-
-# Un candidat mal classe est-il exactement l'artefact ".0" ? -- i.e. le vrai
-# code (sans le fix) prive de ses "0" terminaux redevient-il egal au candidat ?
-retirer_zeros_un <- function(x) {
-  if (is.na(x)) return(NA_character_)
-  while (grepl("\\.0$", x)) x <- sub("\\.0$", "", x)
-  x
-}
-retirer_zeros <- function(xs) vapply(xs, retirer_zeros_un, character(1), USE.NAMES = FALSE)
-vrai_n4_par_ligne_sf <- df_ancien_sans_fix %>% distinct(ligne, vrai_n4)
-
-mal_classees_sans_fix <- choix_sf %>%
-  filter(correcte == 0) %>%
-  left_join(vrai_n4_par_ligne_sf, by = "ligne") %>%
-  mutate(artefact_point_zero = code_candidat == retirer_zeros(vrai_n4))
-
-data.frame(
-  Pipeline = c("Avec fix cascade (section 2)", "Sans fix cascade (tentative_sirus.R)"),
-  N_test = c(nrow(choix_par_produit), nrow(choix_sf)),
-  N_mal_classees = c(nrow(mal_classees_avec_fix), nrow(mal_classees_sans_fix)),
-  Accuracy_produit = c(mean(choix_par_produit$correcte), mean(choix_sf$correcte))
-) %>% mutate(Accuracy_produit = sprintf("%.1f%%", Accuracy_produit * 100))
-
-cat(sprintf(
-  "\nSans le fix : %d erreurs sur %d (%.1f%%) sont exactement l'artefact '.0' -- corrigees par le fix cascade.\n",
-  sum(mal_classees_sans_fix$artefact_point_zero), nrow(mal_classees_sans_fix),
-  100 * mean(mal_classees_sans_fix$artefact_point_zero)
-))
-```
-
-**Lecture** : l'écart d'accuracy entre les deux pipelines s'explique
-majoritairement par l'artefact de troncature ".0" -- les erreurs restantes
-sont de vraies erreurs de classification, indépendantes du fix.
 
 ## 7. Système à deux étages : SIRUS confiant → RF sur les incertains → reprise manuelle
 
@@ -539,7 +528,7 @@ nécessaire pour une fiabilité globale comparable ou meilleure -- à
 confirmer sur un échantillon plus grand (le RF n'a été validé que sur 20 %
 de la zone incertaine). **Non recalculé sur `x98xl`** : la zone incertaine
 et les performances du RF dépendraient de la régression RAG-ANN identifiée
-section 4, à ré-évaluer si cette piste est reprise.
+section 5, à ré-évaluer si cette piste est reprise.
 
 **Rappel du message le plus important** de cette exploration : ce système
 optimise la décision *en aval*, avec les classifieurs de base tels qu'ils
@@ -549,17 +538,17 @@ code n'est proposé par aucun classifieur.
 
 ## 8. Synthèse et recommandations
 
-- **Le fix de troncature ".0" est légitime** (section 1), validé
-  structurellement sur l'ensemble des codes observés (0 position à risque
-  sur 3 runs) -- et maintenant remplacé en amont par `code_lvl4` sur les
-  runs qui l'incluent.
+- **SIRUS livre bien l'objectif visé** (section 1) : une poignée de règles
+  seuils lisibles (`sirus.print(modele)`, section 3), directement
+  exploitables comme convention de codage, là où une Random Forest
+  classique ne donnerait que des importances de features.
 - **Le modèle SIRUS de base (10 règles, profondeur 2) est déjà quasi-optimal**
-  (section 5) : ni plus de règles, ni de features additionnelles
-  (`budget`/`shop_type_name`/`source`, section 3) n'apportent de gain
+  (section 6) : ni plus de règles, ni de features additionnelles
+  (`budget`/`shop_type_name`/`source`, section 4) n'apportent de gain
   mesurable.
 - **Le vrai facteur limitant est en amont** : la régression RAG-ANN,
   présente depuis le 23 juillet et toujours non corrigée au 30 juillet
-  (section 4), plafonne la borne haute à ~88 % contre ~98 % sur l'ancien
+  (section 5), plafonne la borne haute à ~88 % contre ~98 % sur l'ancien
   run. Aucun réglage de SIRUS ne peut compenser un candidat qui n'est
   simplement pas proposé.
 - **Prochaine étape recommandée** : corriger RAG-ANN en amont plutôt que

@@ -1,25 +1,11 @@
-# /home/onyxia/work/codification_auto_coicop/data/load_data.py
 import pandas as pd
 import s3fs
 
 ENDPOINT_URL = "https://minio.lab.sspcloud.fr"
 
-# Run utilise par modelisation.qmd et ses notebooks miroir (baseline_rf,
-# explo_baseline_ttc). Changer cette valeur ne touche pas les stats descriptives.
-CHEMIN_S3_MODELISATION = (
-    "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9"
-    "/decide-coicop/predictions.parquet"
-)
-
-# Run utilise par les pages/notebooks de stats descriptives (_setup.qmd,
-# stat_descriptives). Changer cette valeur pour reproduire les stats
-# descriptives sur un nouveau run, independamment de CHEMIN_S3_MODELISATION.
-#
-# NB : rapport_stat_des/rapport_stats_descriptives.py (rapport autonome, hors
-# site) ne depend PAS de ce fichier -- il a sa propre copie independante de
-# cette meme valeur par defaut dans rapport_stat_des/load_data.py, et se
-# rejoue sur un autre run via la variable d'environnement
-# CHEMIN_S3_STATS_DESCRIPTIVES plutot qu'en editant un fichier.
+# Run utilise par defaut. Rejouable sur un autre run sans toucher a ce
+# fichier via la variable d'environnement CHEMIN_S3_STATS_DESCRIPTIVES
+# (cf. l'entete de rapport_stats_descriptives.py).
 CHEMIN_S3_STATS_DESCRIPTIVES = (
     "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9"
     "/decide-coicop/predictions.parquet"

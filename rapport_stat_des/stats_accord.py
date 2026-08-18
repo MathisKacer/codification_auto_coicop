@@ -12,13 +12,17 @@ Convention de niveau (nombre de chiffres significatifs = niveau + 1) :
     niveau 2 → "XX.X"      (groupe)
     niveau 3 → "XX.X.X"    (classe)
     niveau 4 → "XX.X.X.X"  (sous-classe)
+
+NB : version allégée de `src/stats_accord.py` (repo principal), qui ne garde
+que les fonctions utilisées par `rapport_stats_descriptives.py` (pas les
+wrappers multi-niveaux ni la dataviz, utilisés ailleurs dans le repo mais pas
+ici).
 """
 from collections import Counter
 
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from src.coicop import tronquer_niveau
+from coicop import tronquer_niveau
 
 # Toutes les fonctions de stats acceptent un paramètre `verbose` :
 #   - verbose=True (défaut)  → affiche un résumé texte, pratique en exploration interactive
@@ -559,26 +563,6 @@ def stats_classifieur_seul_correct(df, cols_pred, col_vrai, niveau=4, verbose=Tr
     return out
 
 
-def analyse_classifieur_seul(df_seul, classifieur, top_n=15, verbose=True):
-    """
-    Codes sur lesquels `classifieur` a raison quand tous les autres ont tort.
-
-    Returns
-    -------
-    pd.DataFrame (sous-ensemble de df_seul pour ce classifieur), avec le top
-    des codes concernés disponible en `.attrs["top_codes"]`.
-    """
-    sub = df_seul[df_seul["classifieur_seul"] == classifieur].copy()
-    top_codes = sub["vrai_tronq"].value_counts().head(top_n).rename_axis("code").reset_index(name="n")
-    sub.attrs["top_codes"] = top_codes
-    sub.attrs["classifieur"] = classifieur
-
-    if verbose:
-        print(f"\n=== {classifieur} seul correct : {len(sub)} cas ===")
-        print(top_codes.to_string(index=False))
-    return sub
-
-
 # =============================================================================
 # Cas où une majorité (n-1) de classifieurs est d'accord contre 1 dissident
 # =============================================================================
@@ -700,100 +684,7 @@ def stats_majorite_3_1(df, cols_pred, col_vrai, niveau=4, verbose=True):
 
 
 # =============================================================================
-# Wrappers multi-niveaux
-# =============================================================================
-
-def stats_accord_multi_niveaux(df, cols_base, col_llm, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
-    """
-    Lance stats_accord puis stats_accord_avec_llm pour chaque niveau demandé.
-
-    Returns
-    -------
-    dict {niveau: {"df_stats": ..., "df_acc": ...}}
-    """
-    resultats = {}
-    for n in niveaux:
-        df_stats = stats_accord(df, cols_base, col_vrai, niveau=n, verbose=verbose)
-        df_acc = stats_accord_avec_llm(df, cols_base, col_llm, col_vrai, niveau=n, verbose=verbose)
-        resultats[n] = {"df_stats": df_stats, "df_acc": df_acc}
-    return resultats
-
-
-def stats_seul_multi_niveaux(df, cols_tous, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
-    """
-    Lance stats_classifieur_seul_correct pour chaque niveau.
-
-    Returns
-    -------
-    dict {niveau: df_seul}
-    """
-    resultats = {}
-    for n in niveaux:
-        resultats[n] = stats_classifieur_seul_correct(df, cols_tous, col_vrai, niveau=n, verbose=verbose)
-    return resultats
-
-
-def stats_majorite_3_1_multi_niveaux(df, cols_pred, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
-    """
-    Lance stats_majorite_3_1 pour chaque niveau.
-
-    Returns
-    -------
-    dict {niveau: df_31}
-    """
-    resultats = {}
-    for n in niveaux:
-        resultats[n] = stats_majorite_3_1(df, cols_pred, col_vrai, niveau=n, verbose=verbose)
-    return resultats
-
-
-def recap_3_1_multi_niveaux(df, cols_pred, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
-    """
-    DataFrame récap synthétique des stats de majorité (n-1 vs 1) à plusieurs niveaux.
-
-    Colonnes :
-      - n_3_1                 : nb de cas n-1 vs 1
-      - pct_3_1               : part sur le total
-      - pct_majorite_correcte : parmi les cas n-1 vs 1, part où la majorité a raison
-      - pct_minorite_correcte : parmi les cas n-1 vs 1, part où le dissident a raison
-    """
-    rows = []
-    for n in niveaux:
-        resume = stats_majorite_3_1(df, cols_pred, col_vrai, niveau=n, verbose=False).attrs["resume"]
-        rows.append(resume.iloc[0].to_dict())
-
-    recap = pd.DataFrame(rows).set_index("niveau")
-    if verbose:
-        print(recap.to_string(formatters={
-            "pct_3_1": "{:.1%}".format,
-            "pct_majorite_correcte": "{:.1%}".format,
-            "pct_minorite_correcte": "{:.1%}".format,
-            "pct_aucun_correct": "{:.1%}".format,
-        }))
-    return recap
-
-
-def rapport_complet_multi_niveaux(df, cols_base, col_llm, col_vrai,
-                                  niveaux=(1, 2, 3, 4), top_n=10, verbose=True):
-    """
-    Rapport détaillé complet pour chaque niveau :
-    accord global + analyse des FP + dissociation LLM.
-
-    Returns
-    -------
-    dict {niveau: {"df_stats": ..., "df_fp": ..., "df_acc": ...}}
-    """
-    resultats = {}
-    for n in niveaux:
-        df_stats = stats_accord(df, cols_base, col_vrai, niveau=n, verbose=verbose)
-        df_fp = analyse_faux_positifs(df_stats, niveau=n, top_n=top_n, verbose=verbose)
-        df_acc = stats_accord_avec_llm(df, cols_base, col_llm, col_vrai, niveau=n, verbose=verbose)
-        resultats[n] = {"df_stats": df_stats, "df_fp": df_fp, "df_acc": df_acc}
-    return resultats
-
-
-# =============================================================================
-# Récap + dataviz multi-niveaux
+# Récap multi-niveaux (accord)
 # =============================================================================
 
 def recap_multi_niveaux(df, cols_base, col_llm, col_vrai, niveaux=(1, 2, 3, 4), verbose=True):
@@ -847,51 +738,6 @@ def recap_multi_niveaux(df, cols_base, col_llm, col_vrai, niveaux=(1, 2, 3, 4), 
             "pct_correct": "{:.1%}".format,
         }))
     return recap
-
-
-def plot_recap_multi_niveaux(recap, n_total):
-    """
-    Graphique empilé : pour chaque niveau, décomposition des observations en
-    [accord correct | FP 5/5 | base faux mais LLM sauve |
-     base faux, LLM diverge mais faux aussi | pas d'accord].
-    """
-    niveaux = recap.index.tolist()
-
-    n_correct = recap["n_correct"].values
-    n_fp_5_5 = recap["n_fp_5_5"].values
-    n_llm_sauve = recap["n_llm_sauve"].values
-    n_fp_autre = recap["n_fp_base"].values - n_fp_5_5 - n_llm_sauve
-    n_pas_accord = n_total - recap["n_accord"].values
-
-    pct_correct = n_correct / n_total * 100
-    pct_fp_5_5 = n_fp_5_5 / n_total * 100
-    pct_llm_sauve = n_llm_sauve / n_total * 100
-    pct_fp_autre = n_fp_autre / n_total * 100
-    pct_pas_accord = n_pas_accord / n_total * 100
-
-    fig, ax = plt.subplots(figsize=(9, 5))
-    x = [str(n) for n in niveaux]
-
-    bars = [
-        ("Accord correct",                              pct_correct,    "#2ca02c"),
-        ("FP 5/5 (base+LLM faux)",                      pct_fp_5_5,     "#d62728"),
-        ("Base faux, LLM rattrape",                     pct_llm_sauve,  "#1f77b4"),
-        ("Base faux, LLM diverge\nmais faux aussi",     pct_fp_autre,   "#ff7f0e"),
-        ("Pas d'accord des 4 base",                     pct_pas_accord, "#bbbbbb"),
-    ]
-
-    bottom = [0] * len(x)
-    for label, vals, color in bars:
-        ax.bar(x, vals, bottom=bottom, label=label, color=color, edgecolor="white")
-        bottom = [b + v for b, v in zip(bottom, vals)]
-
-    ax.set_xlabel("Niveau de troncature COICOP")
-    ax.set_ylabel("Part des observations (%)")
-    ax.set_title("Décomposition des observations selon le niveau d'accord et la justesse")
-    ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5), frameon=False)
-    ax.set_ylim(0, 100)
-    plt.tight_layout()
-    return fig
 
 
 def stats_seul_par_division(df_seul, cols_pred, niveau_analyse=4, top_n=None, verbose=True):
@@ -971,4 +817,3 @@ def stats_seul_par_division(df_seul, cols_pred, niveau_analyse=4, top_n=None, ve
             print(detail[c].to_string(index=False, formatters={"pct": "{:.1%}".format}))
 
     return cross
-

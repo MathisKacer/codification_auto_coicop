@@ -1,0 +1,90 @@
+"""
+Utilitaires d'affichage pour le rapport de stats descriptives COICOP :
+libelles lisibles pour les classifieurs/colonnes/divisions, et mise en
+forme des tableaux.
+"""
+import pandas as pd
+from IPython.display import display, HTML
+
+from coicop import libelle_division
+
+LIBELLES_CLASSIFIEURS = {
+    "lcs_code": "LCS", "rag_code": "RAG", "ragann_code": "RAG-ANN",
+    "ttc_code_1": "TTC", "llm_code": "LLM-judge",
+}
+
+LIBELLES_COLONNES = {
+    "niveau": "Niveau", "n_total": "Total", "n_accord": "Accord unanime",
+    "pct_accord": "% accord", "n_correct": "Corrects",
+    "pct_correct": "% corrects (accords)",
+    "pct_correct_des_accords": "% corrects (accords)",
+    "n_fp": "Faux positifs", "n_fp_base": "Faux positifs",
+    "pct_fp_des_accords": "% FP (accords)", "pct_fp_du_total": "% FP (total)",
+    "n_fp_5_5": "FP partagés (+LLM)", "n_llm_sauve": "LLM rattrape",
+    "n_seul_correct": "Un seul correct", "pct_seul_correct": "% un seul correct",
+    "classifieur": "Classifieur", "classifieur_seul": "Classifieur seul correct",
+    "n_3_1": "Cas 3 contre 1", "pct_3_1": "% cas 3 contre 1",
+    "classifieur_dissident": "Classifieur dissident",
+    "code_majorite": "Code majorité", "code_minoritaire": "Code dissident",
+    "majorite_correcte": "Majorité correcte", "minorite_correcte": "Dissident correct",
+    "n_majorite_correcte": "Majorité correcte", "pct_majorite_correcte": "% majorité correcte",
+    "n_minorite_correcte": "Dissident correct", "pct_minorite_correcte": "% dissident correct",
+    "n_aucun_correct": "Personne correct", "pct_aucun_correct": "% personne correct",
+    "n": "Effectif", "pct": "%", "code": "Code",
+    "vrai_tronq": "Code vrai", "code_consensus": "Consensus",
+    "vrai_div": "Division vraie", "pred_div": "Division prédite",
+    "division": "Division", "cas": "Cas",
+    "ligne": "Ligne",
+    "accuracy": "Accuracy", "accuracy_hors_exclus": "Accuracy (hors 98/99)",
+    "n_exclus": "Exclus (98/99)", "n_hors_exclus": "Total (hors 98/99)",
+    "n_correct_hors_exclus": "Corrects (hors 98/99)",
+    "n_erreurs": "Erreurs", "precision": "Précision",
+    "pred_division": "Division prédite (LLM)",
+    "pct_absent": "% absent",
+    "pct_non_codable": "% non codable",
+    "pct_profondeur_1": "% profondeur 1", "pct_profondeur_2": "% profondeur 2",
+    "pct_profondeur_3": "% profondeur 3", "pct_profondeur_4": "% profondeur 4",
+    "pct_profondeur_5_plus": "% profondeur 5+",
+    "pct_incomplet": "% incomplet (< niveau 4)",
+    "pct_complet_niveau_4": "% complet (niveau 4)",
+    "pct_sur_precis": "% sur-précis (> niveau 4)",
+    "pct_div_98": "% division 98", "pct_div_99": "% division 99",
+    "pct_correct_confiance": "% correct", "tranche": "Tranche de confiance",
+    **LIBELLES_CLASSIFIEURS,
+    **{f"{k}_tronq": v for k, v in LIBELLES_CLASSIFIEURS.items()},
+    **{f"accuracy_{k}": v for k, v in LIBELLES_CLASSIFIEURS.items()},
+}
+
+COLONNES_DIVISION = {"division", "pred_division", "vrai_div", "pred_div"}
+
+
+def joli(tableau):
+    """Renomme colonnes/classifieurs, ajoute le libelle des divisions et
+    formate les % pour l'affichage."""
+    out = tableau.copy()
+    if out.index.name in COLONNES_DIVISION:
+        out.index = out.index.map(libelle_division)
+    for c in out.columns:
+        if c in COLONNES_DIVISION:
+            out[c] = out[c].map(libelle_division)
+        if str(c).startswith(("pct", "accuracy", "precision")) and pd.api.types.is_numeric_dtype(out[c]):
+            out[c] = out[c].map(lambda x: f"{x:.1%}" if pd.notna(x) else x)
+    for c in out.select_dtypes(include="object").columns:
+        out[c] = out[c].replace(LIBELLES_CLASSIFIEURS)
+    out = out.rename(columns=LIBELLES_COLONNES)
+    if out.index.name in LIBELLES_COLONNES:
+        out.index.name = LIBELLES_COLONNES[out.index.name]
+    if out.columns.name in LIBELLES_COLONNES:
+        out.columns.name = LIBELLES_COLONNES[out.columns.name]
+    return out
+
+
+def titre(texte):
+    """Sous-titre (gras) precedant un tableau, avec un espace plus
+    au-dessus pour le detacher du tableau precedent."""
+    display(HTML(f'<p style="margin-top:2em; margin-bottom:0.4em; font-weight:bold;">{texte}</p>'))
+
+
+def sous_titre(texte):
+    """Variante italique de `titre`, pour les libelles secondaires."""
+    display(HTML(f'<p style="margin-top:1.3em; margin-bottom:0.3em; font-style:italic;">{texte}</p>'))

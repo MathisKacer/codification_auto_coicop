@@ -210,12 +210,20 @@ res_seul[4]
 # imprimées par les fonctions de `src/stats_accord.py`.
 #
 # Le rapport final, lui, est généré indépendamment avec Quarto à partir de
-# `notebooks/rapport_stats_accord.py`, qui rejoue les mêmes analyses en mode
-# silencieux (`verbose=False`) et affiche directement les tableaux/graphiques
-# produits — sans dépendre de sorties console capturées. Pour le régénérer :
+# `rapport_stat_des/rapport_stats_descriptives.py` (dossier autonome à la
+# racine du repo, hors `notebooks/` — voir sa note d'indépendance en tête de
+# fichier), qui rejoue les mêmes analyses (et plus : aperçu des données,
+# top-3 TTC, profondeur des codes, calibration des confiances — tout ce que
+# couvre `site/stats-descriptives/`) en mode silencieux (`verbose=False`) et
+# affiche directement les tableaux/graphiques produits — sans dépendre de
+# sorties console capturées. Pour le régénérer :
 #
 # ```bash
-# quarto render notebooks/rapport_stats_accord.py --to html --output-dir ../outputs
+# quarto render rapport_stat_des/rapport_stats_descriptives.py --to html --output-dir ../outputs
 # ```
+#
+# Pour le rejouer sur un autre run, définir `CHEMIN_S3_STATS_DESCRIPTIVES`
+# dans l'environnement avant la commande ci-dessus (cf. l'entête de ce
+# fichier) plutôt que de dupliquer le dossier.
 
 # %%

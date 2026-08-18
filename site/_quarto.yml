@@ -31,8 +31,8 @@ website:
         - stats-descriptives/seul-correct.qmd
         - stats-descriptives/ttc-top3.qmd
         - stats-descriptives/profondeur-codes.qmd
-        - stats-descriptives/troncature-niveau4.qmd
         - stats-descriptives/calibration-confiance.qmd
+        - stats-descriptives/accuracy-prix-collecte.qmd
     - id: modelisation
       title: "Modélisation"
       style: docked

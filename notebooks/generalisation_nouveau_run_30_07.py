@@ -20,9 +20,9 @@
 # NB run choisi : le 2026-07-30 ne contient qu'un seul sous-run
 # (`codif-x98xl`, 5881 lignes) — pas d'ambiguïté à trancher ici. Ce run
 # introduit aussi une colonne `code_lvl4` (vrai code déjà tronqué/élagué au
-# niveau 4 en amont), vérifiée identique à `tronquer_niveau(code, niveau=4)`
-# dans `stats_descriptives_nouveau_run.py` — `col_vrai="code"` ci-dessous
-# donne donc les mêmes résultats qu'avec `code_lvl4`.
+# niveau 4 en amont), vérifiée à l'époque identique à
+# `tronquer_niveau(code, niveau=4)` — `col_vrai="code"` ci-dessous donne donc
+# les mêmes résultats qu'avec `code_lvl4`.
 
 # %% Imports
 import sys, os
