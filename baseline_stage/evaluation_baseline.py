@@ -45,10 +45,15 @@ ENDPOINT_S3 = "https://minio.lab.sspcloud.fr"
 # relancer ce script pour rafraichir le modele de production. Memes runs que
 # ceux utilises pour SIRUS (sirus_stage/evaluation_sirus.R), pour des
 # resultats directement comparables entre les deux modeles.
+#
+# Pour l'instant, entrainement sur un seul run -- les deux autres restent
+# commentes ci-dessous, pour pouvoir tester `production_baseline.py` sur un
+# run que le modele n'a jamais vu (generalisation), plutot que sur un
+# echantillon issu du meme run que l'entrainement.
 RUNS_LABELLISES = [
     f"{BUCKET_S3}/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet",
-    f"{BUCKET_S3}/data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
-    f"{BUCKET_S3}/data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet",
+    # f"{BUCKET_S3}/data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
+    # f"{BUCKET_S3}/data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet",
 ]
 
 CHEMIN_MODELE_SORTIE = "modele_baseline_production.joblib"
@@ -193,6 +198,14 @@ def main():
             "baseline": float(acc_baseline),
             "rf_accuracy": float(acc_rf),
             "rf_auc": float(auc_rf),
+        },
+        # Probas et vraies étiquettes du test 20% : permet à
+        # production_baseline.py d'estimer, pour N'IMPORTE QUEL seuil choisi
+        # (pas seulement les tranches ci-dessus), le volume et la fiabilité
+        # attendus -- sans jamais voir le vrai code du nouveau run à coder.
+        "calibration_test": {
+            "proba": [float(p) for p in y_proba],
+            "correct": [int(c) for c in y_test.values],
         },
         "runs_entrainement": RUNS_LABELLISES,
         "date_entrainement": date.today().isoformat(),

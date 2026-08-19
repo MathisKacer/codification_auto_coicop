@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 import s3fs
 
@@ -36,12 +37,13 @@ CHEMIN_MODELE = "modele_baseline_production.joblib"
 # Seuil de décision sur `proba` (P(baseline correcte) estimée par le RF) :
 # au-dessus, on accepte le choix de la baseline (code automatique) ; en
 # dessous, reprise manuelle / LLM-judge plutôt que de forcer un choix peu
-# fiable. 0.6 est établi sur la table de calibration produite par
-# evaluation_baseline.py (test 20%, 3 runs labellisés) : à ce seuil, 63.5% du
-# volume est codé automatiquement, avec une fiabilité observée de 96.9% sur
+# fiable. 0.5 est lu sur la table de calibration produite par
+# evaluation_baseline.py (test 20%, run `codif-vvkv9`) : à ce seuil, 77.6% du
+# volume est codé automatiquement, avec une fiabilité observée de 96.8% sur
 # ce sous-ensemble -- À RE-VÉRIFIER à chaque réentraînement du modèle (la
-# calibration peut dériver, cf. régression RAG-ANN documentée côté SIRUS).
-SEUIL_DECISION = 0.6
+# calibration peut dériver d'un run à l'autre, cf. régression RAG-ANN
+# documentée côté SIRUS).
+SEUIL_DECISION = 0.3
 
 
 def identifiant_run(chemin_s3):
@@ -55,6 +57,28 @@ def identifiant_run(chemin_s3):
     if idx and idx[0] >= 1:
         return f"{segments[idx[0] - 1]}_{segments[idx[0]]}"
     return re.sub(r"[/.]", "_", chemin_s3.replace(".parquet", ""))
+
+
+def estimer_fiabilite_au_seuil(bundle, seuil):
+    """
+    Estime, à partir du test 20% mis de côté par evaluation_baseline.py (pas
+    du run à coder -- son vrai code est inconnu), le volume et la fiabilité
+    attendus si on règle SEUIL_DECISION à `seuil`. Fonctionne pour n'importe
+    quel seuil, pas seulement les tranches de la table de calibration
+    affichée par evaluation_baseline.py.
+    """
+    if "calibration_test" not in bundle:
+        return None  # bundle genere par une version anterieure du script
+    proba = np.array(bundle["calibration_test"]["proba"])
+    correct = np.array(bundle["calibration_test"]["correct"])
+    confiant = proba >= seuil
+    if not confiant.any():
+        return {"volume": 0.0, "fiabilite": float("nan"), "n": 0}
+    return {
+        "volume": float(confiant.mean()),
+        "fiabilite": float(correct[confiant].mean()),
+        "n": int(confiant.sum()),
+    }
 
 
 def main():
@@ -73,6 +97,24 @@ def main():
         f"{len(bundle['runs_entrainement'])} run(s), accuracy baseline ESTIMÉE "
         f"{acc['baseline']:.1%}, RF {acc['rf_accuracy']:.1%} -- cf. evaluation_baseline.py)"
     )
+
+    estimation = estimer_fiabilite_au_seuil(bundle, SEUIL_DECISION)
+    if estimation is None:
+        print(
+            "(Estimation du volume/fiabilité au seuil actuel indisponible -- "
+            "modèle généré par une version antérieure d'evaluation_baseline.py, "
+            "relancer evaluation_baseline.py pour la régénérer.)"
+        )
+    else:
+        print(
+            f"À SEUIL_DECISION = {SEUIL_DECISION} : sur le test de "
+            f"evaluation_baseline.py, ça correspondrait à {estimation['volume']:.1%} "
+            f"du volume codé automatiquement ({estimation['n']} cas), avec une "
+            f"fiabilité estimée de {estimation['fiabilite']:.1%} (donc "
+            f"~{1 - estimation['fiabilite']:.1%} de faux positifs attendus parmi "
+            "ce volume) -- estimation basée sur le run d'entraînement, pas sur le "
+            "run ci-dessous."
+        )
 
     fs = s3fs.S3FileSystem(client_kwargs={"endpoint_url": ENDPOINT_S3})
     chemin_complet = f"{BUCKET_S3}/{objet_s3}" if not objet_s3.startswith(BUCKET_S3) else objet_s3

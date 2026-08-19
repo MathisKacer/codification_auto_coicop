@@ -33,10 +33,15 @@ endpoint_s3 <- "minio.lab.sspcloud.fr"
 # Runs labellises disponibles (vrai code connu) -- ajouter ici toute nouvelle
 # donnee labellisee au fur et a mesure qu'elle devient disponible, puis
 # relancer ce script pour rafraichir le modele de production.
+#
+# Pour l'instant, entrainement sur un seul run -- les deux autres restent
+# commentes ci-dessous, pour pouvoir tester `production_sirus.R` sur un run
+# que le modele n'a jamais vu (generalisation), plutot que sur un echantillon
+# issu du meme run que l'entrainement.
 runs_labellises <- c(
-  "data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet",
-  "data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
-  "data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
+  "data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet"
+  # "data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
+  # "data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
 )
 
 chemin_modele_sortie <- "modele_sirus_production.rds"
@@ -167,6 +172,15 @@ bundle_production <- list(
     candidat = mean(as.integer(test$proba > 0.5) == test$correcte),
     produit = mean(choix_par_produit$correcte),
     borne_haute = borne_haute
+  ),
+  # Proba et correction du candidat retenu par produit (test 20%) : permet a
+  # production_sirus.R d'estimer, pour N'IMPORTE QUEL seuil_decision (pas
+  # seulement les tranches de la table de calibration ci-dessus), le volume
+  # et la fiabilite attendus -- sans jamais voir le vrai code du nouveau run
+  # a coder.
+  calibration_test = list(
+    proba = choix_par_produit$proba,
+    correct = as.integer(choix_par_produit$correcte)
   ),
   runs_entrainement = runs_labellises,
   date_entrainement = as.character(Sys.Date())

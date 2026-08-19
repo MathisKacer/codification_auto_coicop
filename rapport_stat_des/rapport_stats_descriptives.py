@@ -14,7 +14,7 @@
 # %% [markdown]
 # ---
 # title: "Stats descriptives — codification COICOP"
-# subtitle: "Reproduit, hors modélisation, l'intégralité du site (`site/stats-descriptives/`) pour un run donné"
+# subtitle: "Fiabilité des classifieurs de codification COICOP sur un run donné"
 # date: today
 # format:
 #   html:
@@ -22,42 +22,18 @@
 #     toc-depth: 3
 #     embed-resources: true
 #     theme: flatly
-#     code-fold: true
-#     code-summary: "Voir le code"
 #     df-print: default
 # jupyter: python3
 # execute:
+#   echo: false
 #   warning: false
 # ---
 #
-# Ce notebook consolide, dans l'ordre logique du site, tout ce qui est
-# présenté sur `site/stats-descriptives/` (aperçu des données, accord entre
-# classifieurs, accuracy par prix/mode de collecte, top-3 de TTC, profondeur
-# des codes, calibration des confiances). Il n'inclut pas la partie
-# modélisation (baseline, Random Forest, SIRUS), qui vit dans
-# `notebooks/baseline_rf.py` et
-# `site/modelisation/`.
-#
-# **Dossier totalement autonome** : `coicop.py`, `stats_accord.py`,
-# `rapport_utils.py` et `load_data.py`, dans ce même dossier, sont les seules
-# dépendances de ce script (aucun import vers `src/` ou `data/` à la racine
-# du repo). Ce sont des copies allégées — pas de re-export, uniquement ce
-# qu'utilise ce rapport — pensées pour que ce dossier puisse être déplacé ou
-# embarqué tel quel (ex. dans une image de pipeline) sans rien emporter
-# d'autre. En contrepartie, elles ne se mettent pas à jour automatiquement si
-# `src/stats_accord.py` ou `src/coicop.py` évoluent côté site : à resynchroniser
-# à la main si la logique de calcul change.
-#
-# Contrairement au site (figé sur `CHEMIN_S3_STATS_DESCRIPTIVES`, défini
-# dans `data/load_data.py` à la racine du repo), ce notebook est indépendant
-# du site : il lit le run à traiter depuis la variable d'environnement
-# `CHEMIN_S3_STATS_DESCRIPTIVES` si elle est définie, et retombe sinon sur un
-# run par défaut (le même que celui du site, dupliqué dans
-# `rapport_stat_des/load_data.py`). Publier ces chiffres sur le site reste
-# une décision séparée (il faudrait alors mettre à jour la constante dans
-# `data/load_data.py`, à la racine) — ce notebook sert seulement à
-# *recalculer* et *consulter* les statistiques pour un run, sans dépendre de
-# Quarto-site ni du reste du repo pour le faire.
+# Ce rapport dresse un état des lieux de la fiabilité des classifieurs de
+# codification COICOP sur un run de l'enquête Budget de Famille : accord
+# entre classifieurs, effet du prix et du mode de collecte, performance du
+# classifieur TTC, qualité des codes produits, et calibration des scores de
+# confiance.
 
 # %%
 import os
@@ -155,12 +131,42 @@ joli(recap)
 # entière, que les classifieurs doivent aussi savoir détecter, elles sont
 # donc traitées ici comme n'importe quelle autre division, sans exclusion.
 
+# %% [markdown]
+# ::: {.panel-tabset}
+#
+# ### Niveau 4 — sous-classe
+
 # %%
-for n in (4, 3, 2, 1):
-    sous_titre(f"Niveau {n}")
-    display(joli(accuracy_multi_classifieurs(
-        df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=n, codes_exclus=(), verbose=False,
-    )))
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=4, codes_exclus=(), verbose=False,
+)))
+
+# %% [markdown]
+# ### Niveau 3 — classe
+
+# %%
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=3, codes_exclus=(), verbose=False,
+)))
+
+# %% [markdown]
+# ### Niveau 2 — groupe
+
+# %%
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=2, codes_exclus=(), verbose=False,
+)))
+
+# %% [markdown]
+# ### Niveau 1 — division
+
+# %%
+display(joli(accuracy_multi_classifieurs(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, niveau=1, codes_exclus=(), verbose=False,
+)))
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # ## Accuracy du LLM-judge par division (vérité terrain)
@@ -179,9 +185,34 @@ def accuracy_llm_par_division(niveau):
     return recap_niveau[["n", "n_correct", "n_erreurs", "accuracy"]]
 
 
-for n in (4, 3, 2, 1):
-    sous_titre(f"Niveau {n}")
-    display(joli(accuracy_llm_par_division(n)))
+# %% [markdown]
+# ::: {.panel-tabset}
+#
+# ### Niveau 4 — sous-classe
+
+# %%
+display(joli(accuracy_llm_par_division(4)))
+
+# %% [markdown]
+# ### Niveau 3 — classe
+
+# %%
+display(joli(accuracy_llm_par_division(3)))
+
+# %% [markdown]
+# ### Niveau 2 — groupe
+
+# %%
+display(joli(accuracy_llm_par_division(2)))
+
+# %% [markdown]
+# ### Niveau 1 — division
+
+# %%
+display(joli(accuracy_llm_par_division(1)))
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # ## Précision du LLM-judge par division prédite
@@ -191,12 +222,42 @@ for n in (4, 3, 2, 1):
 # et on regarde quelle part de ces prédictions est effectivement correcte
 # (précision).
 
+# %% [markdown]
+# ::: {.panel-tabset}
+#
+# ### Niveau 4 — sous-classe
+
 # %%
-for n in (4, 3, 2, 1):
-    sous_titre(f"Niveau {n}")
-    display(joli(precision_par_division_llm(
-        df, col_pred=col_llm, col_vrai=col_vrai, niveau=n, verbose=False,
-    )))
+display(joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=4, verbose=False,
+)))
+
+# %% [markdown]
+# ### Niveau 3 — classe
+
+# %%
+display(joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=3, verbose=False,
+)))
+
+# %% [markdown]
+# ### Niveau 2 — groupe
+
+# %%
+display(joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=2, verbose=False,
+)))
+
+# %% [markdown]
+# ### Niveau 1 — division
+
+# %%
+display(joli(precision_par_division_llm(
+    df, col_pred=col_llm, col_vrai=col_vrai, niveau=1, verbose=False,
+)))
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # ## Confusion par division COICOP
@@ -289,12 +350,42 @@ groupe_budget.name = "budget"
 # reformulation du déclarant — deux régimes de difficulté potentiellement
 # différents pour les classifieurs.
 
+# %% [markdown]
+# ::: {.panel-tabset}
+#
+# ### Niveau 4 — sous-classe
+
 # %%
-for n in (4, 3, 2, 1):
-    sous_titre(f"Niveau {n}")
-    display(joli(accuracy_multi_classifieurs_par_groupe(
-        df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=n, verbose=False,
-    ).reindex(ORDRE_SOURCE)))
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=4, verbose=False,
+).reindex(ORDRE_SOURCE)))
+
+# %% [markdown]
+# ### Niveau 3 — classe
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=3, verbose=False,
+).reindex(ORDRE_SOURCE)))
+
+# %% [markdown]
+# ### Niveau 2 — groupe
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=2, verbose=False,
+).reindex(ORDRE_SOURCE)))
+
+# %% [markdown]
+# ### Niveau 1 — division
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_source, niveau=1, verbose=False,
+).reindex(ORDRE_SOURCE)))
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # ## Accuracy par tranche de budget
@@ -309,11 +400,42 @@ display(Markdown(
     f"sur **{len(df)}** ({df['budget'].isna().mean():.1%})."
 ))
 
-for n in (4, 3, 2, 1):
-    sous_titre(f"Niveau {n}")
-    display(joli(accuracy_multi_classifieurs_par_groupe(
-        df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=n, verbose=False,
-    ).reindex(ORDRE_BUDGET)))
+# %% [markdown]
+# ::: {.panel-tabset}
+#
+# ### Niveau 4 — sous-classe
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=4, verbose=False,
+).reindex(ORDRE_BUDGET)))
+
+# %% [markdown]
+# ### Niveau 3 — classe
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=3, verbose=False,
+).reindex(ORDRE_BUDGET)))
+
+# %% [markdown]
+# ### Niveau 2 — groupe
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=2, verbose=False,
+).reindex(ORDRE_BUDGET)))
+
+# %% [markdown]
+# ### Niveau 1 — division
+
+# %%
+display(joli(accuracy_multi_classifieurs_par_groupe(
+    df, cols_pred=cols_tous, col_vrai=col_vrai, groupe=groupe_budget, niveau=1, verbose=False,
+).reindex(ORDRE_BUDGET)))
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # # 4. Accords unanimes des 4 classifieurs
@@ -350,6 +472,8 @@ def afficher_detail_niveau(n, top_n=10):
 
 
 # %% [markdown]
+# ::: {.panel-tabset}
+#
 # ## Niveau 4 — sous-classe
 
 # %%
@@ -384,6 +508,9 @@ df_stats_2, df_fp_2, df_acc_2 = afficher_detail_niveau(2)
 df_stats_1, df_fp_1, df_acc_1 = afficher_detail_niveau(1)
 
 # %% [markdown]
+# :::
+
+# %% [markdown]
 # # 5. Cas où 3 classifieurs de base sont d'accord contre 1 dissident
 #
 # Parmi les 4 classifieurs de base, cas où 3 votent le même code et le 4e
@@ -402,6 +529,8 @@ def afficher_3_1_niveau(n):
 
 
 # %% [markdown]
+# ::: {.panel-tabset}
+#
 # ## Niveau 4 — sous-classe
 
 # %%
@@ -439,6 +568,9 @@ df_31_2 = afficher_3_1_niveau(2)
 df_31_1 = afficher_3_1_niveau(1)
 
 # %% [markdown]
+# :::
+
+# %% [markdown]
 # # 6. Un seul classifieur a raison
 #
 # Pour chaque niveau, cas où exactement un classifieur (parmi les 4 de base
@@ -469,6 +601,8 @@ def afficher_detail_classifieur(df_seul_only, classifieur):
 
 
 # %% [markdown]
+# :::: {.panel-tabset}
+#
 # ## Niveau 4 — sous-classe
 
 # %%
@@ -488,36 +622,40 @@ display(HTML(
 # %% [markdown]
 # **Détail par classifieur sauveur** (niveau 4), avec la division COICOP
 # (niveau 1) du vrai code :
-
-# %% [markdown]
-# ### LCS
+#
+# ::: {.panel-tabset}
+#
+# #### LCS
 
 # %%
 afficher_detail_classifieur(df_seul_only_4, "lcs_code")
 
 # %% [markdown]
-# ### RAG
+# #### RAG
 
 # %%
 afficher_detail_classifieur(df_seul_only_4, "rag_code")
 
 # %% [markdown]
-# ### RAG-ANN
+# #### RAG-ANN
 
 # %%
 afficher_detail_classifieur(df_seul_only_4, "ragann_code")
 
 # %% [markdown]
-# ### TTC
+# #### TTC
 
 # %%
 afficher_detail_classifieur(df_seul_only_4, "ttc_code_1")
 
 # %% [markdown]
-# ### LLM-judge
+# #### LLM-judge
 
 # %%
 afficher_detail_classifieur(df_seul_only_4, "llm_code")
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # ## Niveau 3 — classe
@@ -536,6 +674,9 @@ df_seul_2 = afficher_seul_niveau(2)
 
 # %%
 df_seul_1 = afficher_seul_niveau(1)
+
+# %% [markdown]
+# ::::
 
 # %% [markdown]
 # ## Ventilation par division COICOP — cas "un seul correct" (niveau 4)
@@ -562,8 +703,9 @@ def afficher_ventilation_classifieur(classifieur):
 
 # %% [markdown]
 # **Détail par classifieur sauveur**, au choix :
-
-# %% [markdown]
+#
+# ::: {.panel-tabset}
+#
 # ### LCS
 
 # %%
@@ -592,6 +734,9 @@ afficher_ventilation_classifieur("ttc_code_1")
 
 # %%
 afficher_ventilation_classifieur("llm_code")
+
+# %% [markdown]
+# :::
 
 # %% [markdown]
 # # 7. Le top-3 de TTC
@@ -931,6 +1076,8 @@ def graphique_calibration(recap_calib, titre_graphique):
 
 
 # %% [markdown]
+# ::: {.panel-tabset}
+#
 # ## LCS
 #
 # `lcs_distance` est une distance : **plus petit = plus proche, donc plus
@@ -993,3 +1140,6 @@ recap_llm_calib = stats_calibration(
 )
 display(joli(recap_llm_calib.round(3)))
 graphique_calibration(recap_llm_calib, "LLM-judge : % correct par tranche de confiance (échelle 1-5)")
+
+# %% [markdown]
+# :::

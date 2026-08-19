@@ -32,7 +32,29 @@ chemin_modele <- "modele_sirus_production.rds"
 # le run 8m8jn (test.qmd : 63% du volume auto-codé à ~80% de fiabilité) --
 # À RE-VÉRIFIER (section calibration de evaluation_sirus.R) à chaque
 # réentraînement du modèle : la calibration peut dériver.
-seuil_decision <- 0.6
+seuil_decision <- 0.3
+
+# Estime, à partir du test 20% mis de côté par evaluation_sirus.R (pas du run
+# à coder -- son vrai code est inconnu), le volume et la fiabilité attendus
+# si on règle seuil_decision à `seuil`. Fonctionne pour n'importe quel seuil,
+# pas seulement les tranches de la table de calibration affichée par
+# evaluation_sirus.R.
+estimer_fiabilite_au_seuil <- function(bundle, seuil) {
+  if (is.null(bundle$calibration_test)) {
+    return(NULL)  # bundle genere par une version anterieure du script
+  }
+  proba <- bundle$calibration_test$proba
+  correct <- bundle$calibration_test$correct
+  confiant <- proba >= seuil
+  if (!any(confiant)) {
+    return(list(volume = 0, fiabilite = NaN, n = 0L))
+  }
+  list(
+    volume = mean(confiant),
+    fiabilite = mean(correct[confiant]),
+    n = sum(confiant)
+  )
+}
 
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 1) {
@@ -49,6 +71,27 @@ cat(sprintf(
   "Modèle chargé (entraîné le %s sur %d run(s), accuracy produit ESTIMÉE %.1f%% -- cf. evaluation_sirus.R)\n",
   bundle$date_entrainement, length(bundle$runs_entrainement), 100 * bundle$accuracy_estimee$produit
 ))
+
+estimation <- estimer_fiabilite_au_seuil(bundle, seuil_decision)
+if (is.null(estimation)) {
+  cat(
+    "(Estimation du volume/fiabilité au seuil actuel indisponible -- modèle ",
+    "généré par une version antérieure d'evaluation_sirus.R, relancer ",
+    "evaluation_sirus.R pour la régénérer.)\n", sep = ""
+  )
+} else {
+  cat(sprintf(
+    paste0(
+      "À seuil_decision = %s : sur le test de evaluation_sirus.R, ça ",
+      "correspondrait à %.1f%% du volume codé automatiquement (%d cas), ",
+      "avec une fiabilité estimée de %.1f%% (donc ~%.1f%% de faux positifs ",
+      "attendus parmi ce volume) -- estimation basée sur le run ",
+      "d'entraînement, pas sur le run ci-dessous.\n"
+    ),
+    seuil_decision, 100 * estimation$volume, estimation$n,
+    100 * estimation$fiabilite, 100 * (1 - estimation$fiabilite)
+  ))
+}
 
 # --- Chargement des nouvelles données (vrai code INCONNU, jamais utilisé) -------
 df <- aws.s3::s3read_using(

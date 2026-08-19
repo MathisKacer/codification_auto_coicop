@@ -80,12 +80,6 @@ vérifier que l'accès fonctionne :
 aws.s3::get_bucket(bucket = "projet-budget-famille", region = "", base_url = "minio.lab.sspcloud.fr")
 ```
 
-Si ça échoue (erreur d'authentification), c'est très probablement que les
-credentials du service SSP Cloud (variables d'environnement `AWS_*` /
-`MC_HOST_s3`, injectées automatiquement par le service) ont expiré —
-**relancer le service** SSP Cloud régénère un token frais. Ce n'est pas
-quelque chose que ce dépôt peut corriger lui-même.
-
 ## Installation
 
 Le package `sirus` (0.3.3, CRAN) ne compile plus tel quel avec les
@@ -108,8 +102,7 @@ Rscript install_dependencies.R
 
 installe tout (`arrow`, `dplyr`, `tidyr`, `aws.s3`, `ROCR`, `glmnet`,
 `RcppEigen`, `randomForest`, `stringr`, puis `sirus` depuis le tarball
-patché). Ce script est idempotent : relancez-le sans crainte, il ne
-réinstalle que ce qui manque.
+patché). Le script neréinstalle que ce qui manque.
 
 (`randomForest` et `stringr` ne sont utilisés que par
 `resultats_sirus_final.qmd` — inutiles pour `evaluation_sirus.R` /
@@ -117,10 +110,6 @@ réinstalle que ce qui manque.
 modification du `.qmd`, il faut aussi [Quarto](https://quarto.org) installé,
 puis `quarto render resultats_sirus_final.qmd`.)
 
-**Sur SSP Cloud, ces packages ne persistent généralement pas entre deux
-relances du service** — il faut relancer `install_dependencies.R` (compte
-quelques minutes, compilation de `RcppEigen`/`glmnet` incluse) à chaque
-nouvelle session de travail.
 
 ## Démarrage rapide
 
@@ -196,8 +185,12 @@ calibration peut dériver — cf. régression RAG-ANN documentée dans
 ## Limites connues
 
 - Le modèle est entraîné sur les runs listés dans `runs_labellises`
-  (`evaluation_sirus.R`) — actuellement 3 runs de juin-juillet 2026. Plus il y
-  a de données labellisées diverses, plus l'estimation d'accuracy et la
+  (`evaluation_sirus.R`) — actuellement un seul run (`codif-vvkv9`,
+  2026-06-29), volontairement, pour pouvoir tester `production_sirus.R` sur
+  un run que le modèle n'a jamais vu (les deux autres runs, commentés dans
+  le fichier, servent à ça). Décommenter les autres runs et relancer
+  `evaluation_sirus.R` pour entraîner sur plusieurs runs à la fois — plus il
+  y a de données labellisées diverses, plus l'estimation d'accuracy et la
   calibration sont fiables.
 - Le modèle suppose les 4 classifieurs de base disponibles. Sur un run où
   RAG et/ou RAG-ANN n'ont rien produit (ex. run antérieur à leur intégration

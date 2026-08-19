@@ -8,10 +8,6 @@ Forest) estime la fiabilité de ce choix, pour décider automatiquement
 quels produits peuvent être codés sans intervention humaine et lesquels
 doivent repasser en reprise manuelle / LLM-judge.
 
-C'est une alternative — moins interprétable mais construite exactement
-sur le même schéma d'entrée/sortie — au modèle SIRUS de `sirus_stage/`
-(mêmes runs d'entraînement, même format de décision en sortie).
-
 ## Comment ça marche
 
 ```
@@ -46,13 +42,11 @@ colonnes de sortie :
 | **TTC** | `ttc_code_1`, `ttc_conf_1` | Classifieur neuronal fine-tuné ; seul le rang 1 est utilisé par ce pipeline. |
 
 Si aucun des 4 classifieurs (TTC compris) n'a de code exploitable pour un
-produit, la baseline renvoie `NaN` — ce produit part automatiquement en
-reprise manuelle (cf. "Limites connues").
+produit, la baseline renvoie `NaN`.
 
 ### Comment lire une décision
 
-Contrairement à SIRUS (qui choisit *parmi* plusieurs codes candidats), la
-baseline propose un seul code par construction (le vote majoritaire, TTC en
+La baseline propose un seul code par construction (le vote majoritaire, TTC en
 arbitre). La question du modèle de confiance est donc plus simple : *« ce
 code unique proposé par la baseline est-il le bon ? »* — une probabilité
 entre 0 et 1, obtenue par un Random Forest entraîné sur les signaux déjà
@@ -71,21 +65,11 @@ import s3fs
 s3fs.S3FileSystem(client_kwargs={"endpoint_url": "https://minio.lab.sspcloud.fr"}).ls("projet-budget-famille")
 ```
 
-Si ça échoue (erreur d'authentification), c'est très probablement que les
-credentials du service SSP Cloud (variables d'environnement `AWS_*` /
-`MC_HOST_s3`, injectées automatiquement par le service) ont expiré —
-**relancer le service** SSP Cloud régénère un token frais. Ce n'est pas
-quelque chose que ce dépôt peut corriger lui-même.
-
 ## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
-
-Contrairement à SIRUS (package R nécessitant un correctif de compilation),
-toutes les dépendances Python sont des paquets PyPI standards — pas de
-patch, pas de compilation depuis les sources.
 
 ## Démarrage rapide
 
@@ -147,14 +131,15 @@ par produit d'entrée :
 `SEUIL_DECISION` (dans `production_baseline.py`, actuellement `0.6`)
 détermine l'arbitrage volume codé automatiquement / fiabilité. Le monter
 réduit le volume auto-codé mais augmente sa fiabilité, et inversement. Sur
-les 3 runs labellisés actuels (test 20%) :
+le run labellisé actuel (test 20%) :
 
 | Seuil | Volume auto-codé | Fiabilité de l'auto-codé |
 |---|---|---|
-| 0.6 (actuel) | 63.5% | 96.9% |
-| 0.7 | 57.0% | 97.9% |
-| 0.8 | 48.6% | 98.6% |
-| 0.9 | 37.4% | 99.2% |
+| 0.5 | 77.6% | 96.8% |
+| 0.6 (actuel) | 70.6% | 97.8% |
+| 0.7 | 64.0% | 98.4% |
+| 0.8 | 55.8% | 98.9% |
+| 0.9 | 42.1% | 99.6% |
 
 À re-vérifier (table de calibration de `evaluation_baseline.py`) à chaque
 réentraînement du modèle : la calibration peut dériver d'un run à l'autre.
@@ -162,11 +147,13 @@ réentraînement du modèle : la calibration peut dériver d'un run à l'autre.
 ## Limites connues
 
 - Le modèle est entraîné sur les runs listés dans `RUNS_LABELLISES`
-  (`evaluation_baseline.py`) — actuellement 3 runs de juin-juillet 2026 (les
-  mêmes que ceux utilisés pour `sirus_stage/`, pour des résultats
-  comparables entre les deux modèles). Plus il y a de données labellisées
-  diverses, plus l'estimation de performance et la calibration sont
-  fiables.
+  (`evaluation_baseline.py`) — actuellement un seul run (`codif-vvkv9`,
+  2026-06-29), volontairement, pour pouvoir tester `production_baseline.py`
+  sur un run que le modèle n'a jamais vu (les deux autres runs, commentés
+  dans le fichier, servent à ça). Décommenter les autres runs et relancer
+  `evaluation_baseline.py` pour entraîner sur plusieurs runs à la fois —
+  plus il y a de données labellisées diverses, plus l'estimation de
+  performance et la calibration sont fiables.
 - Le modèle suppose les 4 classifieurs de base disponibles. Sur un run où
   un ou plusieurs d'entre eux n'ont rien produit, la baseline se rabat sur
   TTC (voire `NaN` si TTC lui-même est absent) plutôt que de forcer un
