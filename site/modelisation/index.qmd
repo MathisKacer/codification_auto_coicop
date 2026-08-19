@@ -14,6 +14,8 @@ Le but est ensuite d'en étudier les performances, notamment via une Random Fore
 
 
 ```{python}
+#| output: false
+
 import sys, os
 sys.path.append(os.path.abspath("../.."))
 
@@ -42,6 +44,8 @@ pd.set_option("display.max_colwidth", None)
 ```
 
 ```{python}
+#| output: false
+
 chemin_s3 = CHEMIN_S3_MODELISATION
 df = charger_donnees(chemin_s3)
 df["ligne"] = df.index  # identifiant de ligne pour retrouver un cas sans publier le libellé brut
