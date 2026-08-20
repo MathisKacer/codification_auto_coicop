@@ -175,7 +175,7 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Baseline+RF vs SIRUS</h1>
-<p class="subtitle lead">Comparaison directe sur les mêmes runs : qui choisit le meilleur code, et qui offre le meilleur compromis volume automatisé / fiabilité ?</p>
+<p class="subtitle lead">Comparaison directe sur le même run : qui choisit le meilleur code, et qui offre le meilleur compromis volume automatisé / fiabilité ?</p>
 </div>
 
 
@@ -198,7 +198,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>Cette page compare directement les deux alternatives au LLM-as-a-judge développées pendant le stage — <a href="../modelisation/index.html">la baseline (vote majoritaire) filtrée par une Random Forest</a> et <a href="../modelisation/sirus.html">SIRUS</a> — sur les mêmes 3 runs labellisés (<code>codif-vvkv9</code>, <code>codif-8m8jn</code>, <code>codif-x98xl</code>), calculées ici même (pas des chiffres recopiés) pour que les deux résultats soient strictement comparables.</p>
+<p>Cette page compare directement les deux alternatives au LLM-as-a-judge développées pendant le stage — <a href="../modelisation/index.html">la baseline (vote majoritaire) filtrée par une Random Forest</a> et <a href="../modelisation/sirus.html">SIRUS</a> — sur le même run courant (<code>codif-x98xl</code>, cf.&nbsp;<a href="../modelisation/sirus.html">sirus.qmd</a>), calculées ici même (pas des chiffres recopiés) pour que les deux résultats soient strictement comparables.</p>
 <p><strong>Ce que les deux modèles ont en commun</strong> : ils partent tous les deux des mêmes 4 classifieurs de base, et rendent tous les deux une probabilité de confiance servant à décider si on peut coder automatiquement ou s’il faut escalader (reprise manuelle / LLM-judge).</p>
 <p><strong>Ce qui les distingue structurellement</strong> : la baseline+RF ne choisit jamais elle-même un code — la RF se contente de dire si on peut faire confiance au vote majoritaire (déjà figé en amont). SIRUS, lui, <strong>reclasse les candidats des 4 classifieurs</strong> et peut donc choisir un candidat différent du vote majoritaire. C’est ce qui explique l’essentiel de l’écart observé plus bas.</p>
 <section id="précision-du-code-proposé" class="level2">
@@ -226,25 +226,25 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td style="text-align: left;">Baseline (vote majoritaire)</td>
 <td style="text-align: left;">—</td>
-<td style="text-align: left;">78.4%</td>
+<td style="text-align: left;">76.7%</td>
 <td style="text-align: left;">—</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">SIRUS</td>
-<td style="text-align: left;">86.9%</td>
-<td style="text-align: left;">84.1%</td>
-<td style="text-align: left;">91.7%</td>
+<td style="text-align: left;">84.6%</td>
+<td style="text-align: left;">78.7%</td>
+<td style="text-align: left;">88.6%</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p>SIRUS re-classe les candidats des 4 classifieurs plutôt que de suivre le vote majoritaire figé : c’est ce qui lui permet de dépasser l’accuracy de la baseline (78.4%), et d’approcher sa propre borne haute (91.7%). La baseline+RF, elle, ne peut structurellement jamais dépasser 78.4% : le RF ne change jamais le code proposé, il ne fait qu’estimer si ce code fixe est fiable.</p>
+<p>SIRUS re-classe les candidats des 4 classifieurs plutôt que de suivre le vote majoritaire figé : c’est ce qui lui permet de dépasser l’accuracy de la baseline (76.7%), et d’approcher sa propre borne haute (88.6%). La baseline+RF, elle, ne peut structurellement jamais dépasser 76.7% : le RF ne change jamais le code proposé, il ne fait qu’estimer si ce code fixe est fiable.</p>
 </section>
 <section id="significativité-de-lécart-test-de-mcnemar" class="level2">
 <h2 class="anchored" data-anchor-id="significativité-de-lécart-test-de-mcnemar">Significativité de l’écart (test de McNemar)</h2>
-<p>L’écart mesuré ci-dessus porte sur 3508 produits de test : est-il assez net pour ne pas être un simple effet d’échantillonnage ? Le <a href="https://fr.wikipedia.org/wiki/Test_de_McNemar">test de McNemar</a> répond à cette question précise, en comparant les deux modèles <strong>produit par produit</strong> (contrairement aux sections précédentes, qui ne faisaient que comparer deux taux globaux) : il ne regarde que les cas où les deux modèles sont en désaccord, et teste si ce désaccord penche significativement du même côté à chaque fois.</p>
+<p>L’écart mesuré ci-dessus porte sur 1177 produits de test : est-il assez net pour ne pas être un simple effet d’échantillonnage ? Le <a href="https://fr.wikipedia.org/wiki/Test_de_McNemar">test de McNemar</a> répond à cette question précise, en comparant les deux modèles <strong>produit par produit</strong> (contrairement aux sections précédentes, qui ne faisaient que comparer deux taux globaux) : il ne regarde que les cas où les deux modèles sont en désaccord, et teste si ce désaccord penche significativement du même côté à chaque fois.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="kable-table">
@@ -259,23 +259,23 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">faux</td>
-<td style="text-align: right;">469</td>
-<td style="text-align: right;">90</td>
+<td style="text-align: right;">224</td>
+<td style="text-align: right;">27</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">correct</td>
-<td style="text-align: right;">289</td>
-<td style="text-align: right;">2660</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">876</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p>Sur les 3508 produits du test, les deux modèles sont en désaccord dans 379 cas : SIRUS seul a raison dans 289 cas, la baseline seule a raison dans 90 cas. Le test de McNemar (avec correction de continuité) donne :</p>
+<p>Sur les 1177 produits du test, les deux modèles sont en désaccord dans 77 cas : SIRUS seul a raison dans 50 cas, la baseline seule a raison dans 27 cas. Le test de McNemar (avec correction de continuité) donne :</p>
 <ul>
-<li>statistique du test : 103.4 (1 degré de liberté)</li>
-<li>p-value : &lt;1e-04</li>
+<li>statistique du test : 6.3 (1 degré de liberté)</li>
+<li>p-value : 0.0122</li>
 </ul>
 <p>La p-value est très inférieure au seuil usuel de 5 % : l’avantage de SIRUS sur la baseline n’est pas un effet du hasard d’échantillonnage — il est statistiquement significatif, et concentré (comme attendu) dans le sens où SIRUS rattrape des cas que la baseline rate, beaucoup plus souvent que l’inverse.</p>
 </section>
@@ -298,81 +298,81 @@ ul.task-list li input[type="checkbox"] {
 <tr class="odd">
 <td style="text-align: left;">SIRUS</td>
 <td style="text-align: right;">0.3</td>
-<td style="text-align: left;">100.0%</td>
-<td style="text-align: left;">84.1%</td>
+<td style="text-align: left;">96.9%</td>
+<td style="text-align: left;">80.7%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">SIRUS</td>
 <td style="text-align: right;">0.4</td>
-<td style="text-align: left;">96.5%</td>
-<td style="text-align: left;">86.6%</td>
+<td style="text-align: left;">84.8%</td>
+<td style="text-align: left;">84.8%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">SIRUS</td>
 <td style="text-align: right;">0.5</td>
-<td style="text-align: left;">81.6%</td>
-<td style="text-align: left;">90.2%</td>
+<td style="text-align: left;">70.8%</td>
+<td style="text-align: left;">91.1%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">SIRUS</td>
 <td style="text-align: right;">0.6</td>
-<td style="text-align: left;">66.4%</td>
-<td style="text-align: left;">96.1%</td>
+<td style="text-align: left;">61.0%</td>
+<td style="text-align: left;">94.2%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">SIRUS</td>
 <td style="text-align: right;">0.7</td>
-<td style="text-align: left;">61.0%</td>
-<td style="text-align: left;">96.5%</td>
+<td style="text-align: left;">39.2%</td>
+<td style="text-align: left;">98.0%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.3</td>
-<td style="text-align: left;">82.6%</td>
-<td style="text-align: left;">91.5%</td>
+<td style="text-align: left;">81.4%</td>
+<td style="text-align: left;">87.2%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.4</td>
-<td style="text-align: left;">76.9%</td>
-<td style="text-align: left;">93.5%</td>
+<td style="text-align: left;">74.3%</td>
+<td style="text-align: left;">90.4%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.5</td>
-<td style="text-align: left;">70.6%</td>
-<td style="text-align: left;">95.3%</td>
+<td style="text-align: left;">67.3%</td>
+<td style="text-align: left;">92.4%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.6</td>
-<td style="text-align: left;">63.5%</td>
-<td style="text-align: left;">96.9%</td>
+<td style="text-align: left;">61.2%</td>
+<td style="text-align: left;">94.0%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.7</td>
-<td style="text-align: left;">57.0%</td>
-<td style="text-align: left;">97.9%</td>
+<td style="text-align: left;">53.1%</td>
+<td style="text-align: left;">95.7%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.8</td>
-<td style="text-align: left;">48.6%</td>
-<td style="text-align: left;">98.6%</td>
+<td style="text-align: left;">45.5%</td>
+<td style="text-align: left;">96.8%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Baseline+RF</td>
 <td style="text-align: right;">0.9</td>
-<td style="text-align: left;">37.4%</td>
-<td style="text-align: left;">99.2%</td>
+<td style="text-align: left;">32.5%</td>
+<td style="text-align: left;">98.7%</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p>À seuil égal (0.6), les deux modèles donnent un volume et une fiabilité étonnamment proches. La différence structurelle apparaît aux seuils plus élevés : la RF explore toute la plage <code>[0, 1]</code> (ici observée entre 0.00 et 1.00), et peut donc pousser la fiabilité au-delà de 99 % en sacrifiant du volume. SIRUS, avec seulement 10 règles de profondeur 2, reste cantonné à une plage de confiance beaucoup plus étroite (observée entre 0.36 et 0.74 sur ces données) : au-delà de ~0.7, plus aucun candidat n’atteint ce niveau de confiance, le seuil devient inutilisable.</p>
+<p>À seuil égal (0.6), les deux modèles donnent un volume et une fiabilité étonnamment proches. La différence structurelle apparaît aux seuils plus élevés : la RF explore toute la plage <code>[0, 1]</code> (ici observée entre 0.02 et 1.00), et peut donc pousser la fiabilité au-delà de 99 % en sacrifiant du volume. SIRUS, avec seulement 20 règles de profondeur 2, reste cantonné à une plage de confiance beaucoup plus étroite (observée entre 0.29 et 0.72 sur ces données) : au-delà de ~0.7, plus aucun candidat n’atteint ce niveau de confiance, le seuil devient inutilisable.</p>
 </section>
 <section id="ce-que-ça-implique" class="level2">
 <h2 class="anchored" data-anchor-id="ce-que-ça-implique">Ce que ça implique</h2>

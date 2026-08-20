@@ -227,16 +227,16 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <h2 class="anchored" data-anchor-id="objectif">Objectif</h2>
 <p>Un nouveau classifieur simple a été mis en place, avec comme objectif de compléter le LLM-as-a-judge, voire de la concurrencer. Celui-ci s’appuie sur une idée simple : suivre l’avis majoritaire des classifieurs (cf.&nbsp;<a href="../stats-descriptives/accords-unanimes.html">Accords unanimes des 4 classifieurs</a> et <a href="../stats-descriptives/trois-contre-un.html">3 classifieurs contre 1 dissident</a>) et TorchTextClassifier en cas d’égalité (cf.&nbsp;<a href="../stats-descriptives/seul-correct.html">classifieurs seuls</a>).</p>
 <p>Le but est ensuite d’en étudier les performances, notamment via une Random Forest, afin d’établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l’intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.</p>
-<div id="844d51a7" class="cell" data-execution_count="3">
+<div id="3208a526" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p><em>Résultats calculés pour le run : <code>s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet</code>.</em></p>
+<p><em>Résultats calculés pour le run : <code>s3://projet-budget-famille/data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet</code>.</em></p>
 </div>
 </div>
 </section>
 <section id="performance-de-la-baseline" class="level2">
 <h2 class="anchored" data-anchor-id="performance-de-la-baseline">Performance de la baseline</h2>
 <p>Avant d’entraîner un modèle pour détecter ses erreurs, on mesure la performance brute de la baseline (vote majoritaire, TTC arbitre en cas d’égalité), au niveau 4. En comparaison : l’accuracy obtenue en suivant TTC seul permet de chiffrer l’apport du vote majoritaire, et l’accuracy du LLM-judge donne la référence haute (plus coûteuse) à laquelle la baseline est comparée.</p>
-<div id="76d8ec98" class="cell" data-execution_count="4">
+<div id="f3556179" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
 
@@ -253,17 +253,17 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
 <td>Vote majoritaire (baseline)</td>
-<td>81.4%</td>
+<td>76.7%</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
 <td>TTC seul</td>
-<td>74.3%</td>
+<td>74.2%</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
 <td>LLM-judge</td>
-<td>81.9%</td>
+<td>72.7%</td>
 </tr>
 </tbody>
 </table>
@@ -271,10 +271,10 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 </div>
 </div>
-<div id="31031177" class="cell" data-execution_count="5">
+<div id="a5ddf60f" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p><strong>Gain du vote majoritaire vs TTC seul : +7.07 points</strong></p>
-<p><strong>Écart baseline vs LLM-judge : -0.53 points</strong></p>
+<p><strong>Gain du vote majoritaire vs TTC seul : +2.52 points</strong></p>
+<p><strong>Écart baseline vs LLM-judge : +4.03 points</strong></p>
 </div>
 </div>
 </section>
@@ -283,7 +283,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <p>Avant d’entraîner un modèle, on regarde directement ce qui distingue les cas où la baseline trouve le bon code de ceux où elle se trompe, une lecture plus directement interprétable que les importances de features du modèle entraîné plus loin.</p>
 <section id="par-division-coicop" class="level3">
 <h3 class="anchored" data-anchor-id="par-division-coicop">Par division COICOP</h3>
-<div id="e16d610d" class="cell" data-execution_count="7">
+<div id="1ca6b0f0" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
@@ -304,78 +304,78 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Produits alimentaires et boissons non alcoolisées (01)</th>
-<td>3266</td>
-<td>88.1</td>
+<td>3234</td>
+<td>83.5</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Boissons alcoolisées, tabac et stupéfiants (02)</th>
-<td>124</td>
-<td>96.0</td>
+<td>109</td>
+<td>90.8</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Articles d'habillement et chaussures (03)</th>
-<td>159</td>
-<td>61.0</td>
+<td>166</td>
+<td>52.4</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Logement, eau, gaz, électricité et autres combustibles (04)</th>
-<td>126</td>
-<td>65.9</td>
+<td>113</td>
+<td>61.1</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Meubles, articles de ménage et entretien courant du foyer (05)</th>
-<td>301</td>
-<td>86.0</td>
+<td>316</td>
+<td>78.8</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Santé (06)</th>
-<td>129</td>
-<td>39.5</td>
+<td>120</td>
+<td>41.7</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Transports (07)</th>
-<td>286</td>
-<td>89.5</td>
+<td>300</td>
+<td>84.7</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Information et communication (08)</th>
-<td>88</td>
-<td>72.7</td>
+<td>75</td>
+<td>65.3</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Loisirs, sport et culture (09)</th>
-<td>398</td>
-<td>81.7</td>
+<td>423</td>
+<td>77.3</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Services de l'enseignement (10)</th>
 <td>9</td>
-<td>66.7</td>
+<td>55.6</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Services de restauration et d'hébergement (11)</th>
-<td>323</td>
-<td>66.9</td>
+<td>320</td>
+<td>60.9</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Assurance et services financiers (12)</th>
-<td>76</td>
-<td>75.0</td>
+<td>81</td>
+<td>69.1</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Soins corporels, protection sociale et biens et services divers (13)</th>
-<td>251</td>
-<td>91.2</td>
+<td>272</td>
+<td>90.8</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Produit indéterminé/illisible (98)</th>
-<td>209</td>
-<td>17.2</td>
+<td>230</td>
+<td>18.3</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Hors COICOP (dons, impôts, opérations bancaires...) (99)</th>
-<td>80</td>
-<td>78.8</td>
+<td>113</td>
+<td>70.8</td>
 </tr>
 </tbody>
 </table>
@@ -386,7 +386,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </section>
 <section id="par-niveau-daccord-entre-classifieurs" class="level3">
 <h3 class="anchored" data-anchor-id="par-niveau-daccord-entre-classifieurs">Par niveau d’accord entre classifieurs</h3>
-<div id="1b742283" class="cell" data-execution_count="8">
+<div id="142ee13a" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 
@@ -407,23 +407,23 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">1</th>
-<td>566</td>
-<td>2.7</td>
+<td>936</td>
+<td>37.8</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">2</th>
-<td>1647</td>
-<td>76.6</td>
+<td>1527</td>
+<td>64.8</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">3</th>
-<td>1845</td>
-<td>92.7</td>
+<td>1711</td>
+<td>88.3</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">4</th>
-<td>1767</td>
-<td>99.2</td>
+<td>1707</td>
+<td>97.0</td>
 </tr>
 </tbody>
 </table>
@@ -435,7 +435,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <section id="scores-de-confiance-cas-corrects-vs-incorrects" class="level3">
 <h3 class="anchored" data-anchor-id="scores-de-confiance-cas-corrects-vs-incorrects">Scores de confiance : cas corrects vs incorrects</h3>
 <p>Médiane de chaque score, calculée sur les valeurs brutes (avant imputation des NaN).</p>
-<div id="0603fa23" class="cell" data-execution_count="9">
+<div id="727feb8f" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
@@ -451,8 +451,8 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">lcs_distance</th>
-<td>0.444444</td>
-<td>0.470588</td>
+<td>0.454545</td>
+<td>0.466667</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">rag_confidence</th>
@@ -462,17 +462,17 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tr class="odd">
 <th data-quarto-table-cell-role="th">ragann_confidence</th>
 <td>1.000000</td>
-<td>1.000000</td>
+<td>0.900000</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">ttc_conf_1</th>
-<td>0.990000</td>
+<td>1.000000</td>
 <td>0.780000</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">budget</th>
-<td>4.300000</td>
-<td>7.990000</td>
+<td>4.200000</td>
+<td>7.000000</td>
 </tr>
 </tbody>
 </table>
@@ -564,9 +564,9 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </tr>
 </tbody>
 </table>
-<div id="f68e9022" class="cell" data-execution_count="10">
+<div id="e90f25fb" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p><strong>14 features</strong> (7 catégorielles, 7 numériques) pour <strong>5825 observations</strong>, dont <strong>81.4%</strong> de baseline correcte.</p>
+<p><strong>14 features</strong> (7 catégorielles, 7 numériques) pour <strong>5881 observations</strong>, dont <strong>76.7%</strong> de baseline correcte.</p>
 </div>
 </div>
 </section>
@@ -576,13 +576,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <p>Un premier split train/test sert à obtenir des métriques et les importances de features ; la validation croisée donne ensuite une estimation plus robuste, en réentraînant le pipeline complet (encodage compris) sur chaque fold.</p>
 <section id="split-traintest" class="level3">
 <h3 class="anchored" data-anchor-id="split-traintest">Split train/test</h3>
-<div id="db3d3791" class="cell" data-execution_count="11">
+<div id="79e11d20" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p>Train : <strong>4660</strong> lignes — Test : <strong>1165</strong> lignes (taux de baseline correcte dans le train : 81.4%)</p>
-<p><strong>Accuracy (test)</strong> : 91.2% — <strong>ROC AUC</strong> : 0.958</p>
+<p>Train : <strong>4704</strong> lignes — Test : <strong>1177</strong> lignes (taux de baseline correcte dans le train : 76.7%)</p>
+<p><strong>Accuracy (test)</strong> : 80.4% — <strong>ROC AUC</strong> : 0.882</p>
 </div>
 </div>
-<div id="30ee9162" class="cell" data-execution_count="12">
+<div id="935d2fdc" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display" data-execution_count="12">
 <div>
 
@@ -603,13 +603,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">baseline correcte</th>
-<td>875</td>
-<td>73</td>
+<td>732</td>
+<td>171</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">baseline fausse</th>
-<td>29</td>
-<td>188</td>
+<td>60</td>
+<td>214</td>
 </tr>
 </tbody>
 </table>
@@ -617,7 +617,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 </div>
 </div>
-<div id="7e2d2d79" class="cell" data-execution_count="13">
+<div id="5c057f35" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display" data-execution_count="13">
 <div>
 
@@ -635,38 +635,38 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">baseline_fausse</th>
-<td>0.720</td>
-<td>0.866</td>
-<td>0.787</td>
-<td>217.000</td>
+<td>0.556</td>
+<td>0.781</td>
+<td>0.649</td>
+<td>274.000</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">baseline_correcte</th>
-<td>0.968</td>
-<td>0.923</td>
-<td>0.945</td>
-<td>948.000</td>
+<td>0.924</td>
+<td>0.811</td>
+<td>0.864</td>
+<td>903.000</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">accuracy</th>
-<td>0.912</td>
-<td>0.912</td>
-<td>0.912</td>
-<td>0.912</td>
+<td>0.804</td>
+<td>0.804</td>
+<td>0.804</td>
+<td>0.804</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">macro avg</th>
-<td>0.844</td>
-<td>0.895</td>
-<td>0.866</td>
-<td>1165.000</td>
+<td>0.740</td>
+<td>0.796</td>
+<td>0.757</td>
+<td>1177.000</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">weighted avg</th>
-<td>0.922</td>
-<td>0.912</td>
-<td>0.915</td>
-<td>1165.000</td>
+<td>0.838</td>
+<td>0.804</td>
+<td>0.814</td>
+<td>1177.000</td>
 </tr>
 </tbody>
 </table>
@@ -677,7 +677,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </section>
 <section id="courbe-roc" class="level3">
 <h3 class="anchored" data-anchor-id="courbe-roc">Courbe ROC</h3>
-<div id="95d7b3bf" class="cell" data-execution_count="14">
+<div id="48391518" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -689,7 +689,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </section>
 <section id="importances-des-features" class="level3">
 <h3 class="anchored" data-anchor-id="importances-des-features">Importances des features</h3>
-<div id="75ce1e9f" class="cell" data-execution_count="15">
+<div id="579cc473" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-display" data-execution_count="15">
 <div>
 
@@ -703,60 +703,60 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">nb_accords_max</th>
-<td>35.6</td>
+<th data-quarto-table-cell-role="th">ttc_conf_1</th>
+<td>26.1</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">ttc_conf_1</th>
-<td>17.3</td>
+<th data-quarto-table-cell-role="th">nb_accords_max</th>
+<td>22.8</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">unanimite</th>
-<td>7.9</td>
+<th data-quarto-table-cell-role="th">ragann_confidence</th>
+<td>9.7</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">rag_confidence</th>
-<td>7.3</td>
+<td>7.9</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">ragann_code_n1</th>
-<td>5.5</td>
-</tr>
-<tr class="even">
 <th data-quarto-table-cell-role="th">budget</th>
-<td>5.0</td>
+<td>6.5</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <th data-quarto-table-cell-role="th">lcs_distance</th>
-<td>4.8</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">ragann_confidence</th>
-<td>3.9</td>
+<td>6.2</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">pred_baseline_n1</th>
-<td>2.8</td>
+<th data-quarto-table-cell-role="th">unanimite</th>
+<td>5.8</td>
 </tr>
 <tr class="even">
+<th data-quarto-table-cell-role="th">ragann_code_n1</th>
+<td>2.9</td>
+</tr>
+<tr class="odd">
 <th data-quarto-table-cell-role="th">rag_code_n1</th>
-<td>2.6</td>
+<td>2.5</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">shop_type_name</th>
+<td>2.3</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">ttc_code_1_n1</th>
-<td>2.4</td>
+<td>2.2</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">lcs_code_n1</th>
-<td>2.0</td>
+<th data-quarto-table-cell-role="th">pred_baseline_n1</th>
+<td>2.2</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">shop_type_name</th>
-<td>1.7</td>
+<th data-quarto-table-cell-role="th">lcs_code_n1</th>
+<td>1.9</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">source</th>
-<td>1.2</td>
+<td>1.0</td>
 </tr>
 </tbody>
 </table>
@@ -767,12 +767,12 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </section>
 <section id="validation-croisée-estimation-plus-robuste" class="level3">
 <h3 class="anchored" data-anchor-id="validation-croisée-estimation-plus-robuste">Validation croisée (estimation plus robuste)</h3>
-<div id="d88af27d" class="cell" data-execution_count="16">
+<div id="5d714cfd" class="cell" data-execution_count="16">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p><strong>Accuracy</strong> : 89.0% ± 0.7% — <strong>ROC AUC</strong> : 0.955 ± 0.005 (5 folds)</p>
+<p><strong>Accuracy</strong> : 81.0% ± 0.4% — <strong>ROC AUC</strong> : 0.891 ± 0.007 (5 folds)</p>
 </div>
 </div>
-<div id="62a49343" class="cell" data-execution_count="17">
+<div id="6d64f88c" class="cell" data-execution_count="17">
 <div class="cell-output cell-output-display" data-execution_count="17">
 <div>
 
@@ -793,13 +793,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">baseline correcte</th>
-<td>4266</td>
-<td>473</td>
+<td>3673</td>
+<td>837</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">baseline fausse</th>
-<td>166</td>
-<td>920</td>
+<td>283</td>
+<td>1088</td>
 </tr>
 </tbody>
 </table>
@@ -812,13 +812,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <h3 class="anchored" data-anchor-id="tuning-des-hyperparamètres">Tuning des hyperparamètres</h3>
 <p>Le RF ci-dessus utilise des hyperparamètres fixés à la main (<code>n_estimators=300</code>, <code>min_samples_leaf=5</code>, <code>class_weight="balanced"</code>). On vérifie ici si un <code>RandomizedSearchCV</code> (60 tirages) trouve mieux. La recherche est faite <strong>uniquement sur le train</strong> (même split que ci-dessus, <code>test_size=0.2</code>, <code>random_state=42</code>) : le score CV pendant la recherche ne sert qu’à choisir les hyperparamètres, l’écart avec le score annoncé plus haut se lit sur le même test set, sans fuite.</p>
 <p>Le scoring optimisé n’est <strong>pas</strong> le ROC AUC (métrique de classement globale, insensible au déséquilibre des classes) mais l’<strong>average precision sur la classe “baseline_fausse”</strong> (aire sous la courbe précision/rappel tracée plus bas) : c’est la classe qui compte opérationnellement, puisqu’une “baseline fausse” non détectée est une erreur silencieuse qui ne part jamais au LLM.</p>
-<div id="c463014f" class="cell" data-execution_count="18">
+<div id="d459deda" class="cell" data-execution_count="18">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p><strong>Meilleurs hyperparamètres</strong> : <code>{'rf__class_weight': None, 'rf__max_depth': 20, 'rf__max_features': 'sqrt', 'rf__min_samples_leaf': 1, 'rf__n_estimators': 739}</code></p>
-<p><strong>Score CV (average precision, classe “baseline_fausse”) pendant la recherche</strong> : 0.873</p>
+<p><strong>Meilleurs hyperparamètres</strong> : <code>{'rf__class_weight': None, 'rf__max_depth': 20, 'rf__max_features': 'log2', 'rf__min_samples_leaf': 1, 'rf__n_estimators': 727}</code></p>
+<p><strong>Score CV (average precision, classe “baseline_fausse”) pendant la recherche</strong> : 0.729</p>
 </div>
 </div>
-<div id="abb8e71a" class="cell" data-execution_count="19">
+<div id="50f1260a" class="cell" data-execution_count="19">
 <div class="cell-output cell-output-display" data-execution_count="19">
 <div>
 
@@ -836,14 +836,14 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
 <td>RF par défaut</td>
-<td>91.2%</td>
-<td>0.958</td>
+<td>80.4%</td>
+<td>0.882</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
 <td>RF tuné</td>
-<td>92.4%</td>
-<td>0.962</td>
+<td>85.0%</td>
+<td>0.886</td>
 </tr>
 </tbody>
 </table>
@@ -851,7 +851,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 </div>
 </div>
-<div id="f4467092" class="cell" data-execution_count="20">
+<div id="23710096" class="cell" data-execution_count="20">
 <div class="cell-output cell-output-display" data-execution_count="20">
 <div>
 
@@ -872,13 +872,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">baseline correcte</th>
-<td>940</td>
-<td>8</td>
+<td>846</td>
+<td>57</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">baseline fausse</th>
-<td>80</td>
-<td>137</td>
+<td>120</td>
+<td>154</td>
 </tr>
 </tbody>
 </table>
@@ -886,7 +886,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 </div>
 </div>
-<div id="bbc4128f" class="cell" data-execution_count="21">
+<div id="1c417170" class="cell" data-execution_count="21">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -896,13 +896,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 </div>
 <p>L’accuracy et le ROC AUC globaux masquent un effet important sur la classe qui compte réellement pour ce modèle : celle des vraies erreurs de baseline, qu’on cherche à détecter pour décider de l’envoi au LLM-judge.</p>
-<div id="554168cd" class="cell" data-execution_count="22">
+<div id="2b5b4819" class="cell" data-execution_count="22">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p>Sur les <strong>217</strong> vraies erreurs de baseline du test (seuil par défaut 0.5), le RF par défaut (<code>class_weight='balanced'</code>) en détecte <strong>86.6%</strong> (188/217), contre <strong>63.1%</strong> (137/217) pour le RF tuné (<code>class_weight=None</code>).</p>
+<p>Sur les <strong>274</strong> vraies erreurs de baseline du test (seuil par défaut 0.5), le RF par défaut (<code>class_weight='balanced'</code>) en détecte <strong>78.1%</strong> (214/274), contre <strong>56.2%</strong> (154/274) pour le RF tuné (<code>class_weight=None</code>).</p>
 </div>
 </div>
 <p>Optimiser directement l’average precision sur la classe “baseline_fausse” plutôt que le ROC AUC ne change pas la conclusion : le rappel du RF tuné au seuil par défaut (0.5) reste inférieur à celui du RF par défaut. L’average precision est une métrique indépendante du seuil (elle juge le classement sur toute la plage des seuils possibles), donc l’améliorer ne garantit rien sur la performance à un seuil fixe précis — et <code>class_weight=None</code> continue de produire des probabilités tassées vers “correcte”, peu adaptées à un seuil figé à 0.5. <strong>C’est pourquoi le modèle utilisé pour la suite de cette page (section <a href="#compromis-précisionrappel">Compromis précision/rappel</a>) reste le RF par défaut (<code>res</code>), pas le RF tuné : quel que soit le critère d’optimisation essayé, le gain de tuning ne s’est pas montré utilisable pour cet usage.</strong></p>
-<div id="8309324a" class="cell" data-execution_count="23">
+<div id="0692974e" class="cell" data-execution_count="23">
 <div class="cell-output cell-output-display" data-execution_count="23">
 <div>
 
@@ -916,60 +916,60 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">nb_accords_max</th>
-<td>34.2</td>
+<th data-quarto-table-cell-role="th">ttc_conf_1</th>
+<td>22.1</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">ttc_conf_1</th>
-<td>13.4</td>
+<th data-quarto-table-cell-role="th">nb_accords_max</th>
+<td>13.6</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">budget</th>
-<td>8.7</td>
+<td>11.9</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">lcs_distance</th>
-<td>7.5</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">ragann_code_n1</th>
-<td>6.6</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">rag_confidence</th>
-<td>5.6</td>
+<td>10.4</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">ragann_confidence</th>
-<td>3.9</td>
+<td>7.6</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">shop_type_name</th>
-<td>3.6</td>
+<th data-quarto-table-cell-role="th">rag_confidence</th>
+<td>7.4</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">pred_baseline_n1</th>
-<td>3.6</td>
+<th data-quarto-table-cell-role="th">shop_type_name</th>
+<td>5.0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">ragann_code_n1</th>
+<td>4.0</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">lcs_code_n1</th>
+<td>3.5</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">ttc_code_1_n1</th>
+<td>3.5</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">rag_code_n1</th>
+<td>3.5</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">pred_baseline_n1</th>
 <td>3.2</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">unanimite</th>
-<td>2.9</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">lcs_code_n1</th>
-<td>2.7</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">rag_code_n1</th>
-<td>2.7</td>
+<td>2.4</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">source</th>
-<td>1.5</td>
+<td>2.0</td>
 </tr>
 </tbody>
 </table>
@@ -981,12 +981,12 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <section id="analyse-des-erreurs-manquées-par-le-modèle" class="level3">
 <h3 class="anchored" data-anchor-id="analyse-des-erreurs-manquées-par-le-modèle">Analyse des erreurs manquées par le modèle</h3>
 <p>L’accuracy et les importances de features restent agrégées : elles ne disent rien de ce qui distingue, <em>parmi les vraies erreurs de baseline</em>, celles que le modèle détecte de celles qu’il laisse passer à tort (au seuil par défaut 0.5). C’est cette seconde catégorie, un faux négatif du modèle, qui est la plus coûteuse : la baseline a faux, mais on lui fait confiance sans envoyer au LLM.</p>
-<div id="124b1b14" class="cell" data-execution_count="24">
+<div id="ddb5d0c1" class="cell" data-execution_count="24">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p>Sur les <strong>217</strong> erreurs réelles de baseline du test, la RF (seuil 0.5) en <strong>manque 29</strong> : elle leur attribue <code>P(baseline correcte) &gt; 0.5</code> alors que la baseline a bel et bien faux.</p>
+<p>Sur les <strong>274</strong> erreurs réelles de baseline du test, la RF (seuil 0.5) en <strong>manque 60</strong> : elle leur attribue <code>P(baseline correcte) &gt; 0.5</code> alors que la baseline a bel et bien faux.</p>
 </div>
 </div>
-<div id="51e7ee5c" class="cell" data-execution_count="25">
+<div id="de879674" class="cell" data-execution_count="25">
 <div class="cell-output cell-output-display" data-execution_count="25">
 <div>
 
@@ -1002,38 +1002,38 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">n</th>
-<td>188.000</td>
-<td>29.00</td>
+<td>214.000</td>
+<td>60.000</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">nb_accords_max_median</th>
-<td>1.000</td>
-<td>3.00</td>
+<td>2.000</td>
+<td>3.000</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">ttc_conf_1_median</th>
-<td>0.715</td>
-<td>0.98</td>
+<td>0.695</td>
+<td>0.990</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">rag_confidence_median</th>
 <td>0.700</td>
-<td>0.90</td>
+<td>0.875</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">ragann_confidence_median</th>
-<td>1.000</td>
-<td>1.00</td>
+<td>0.900</td>
+<td>0.900</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">budget_median</th>
-<td>8.015</td>
-<td>4.90</td>
+<td>6.400</td>
+<td>3.900</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">proba_correcte_median</th>
-<td>0.104</td>
-<td>0.65</td>
+<td>0.209</td>
+<td>0.679</td>
 </tr>
 </tbody>
 </table>
@@ -1041,7 +1041,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 </div>
 </div>
-<div id="6d4cf49e" class="cell" data-execution_count="26">
+<div id="0bf8041b" class="cell" data-execution_count="26">
 <div class="cell-output cell-output-display" data-execution_count="26">
 <div>
 
@@ -1063,70 +1063,58 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">Transports (07)</th>
-<td>5</td>
-<td>3</td>
-<td>37.5</td>
-</tr>
-<tr class="even">
 <th data-quarto-table-cell-role="th">Logement, eau, gaz, électricité et autres combustibles (04)</th>
-<td>7</td>
+<td>3</td>
 <td>4</td>
-<td>36.4</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">Soins corporels, protection sociale et biens et services divers (13)</th>
-<td>4</td>
-<td>2</td>
-<td>33.3</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">Hors COICOP (dons, impôts, opérations bancaires...) (99)</th>
-<td>2</td>
-<td>1</td>
-<td>33.3</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">Information et communication (08)</th>
-<td>4</td>
-<td>1</td>
-<td>20.0</td>
+<td>57.1</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Meubles, articles de ménage et entretien courant du foyer (05)</th>
-<td>9</td>
-<td>2</td>
-<td>18.2</td>
+<td>8</td>
+<td>8</td>
+<td>50.0</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Produits alimentaires et boissons non alcoolisées (01)</th>
-<td>69</td>
-<td>11</td>
-<td>13.8</td>
+<td>72</td>
+<td>27</td>
+<td>27.3</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">Santé (06)</th>
-<td>19</td>
-<td>2</td>
-<td>9.5</td>
+<th data-quarto-table-cell-role="th">Services de restauration et d'hébergement (11)</th>
+<td>22</td>
+<td>8</td>
+<td>26.7</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">Services de restauration et d'hébergement (11)</th>
-<td>14</td>
-<td>1</td>
-<td>6.7</td>
+<th data-quarto-table-cell-role="th">Loisirs, sport et culture (09)</th>
+<td>16</td>
+<td>4</td>
+<td>20.0</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">Loisirs, sport et culture (09)</th>
-<td>18</td>
+<th data-quarto-table-cell-role="th">Transports (07)</th>
+<td>5</td>
 <td>1</td>
-<td>5.3</td>
+<td>16.7</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">Produit indéterminé/illisible (98)</th>
-<td>28</td>
+<td>34</td>
+<td>6</td>
+<td>15.0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Santé (06)</th>
+<td>15</td>
 <td>1</td>
-<td>3.4</td>
+<td>6.2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Articles d'habillement et chaussures (03)</th>
+<td>17</td>
+<td>1</td>
+<td>5.6</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">Boissons alcoolisées, tabac et stupéfiants (02)</th>
@@ -1135,14 +1123,32 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <td>0.0</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">Articles d'habillement et chaussures (03)</th>
-<td>7</td>
+<th data-quarto-table-cell-role="th">Information et communication (08)</th>
+<td>5</td>
 <td>0</td>
 <td>0.0</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">Assurance et services financiers (12)</th>
+<th data-quarto-table-cell-role="th">Services de l'enseignement (10)</th>
 <td>1</td>
+<td>0</td>
+<td>0.0</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Assurance et services financiers (12)</th>
+<td>4</td>
+<td>0</td>
+<td>0.0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Soins corporels, protection sociale et biens et services divers (13)</th>
+<td>6</td>
+<td>0</td>
+<td>0.0</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Hors COICOP (dons, impôts, opérations bancaires...) (99)</th>
+<td>5</td>
 <td>0</td>
 <td>0.0</td>
 </tr>
@@ -1154,13 +1160,13 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </div>
 <section id="détail-des-cas-manqués" class="level4">
 <h4 class="anchored" data-anchor-id="détail-des-cas-manqués">Détail des cas manqués</h4>
-<div id="f586b52e" class="cell" data-execution_count="27">
+<div id="c82cadf7" class="cell" data-execution_count="27">
 <div class="cell-output cell-output-display cell-output-markdown">
-<p>Les <strong>29</strong> erreurs manquées elles-mêmes, triées par <code>proba_rf</code> décroissante (les cas où le modèle est le plus confiant à tort en premier).</p>
+<p>Les <strong>60</strong> erreurs manquées elles-mêmes, triées par <code>proba_rf</code> décroissante (les cas où le modèle est le plus confiant à tort en premier).</p>
 </div>
 </div>
 <div style="max-height: 420px; overflow: auto;">
-<div id="55b4bc26" class="cell" data-execution_count="28">
+<div id="d7e7f305" class="cell" data-execution_count="28">
 <div class="cell-output cell-output-display" data-execution_count="28">
 <div>
 
@@ -1185,175 +1191,315 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
-<td>4845</td>
-<td>Magasins maxi-discompte</td>
-<td>04.4.1</td>
-<td>01.2.5</td>
-<td>05.6.1.1</td>
-<td>01.2.5</td>
-<td>01.2.5</td>
-<td>01.2.5</td>
+<td>2806</td>
+<td>None</td>
+<td>09.4.7</td>
+<td>01.1.8.9</td>
+<td>01.1.8.9</td>
+<td>None</td>
+<td>01.1.8.9</td>
+<td>01.1.8.9</td>
 <td>1.00</td>
 <td>3</td>
-<td>0.946</td>
+<td>0.981</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
-<td>3611</td>
-<td>None</td>
-<td>01.2</td>
-<td>01.2.1</td>
-<td>01.2.1</td>
-<td>01.2.1</td>
-<td>01.2</td>
-<td>01.2.1</td>
-<td>1.00</td>
-<td>3</td>
-<td>0.928</td>
+<td>1418</td>
+<td>Hypermarchés</td>
+<td>01.1.7.9</td>
+<td>01.1.7.5</td>
+<td>01.1.7.5</td>
+<td>01.1.7.5</td>
+<td>01.1.7.5</td>
+<td>01.1.7.5</td>
+<td>0.98</td>
+<td>4</td>
+<td>0.976</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
-<td>3853</td>
-<td>None</td>
-<td>01.1.1.5</td>
-<td>01.1.9.1</td>
-<td>01.1.9.1</td>
-<td>01.1.9.1</td>
-<td>01.1.1.5</td>
-<td>01.1.9.1</td>
-<td>0.99</td>
-<td>3</td>
-<td>0.878</td>
+<td>1759</td>
+<td>Grande surface spécialisée Loisir, Culture et TIC</td>
+<td>03.1.2</td>
+<td>03.1.3.1</td>
+<td>03.1.3.1</td>
+<td>03.1.3.1</td>
+<td>03.1.3.1</td>
+<td>03.1.3.1</td>
+<td>1.00</td>
+<td>4</td>
+<td>0.919</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
-<td>367</td>
+<td>3200</td>
 <td>None</td>
-<td>01.1.6.1</td>
-<td>01.1.6.7</td>
-<td>01.1.6.7</td>
-<td>01.1.6.7</td>
-<td>01.1.6.1</td>
-<td>01.1.6.7</td>
-<td>0.70</td>
-<td>3</td>
-<td>0.870</td>
+<td>11.1.1.1</td>
+<td>01.2.2</td>
+<td>01.2.2</td>
+<td>01.2.2</td>
+<td>01.2.2</td>
+<td>01.2.2</td>
+<td>1.00</td>
+<td>4</td>
+<td>0.914</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
-<td>3869</td>
-<td>None</td>
-<td>01.1.7.4</td>
-<td>01.1.9.4</td>
-<td>01.1.9.4</td>
-<td>01.1.9.4</td>
-<td>01.1.7.4</td>
-<td>01.1.9.4</td>
-<td>0.64</td>
-<td>3</td>
-<td>0.845</td>
+<td>5362</td>
+<td>Hypermarchés</td>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
+<td>0.99</td>
+<td>4</td>
+<td>0.905</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">5</th>
-<td>3707</td>
-<td>None</td>
-<td>13.2.1.1</td>
-<td>13.1.3.2</td>
-<td>13.1.3.2</td>
-<td>13.1.3.2</td>
-<td>13.2.1.1</td>
-<td>13.1.3.2</td>
-<td>0.99</td>
-<td>3</td>
-<td>0.843</td>
+<td>917</td>
+<td>Hypermarchés</td>
+<td>05.6.1.1</td>
+<td>13.1.2</td>
+<td>09.3.1.1</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>05.6.1.1</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.893</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">6</th>
-<td>5364</td>
-<td>Supermarchés, magasins multi-commerces</td>
-<td>01.1.9.1</td>
+<td>4523</td>
+<td>None</td>
+<td>11.1.1.1</td>
 <td>01.1.1.3</td>
 <td>01.1.1.3</td>
 <td>01.1.1.3</td>
-<td>01.1.9.1</td>
 <td>01.1.1.3</td>
-<td>0.51</td>
-<td>3</td>
-<td>0.822</td>
+<td>01.1.1.3</td>
+<td>0.99</td>
+<td>4</td>
+<td>0.891</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">7</th>
-<td>3153</td>
+<td>5273</td>
 <td>None</td>
-<td>06.2</td>
-<td>13.9.0.9</td>
-<td>13.9.0.9</td>
-<td>13.9.0.9</td>
-<td>06.2</td>
-<td>13.9.0.9</td>
-<td>0.99</td>
+<td>11.1.1.2</td>
+<td>01.2.6</td>
+<td>01.1.6.2</td>
+<td>01.2.6</td>
+<td>01.2.6</td>
+<td>01.2.6</td>
+<td>0.97</td>
 <td>3</td>
-<td>0.797</td>
+<td>0.889</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">8</th>
-<td>2262</td>
-<td>None</td>
-<td>04.3.1.1</td>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-<td>05.6.1.1</td>
-<td>04.3.1.1</td>
-<td>05.6.1.1</td>
+<td>440</td>
+<td>Hypermarchés</td>
+<td>01.1.7.9</td>
+<td>01.1.7.5</td>
+<td>01.1.9.1</td>
+<td>01.1.7.5</td>
+<td>01.1.7.5</td>
+<td>01.1.7.9</td>
 <td>1.00</td>
-<td>3</td>
-<td>0.778</td>
+<td>2</td>
+<td>0.881</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">9</th>
-<td>4121</td>
-<td>Magasins maxi-discompte</td>
-<td>01.1.7.3</td>
-<td>01.1.7.9</td>
-<td>01.1.7.9</td>
-<td>01.1.7.9</td>
-<td>01.1.7.3</td>
-<td>01.1.7.9</td>
-<td>0.91</td>
-<td>3</td>
-<td>0.761</td>
+<td>3840</td>
+<td>None</td>
+<td>01</td>
+<td>13.1.2</td>
+<td>01.1.9.1</td>
+<td>None</td>
+<td>None</td>
+<td>13.1.2</td>
+<td>1.00</td>
+<td>1</td>
+<td>0.869</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">10</th>
-<td>62</td>
-<td>Services d'équipement du foyer : télécommunications, fibre, Canal +, Satellite, service de télésurveillance</td>
-<td>08.3.2</td>
-<td>08.3.9.2</td>
-<td>08.3.9.2</td>
-<td>08.3.9.2</td>
-<td>08.3.9.2</td>
-<td>08.3.2</td>
-<td>0.72</td>
+<td>2735</td>
+<td>None</td>
+<td>01.1.7.9</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>01.1.9.9</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>1.00</td>
 <td>3</td>
-<td>0.724</td>
+<td>0.861</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">11</th>
-<td>3990</td>
-<td>Service d’entretien, de réparation ou de location pour d’autres biens (vêtements, appareils électroménagers…)</td>
-<td>05.6.2.9</td>
-<td>05.2.1.2</td>
-<td>05.2.1.2</td>
-<td>05.2.1.2</td>
-<td>05.6.2.9</td>
-<td>05.2.1.2</td>
+<td>1107</td>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.6.9</td>
+<td>01.1.1.3</td>
+<td>01.1.8.4</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
 <td>1.00</td>
 <td>3</td>
-<td>0.723</td>
+<td>0.838</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">12</th>
-<td>1093</td>
+<td>1198</td>
+<td>None</td>
+<td>05.3.2</td>
+<td>05.3.2.9</td>
+<td>05.3.2.9</td>
+<td>05.3.2.9</td>
+<td>05.3.2.9</td>
+<td>05.3.2.9</td>
+<td>0.87</td>
+<td>4</td>
+<td>0.836</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">13</th>
+<td>3403</td>
+<td>None</td>
+<td>04.4.1</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>1.00</td>
+<td>4</td>
+<td>0.832</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">14</th>
+<td>2622</td>
+<td>None</td>
+<td>04.4.1</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>01.2.5</td>
+<td>0.97</td>
+<td>4</td>
+<td>0.819</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">15</th>
+<td>10</td>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.7.9</td>
+<td>01.1.7.6</td>
+<td>01.1.7.6</td>
+<td>01.1.7.6</td>
+<td>01.1.7.9</td>
+<td>01.1.7.6</td>
+<td>0.98</td>
+<td>3</td>
+<td>0.817</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">16</th>
+<td>4955</td>
+<td>None</td>
+<td>05.6.1.1</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>1.00</td>
+<td>4</td>
+<td>0.817</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">17</th>
+<td>4607</td>
+<td>None</td>
+<td>01.1.8.5</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>1.00</td>
+<td>4</td>
+<td>0.796</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18</th>
+<td>3615</td>
+<td>None</td>
+<td>05.6.1.1</td>
+<td>05.6.1.9</td>
+<td>05.6.1.1</td>
+<td>05.5.2.2</td>
+<td>None</td>
+<td>05.6.1.9</td>
+<td>1.00</td>
+<td>1</td>
+<td>0.787</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>4942</td>
+<td>None</td>
+<td>01.1.5.9</td>
+<td>01.1.9.3</td>
+<td>01.1.9.3</td>
+<td>None</td>
+<td>01.1.9.3</td>
+<td>01.1.9.3</td>
+<td>1.00</td>
+<td>3</td>
+<td>0.770</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">20</th>
+<td>951</td>
+<td>None</td>
+<td>01.1.6.4</td>
+<td>01.1.8.6</td>
+<td>01.1.8.6</td>
+<td>01.1.6.9</td>
+<td>01.1.8.6</td>
+<td>01.1.8.6</td>
+<td>1.00</td>
+<td>3</td>
+<td>0.751</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">21</th>
+<td>3571</td>
+<td>None</td>
+<td>01.1.1.9</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.1.9</td>
+<td>0.99</td>
+<td>3</td>
+<td>0.737</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">22</th>
+<td>3776</td>
 <td>Grande surface spécialisée dans l’équipement de la maison</td>
 <td>04.3.1.1</td>
 <td>05.5.2.2</td>
@@ -1363,231 +1509,525 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <td>05.5.2.2</td>
 <td>0.91</td>
 <td>3</td>
-<td>0.665</td>
+<td>0.731</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">13</th>
-<td>3420</td>
+<th data-quarto-table-cell-role="th">23</th>
+<td>669</td>
+<td>Magasins maxi-discompte</td>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>1.00</td>
+<td>3</td>
+<td>0.714</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">24</th>
+<td>992</td>
+<td>None</td>
+<td>11.1.1</td>
+<td>11.1.1.1</td>
+<td>01.1.9.2</td>
+<td>11.1.1.1</td>
+<td>11.1.1.1</td>
+<td>11.1.1.1</td>
+<td>0.84</td>
+<td>3</td>
+<td>0.709</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">25</th>
+<td>4140</td>
 <td>Hypermarchés</td>
-<td>07.2.2.2</td>
-<td>07.2.2</td>
-<td>07.2.2</td>
-<td>07.2.2</td>
-<td>07.2.2</td>
-<td>07.2.2.2</td>
+<td>98.1.2</td>
+<td>13.1.2</td>
+<td>09.7.2.2</td>
+<td>13.1.2</td>
+<td>None</td>
+<td>13.1.2</td>
+<td>0.99</td>
+<td>2</td>
+<td>0.709</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">26</th>
+<td>5482</td>
+<td>None</td>
+<td>01.1.8.2</td>
+<td>01.1.9.9</td>
+<td>01.1.9.9</td>
+<td>01.1.8.2</td>
+<td>01.1.8.1</td>
+<td>01.1.9.9</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.707</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">27</th>
+<td>2830</td>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.1.1</td>
+<td>01.1.4.7</td>
+<td>01.1.4.7</td>
+<td>01.1.4.7</td>
+<td>01.1.4.7</td>
+<td>01.1.4.7</td>
+<td>0.74</td>
+<td>4</td>
+<td>0.691</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">28</th>
+<td>2948</td>
+<td>Hypermarchés</td>
+<td>98.2</td>
+<td>13.2.9.1</td>
+<td>13.2.9.1</td>
+<td>13.2.9.1</td>
+<td>13.2.9.1</td>
+<td>13.2.9.1</td>
+<td>0.86</td>
+<td>4</td>
+<td>0.689</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">29</th>
+<td>785</td>
+<td>None</td>
+<td>01.1.2.5</td>
+<td>01.1.2.3</td>
+<td>01.1.2.3</td>
+<td>01.1.2.3</td>
+<td>01.1.2.3</td>
+<td>01.1.2.5</td>
+<td>0.97</td>
+<td>3</td>
+<td>0.680</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">30</th>
+<td>3941</td>
+<td>None</td>
+<td>01.1.1.3</td>
+<td>01.1.1.9</td>
+<td>01.1.1.9</td>
+<td>01.1.1.5</td>
+<td>01.1.1.3</td>
+<td>01.1.1.9</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.677</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">31</th>
+<td>1706</td>
+<td>Restauration classique</td>
+<td>11.1.1.2</td>
+<td>11.1.1.1</td>
+<td>11.1.1.1</td>
+<td>None</td>
+<td>11.1.1.1</td>
+<td>11.1.1.2</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.670</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">32</th>
+<td>3787</td>
+<td>Magasins maxi-discompte</td>
+<td>01.1.4.2</td>
+<td>01.1.4.1</td>
+<td>01.1.4.1</td>
+<td>01.1.4.1</td>
+<td>01.1.4.2</td>
+<td>01.1.4.1</td>
 <td>0.98</td>
 <td>3</td>
-<td>0.655</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">14</th>
-<td>3388</td>
-<td>Magasins maxi-discompte</td>
-<td>01.1.1.3</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>1.00</td>
-<td>4</td>
-<td>0.650</td>
+<td>0.668</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">15</th>
-<td>2393</td>
+<th data-quarto-table-cell-role="th">33</th>
+<td>4294</td>
+<td>None</td>
+<td>01.1.7.9</td>
+<td>01.1.9.3</td>
+<td>01.1.9.3</td>
+<td>01.1.7.9</td>
+<td>01.1.9.3</td>
+<td>01.1.9.3</td>
+<td>0.82</td>
+<td>3</td>
+<td>0.652</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">34</th>
+<td>5436</td>
 <td>Hypermarchés</td>
+<td>01.1.2.5</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
 <td>01.1.3.3</td>
-<td>01.1.3.4</td>
+<td>01.1.2.2</td>
 <td>01.1.9.1</td>
-<td>01.1.3.4</td>
-<td>01.1.3.3</td>
-<td>01.1.3.4</td>
-<td>0.98</td>
+<td>0.99</td>
 <td>2</td>
-<td>0.640</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">16</th>
-<td>1896</td>
-<td>Magasins maxi-discompte</td>
-<td>01.1.6.1</td>
-<td>01.1.6.9</td>
-<td>01.1.4.5</td>
-<td>01.1.6.9</td>
-<td>01.1.6.1</td>
-<td>01.1.6.9</td>
-<td>0.98</td>
-<td>2</td>
-<td>0.604</td>
+<td>0.649</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">17</th>
-<td>2972</td>
+<th data-quarto-table-cell-role="th">35</th>
+<td>4988</td>
 <td>Petite surface spécialisée dans la vente de carburant (station-service)</td>
 <td>07.2.3</td>
 <td>07.2.1.1</td>
 <td>07.2.3</td>
 <td>07.2.1.1</td>
-<td>07.2.3</td>
+<td>None</td>
 <td>07.2.1.1</td>
 <td>0.98</td>
 <td>2</td>
-<td>0.601</td>
+<td>0.640</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">18</th>
-<td>5388</td>
-<td>Grande surface spécialisée dans l’équipement de la maison</td>
-<td>04.3.1.1</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>05.5.2.2</td>
-<td>04.3.1.1</td>
-<td>05.6.1.9</td>
+<th data-quarto-table-cell-role="th">36</th>
+<td>4136</td>
+<td>None</td>
+<td>04.3.2</td>
+<td>04.3.1.2</td>
+<td>04.3.1.2</td>
+<td>04.3.1.2</td>
+<td>04.3.1.2</td>
+<td>04.3.2</td>
+<td>1.00</td>
+<td>3</td>
+<td>0.636</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">37</th>
+<td>3764</td>
+<td>Magasins maxi-discompte</td>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>01.1.2.4</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
+<td>01.1.2.2</td>
 <td>0.99</td>
+<td>3</td>
+<td>0.636</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">38</th>
+<td>3737</td>
+<td>Grande surface non spécialisée (grand magasin…)</td>
+<td>09.2.2.2</td>
+<td>09.4.6.2</td>
+<td>09.2.1.2</td>
+<td>09.2.2.2</td>
+<td>13.2.9.1</td>
+<td>09.4.6.2</td>
+<td>1.00</td>
+<td>1</td>
+<td>0.626</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">39</th>
+<td>2427</td>
+<td>None</td>
+<td>09.7.1</td>
+<td>13.1.2</td>
+<td>01.1.9.1</td>
+<td>09.2.1.2</td>
+<td>None</td>
+<td>13.1.2</td>
+<td>0.98</td>
+<td>1</td>
+<td>0.624</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">40</th>
+<td>4386</td>
+<td>None</td>
+<td>11.1.1.2</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>01.1.7.9</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>0.61</td>
+<td>3</td>
+<td>0.618</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">41</th>
+<td>4390</td>
+<td>Hypermarchés</td>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>01.1.2.5</td>
+<td>01.1.9.1</td>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>1.00</td>
 <td>2</td>
+<td>0.613</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">42</th>
+<td>3990</td>
+<td>None</td>
+<td>05.6.1.1</td>
+<td>01.1.9.4</td>
+<td>01.1.9.4</td>
+<td>01.1.9.4</td>
+<td>05.6.1.9</td>
+<td>05.6.1.1</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.613</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">43</th>
+<td>5554</td>
+<td>Magasins maxi-discompte</td>
+<td>01.1.7.1</td>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>01.1.7.1</td>
+<td>None</td>
+<td>01.1.1.5</td>
+<td>0.99</td>
+<td>1</td>
+<td>0.599</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">44</th>
+<td>3828</td>
+<td>None</td>
+<td>05.6.1.9</td>
+<td>05.6.1.1</td>
+<td>13.1.2</td>
+<td>05.6.1.1</td>
+<td>05.6.1.1</td>
+<td>05.6.1.1</td>
+<td>0.56</td>
+<td>3</td>
 <td>0.592</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">19</th>
-<td>185</td>
-<td>Grande surface spécialisée dans l’équipement de la maison</td>
-<td>99.1</td>
+<th data-quarto-table-cell-role="th">45</th>
+<td>4595</td>
+<td>None</td>
+<td>05.4.0.3</td>
+<td>13.1.2</td>
+<td>13.1.2</td>
+<td>05.2.1.9</td>
+<td>13.1.2</td>
+<td>05.4.0.3</td>
+<td>0.99</td>
+<td>2</td>
+<td>0.587</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">46</th>
+<td>5639</td>
+<td>None</td>
+<td>98.1.1</td>
+<td>01.1.9.3</td>
+<td>01.1.9.3</td>
+<td>01.1.7.2</td>
+<td>01.1.9.3</td>
+<td>01.1.9.3</td>
+<td>1.00</td>
+<td>3</td>
+<td>0.579</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">47</th>
+<td>3318</td>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>01.1.1.3</td>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.578</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">48</th>
+<td>5521</td>
+<td>Hypermarchés</td>
+<td>01.1.6.8</td>
+<td>01.1.1.3</td>
+<td>01.1.8.4</td>
+<td>01.1.6.8</td>
+<td>01.1.1.9</td>
+<td>01.1.1.3</td>
+<td>1.00</td>
+<td>1</td>
+<td>0.576</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">49</th>
+<td>5211</td>
+<td>Hypermarchés</td>
+<td>98.1.1</td>
+<td>98.1.2</td>
+<td>09.3.2.2</td>
+<td>01.1</td>
+<td>None</td>
+<td>98.1.2</td>
+<td>1.00</td>
+<td>1</td>
+<td>0.566</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">50</th>
+<td>5520</td>
+<td>None</td>
+<td>06.1.1</td>
+<td>06.1.1.1</td>
+<td>06.1.1.1</td>
+<td>06.1.1.1</td>
+<td>06.1.1.1</td>
+<td>06.1.1.1</td>
+<td>0.91</td>
+<td>4</td>
+<td>0.557</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">51</th>
+<td>2424</td>
+<td>Supermarchés, magasins multi-commerces</td>
+<td>01.1.9.1</td>
+<td>01.1.1.1</td>
+<td>01.1.4.4</td>
+<td>01.1.1.1</td>
+<td>01.1.1.1</td>
+<td>01.1.1.1</td>
+<td>0.83</td>
+<td>3</td>
+<td>0.553</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">52</th>
+<td>416</td>
+<td>None</td>
+<td>11.1.1</td>
+<td>11.1.1.1</td>
+<td>11.1.2.9</td>
+<td>11.1.1.1</td>
+<td>11.1.1.1</td>
+<td>11.1.1.1</td>
+<td>0.84</td>
+<td>3</td>
+<td>0.537</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">53</th>
+<td>3118</td>
+<td>Marché et éventaire, ambulant et tournée SAI (ex : boulanger, boucher)</td>
+<td>09.7.1</td>
+<td>01.1.9.4</td>
+<td>09.7.1</td>
+<td>None</td>
+<td>01.1.9.4</td>
+<td>01.1.9.4</td>
+<td>0.77</td>
+<td>2</td>
+<td>0.533</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">54</th>
+<td>1284</td>
+<td>Magasins maxi-discompte</td>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>01.1.9.1</td>
+<td>None</td>
+<td>01.1.3.1</td>
+<td>01.1.9.1</td>
+<td>0.99</td>
+<td>2</td>
+<td>0.529</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">55</th>
+<td>1171</td>
+<td>Grande surface spécialisée Loisir, Culture et TIC</td>
+<td>98.1.3</td>
+<td>09.7.3</td>
+<td>07.3.2.1</td>
+<td>None</td>
+<td>None</td>
+<td>09.7.3</td>
+<td>0.99</td>
+<td>1</td>
+<td>0.526</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">56</th>
+<td>5537</td>
+<td>Grande surface non spécialisée (grand magasin…)</td>
+<td>05.6.1.9</td>
 <td>09.7.4</td>
 <td>09.7.4</td>
 <td>09.2.1.3</td>
+<td>03.1.3.2</td>
 <td>09.7.4</td>
-<td>09.7.4</td>
-<td>0.47</td>
-<td>3</td>
-<td>0.592</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">20</th>
-<td>3000</td>
-<td>Hypermarchés</td>
-<td>01.1.1.3</td>
-<td>01.1.8.5</td>
-<td>01.1.8.5</td>
-<td>01.1.8.5</td>
-<td>01.1.1.3</td>
-<td>01.1.8.5</td>
-<td>0.68</td>
-<td>3</td>
-<td>0.580</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">21</th>
-<td>3348</td>
-<td>Petite surface spécialisée dans les biens médicaux (pharmacie)</td>
-<td>06.1.1</td>
-<td>06.1.1.1</td>
-<td>06.1.1.1</td>
-<td>06.1.1.1</td>
-<td>06.1.1</td>
-<td>06.1.1.1</td>
-<td>1.00</td>
-<td>3</td>
-<td>0.580</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">22</th>
-<td>1951</td>
-<td>Grande surface spécialisée Loisir, Culture et TIC</td>
-<td>09.7.1</td>
-<td>09.7.1.9</td>
-<td>07.2.4.3</td>
-<td>09.7.1.9</td>
-<td>09.7.1</td>
-<td>09.7.1.9</td>
-<td>0.99</td>
-<td>2</td>
-<td>0.575</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">23</th>
-<td>1774</td>
-<td>Grande surface spécialisée Loisir, Culture et TIC</td>
-<td>07.2.3</td>
-<td>07.2.1.3</td>
-<td>07.2.1.3</td>
-<td>None</td>
-<td>07.2.3</td>
-<td>07.2.1.3</td>
-<td>0.57</td>
-<td>2</td>
-<td>0.567</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">24</th>
-<td>998</td>
-<td>Restauration rapide, ventes à emporter (yc ventes par camion) (pizza, glace)</td>
-<td>01.1.2.5</td>
-<td>11.1.1.2</td>
-<td>11.1.1.2</td>
-<td>None</td>
-<td>11.1.1.2</td>
-<td>01.1.2.5</td>
-<td>0.86</td>
-<td>2</td>
-<td>0.559</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">25</th>
-<td>3310</td>
-<td>Supermarchés, magasins multi-commerces</td>
-<td>05.6.1</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>05.6.1.9</td>
-<td>05.6.1</td>
-<td>05.6.1.9</td>
-<td>1.00</td>
-<td>3</td>
-<td>0.541</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">26</th>
-<td>1836</td>
-<td>Hypermarchés</td>
-<td>98.4</td>
-<td>01.1.9.1</td>
-<td>01.1.9.1</td>
-<td>01.1.9.3</td>
-<td>01.1.9.1</td>
-<td>01.1.9.1</td>
-<td>1.00</td>
-<td>3</td>
-<td>0.518</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">27</th>
-<td>3461</td>
-<td>Bars, cafés, salons de thé, glaciers</td>
-<td>11.1.1.2</td>
-<td>11.1.1.1</td>
-<td>11.1.1.2</td>
-<td>11.1.1.1</td>
-<td>11.1.1.2</td>
-<td>11.1.1.1</td>
-<td>0.92</td>
-<td>2</td>
-<td>0.516</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">28</th>
-<td>657</td>
-<td>Grande surface non spécialisée (grand magasin…)</td>
-<td>13.2.9.1</td>
-<td>09.2.1.2</td>
-<td>01.1.2.5</td>
-<td>09.2.1.2</td>
-<td>13.2.9.1</td>
-<td>09.2.1.2</td>
-<td>0.85</td>
+<td>0.98</td>
 <td>2</td>
 <td>0.506</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">57</th>
+<td>641</td>
+<td>Organismes financiers : assurances, mutuelles, banques...</td>
+<td>98.2</td>
+<td>99.2</td>
+<td>99.2</td>
+<td>None</td>
+<td>99.2</td>
+<td>12.2.2</td>
+<td>0.26</td>
+<td>2</td>
+<td>0.504</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">58</th>
+<td>856</td>
+<td>Magasins maxi-discompte</td>
+<td>01.1.4.5</td>
+<td>01.1.1.3</td>
+<td>01.1.4.6</td>
+<td>01.1.1.3</td>
+<td>01.1.1.3</td>
+<td>01.1.4.5</td>
+<td>1.00</td>
+<td>2</td>
+<td>0.503</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">59</th>
+<td>3092</td>
+<td>None</td>
+<td>11.1.1.2</td>
+<td>01.1.4.5</td>
+<td>05.1.1.3</td>
+<td>01.1.4.5</td>
+<td>01.1.4.5</td>
+<td>01.1.4.5</td>
+<td>0.91</td>
+<td>3</td>
+<td>0.501</td>
 </tr>
 </tbody>
 </table>
@@ -1606,7 +2046,7 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <li>un seuil plus <strong>bas</strong> envoie plus d’observations au LLM (meilleur rappel sur “baseline fausse”, donc moins d’erreurs manquées), au prix d’un volume, donc d’un coût, plus élevé</li>
 <li>un seuil plus <strong>haut</strong> limite le volume envoyé au LLM (économie), mais laisse passer davantage d’erreurs de baseline non détectées</li>
 </ul>
-<div id="fa486619" class="cell" data-execution_count="29">
+<div id="5d7330f9" class="cell" data-execution_count="29">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -1640,43 +2080,99 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <tbody>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0.99</th>
-<td>978</td>
-<td>84%</td>
+<td>1046</td>
+<td>89%</td>
 <td>0</td>
 <td>100.0%</td>
 <td>100.0%</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">0.95</th>
-<td>797</td>
-<td>68%</td>
-<td>0</td>
-<td>100.0%</td>
-<td>100.0%</td>
+<td>908</td>
+<td>77%</td>
+<td>2</td>
+<td>99.3%</td>
+<td>99.3%</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0.90</th>
-<td>674</td>
-<td>58%</td>
-<td>2</td>
-<td>99.1%</td>
-<td>99.6%</td>
+<td>795</td>
+<td>68%</td>
+<td>5</td>
+<td>98.2%</td>
+<td>98.7%</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">0.80</th>
-<td>515</td>
-<td>44%</td>
-<td>7</td>
+<td>641</td>
+<td>54%</td>
+<td>17</td>
+<td>93.8%</td>
 <td>96.8%</td>
-<td>98.9%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0.70</th>
+<td>552</td>
+<td>47%</td>
+<td>27</td>
+<td>90.1%</td>
+<td>95.7%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">0.60</th>
+<td>457</td>
+<td>39%</td>
+<td>43</td>
+<td>84.3%</td>
+<td>94.0%</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0.50</th>
-<td>261</td>
-<td>22%</td>
-<td>29</td>
-<td>86.6%</td>
-<td>96.8%</td>
+<td>385</td>
+<td>33%</td>
+<td>60</td>
+<td>78.1%</td>
+<td>92.4%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">0.40</th>
+<td>302</td>
+<td>26%</td>
+<td>84</td>
+<td>69.3%</td>
+<td>90.4%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0.30</th>
+<td>219</td>
+<td>19%</td>
+<td>123</td>
+<td>55.1%</td>
+<td>87.2%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">0.20</th>
+<td>124</td>
+<td>11%</td>
+<td>174</td>
+<td>36.5%</td>
+<td>83.5%</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0.10</th>
+<td>50</td>
+<td>4%</td>
+<td>230</td>
+<td>16.1%</td>
+<td>79.6%</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">0.00</th>
+<td>0</td>
+<td>0%</td>
+<td>274</td>
+<td>0.0%</td>
+<td>76.7%</td>
 </tr>
 </tbody>
 </table>
@@ -1688,6 +2184,21 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 </section>
 <section id="réannotation-manuelle-des-cas-manqués" class="level2">
 <h2 class="anchored" data-anchor-id="réannotation-manuelle-des-cas-manqués">Réannotation manuelle des cas manqués</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Réannotation figée sur le run <code>2026-06-29</code> (<code>codif-vvkv9</code>), pas sur le run affiché ci-dessus.</strong></p>
+<p>Les 35 lignes codées à la main plus bas ont été identifiées sur les données du run <code>2026-06-29</code>. Elles sont recollées aux données courantes via <code>ligne</code>, qui n’est qu’un numéro de position dans le parquet du run — cet indice ne désigne pas le même produit d’un run à l’autre. Depuis que <code>CHEMIN_S3_MODELISATION</code> pointe vers un run plus récent, ce recollage associe donc la plupart du temps chaque annotation à un produit <strong>sans rapport</strong> avec celui réellement réannoté : le tableau et les graphiques qui suivent ne sont pas valides pour le run affiché plus haut sur cette page, et ne doivent être lus que comme témoin de la méthode.</p>
+<p>Voir <a href="../interpretation/2026-06-29.html">Interprétation — run du 2026-06-29</a> pour le contexte d’origine de cette réannotation.</p>
+</div>
+</div>
 <p>Les 35 cas manqués par la RF au seuil par défaut (0.5, cf.&nbsp;section <a href="#analyse-des-erreurs-manquées-par-le-modèle">Analyse des erreurs manquées par le modèle</a>) ont été réannoté manuellement (par moi-même) pour distinguer une vraie erreur de la baseline d’une fausse (problème d’annotation inital). Quatre catégories en résultent :</p>
 <ul>
 <li><strong>Erreur réelle</strong> : la baseline a bien tort, confirmé par la relecture.</li>
@@ -1696,12 +2207,12 @@ if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.M
 <li><strong>Erreur d’annotation</strong> : la baseline a raison, mais le code du jeu de données (<code>code_vrai</code>) semble lui-même erroné.</li>
 </ul>
 <p>Pour affiner ces recherches, j’étudie donc les erreurs manqués selon la probabilité donnée par la RF.</p>
-<div id="d022acbb" class="cell" data-execution_count="31">
+<div id="963e8fdc" class="cell" data-execution_count="31">
 <div class="cell-output cell-output-display">
 <div style="height:525px; width:100%;">            <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script><script>if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}</script>                <script>window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
-        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.7.0.min.js" integrity="sha256-jvTGqxNp8AGWEcvNLVuKr+8j5dGe9Yw51LQkmDH+IYA=" crossorigin="anonymous"></script>                <div id="5639cd17-4288-4d39-9f12-cf55eb567528" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("5639cd17-4288-4d39-9f12-cf55eb567528")) {                    Plotly.newPlot(                        "5639cd17-4288-4d39-9f12-cf55eb567528",                        [{"hoverinfo":"text","hovertext":["1836 : 98.4 (baseline: 01.1.9.1)","aucun cas","2262 : 04.3.1.1 (baseline: 05.6.1.1)","aucun cas","aucun cas"],"marker":{"color":"#2a78d6"},"name":"Erreur reelle","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AQABAAA="},"type":"bar"},{"hoverinfo":"text","hovertext":["5388 : 04.3.1.1 (baseline: 05.6.1.9)\u003cbr\u003e185 : 99.1 (baseline: 09.7.4)\u003cbr\u003e3000 : 01.1.1.3 (baseline: 01.1.8.5)\u003cbr\u003e3348 : 06.1.1 (baseline: 06.1.1.1)\u003cbr\u003e1951 : 09.7.1 (baseline: 09.7.1.9)\u003cbr\u003e1774 : 07.2.3 (baseline: 07.2.1.3)\u003cbr\u003e998 : 01.1.2.5 (baseline: 11.1.1.2)\u003cbr\u003e3310 : 05.6.1 (baseline: 05.6.1.9)\u003cbr\u003e3461 : 11.1.1.2 (baseline: 11.1.1.1)\u003cbr\u003e657 : 13.2.9.1 (baseline: 09.2.1.2)","1093 : 04.3.1.1 (baseline: 05.5.2.2)\u003cbr\u003e3420 : 07.2.2.2 (baseline: 07.2.2)\u003cbr\u003e3388 : 01.1.1.3 (baseline: 05.6.1.9)\u003cbr\u003e2393 : 01.1.3.3 (baseline: 01.1.3.4)\u003cbr\u003e1896 : 01.1.6.1 (baseline: 01.1.6.9)\u003cbr\u003e2972 : 07.2.3 (baseline: 07.2.1.1)","3153 : 06.2 (baseline: 13.9.0.9)\u003cbr\u003e4121 : 01.1.7.3 (baseline: 01.1.7.9)\u003cbr\u003e62 : 08.3.2 (baseline: 08.3.9.2)","3853 : 01.1.1.5 (baseline: 01.1.9.1)\u003cbr\u003e367 : 01.1.6.1 (baseline: 01.1.6.7)\u003cbr\u003e3869 : 01.1.7.4 (baseline: 01.1.9.4)\u003cbr\u003e3707 : 13.2.1.1 (baseline: 13.1.3.2)\u003cbr\u003e5364 : 01.1.9.1 (baseline: 01.1.1.3)","4845 : 04.4.1 (baseline: 01.2.5)\u003cbr\u003e3611 : 01.2 (baseline: 01.2.1)"],"marker":{"color":"#eb6834"},"name":"Ambigu","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"CgYDBQI="},"type":"bar"},{"hoverinfo":"text","hovertext":["aucun cas","aucun cas","aucun cas","aucun cas","aucun cas"],"marker":{"color":"#1baf7a"},"name":"Probleme de troncature","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AAAAAAA="},"type":"bar"},{"hoverinfo":"text","hovertext":["aucun cas","aucun cas","3990 : 05.6.2.9 (baseline: 05.2.1.2)","aucun cas","aucun cas"],"marker":{"color":"#eda100"},"name":"Erreur d'annotation","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AAABAAA="},"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"legend":{"title":{"text":"Categorie"}},"barmode":"stack","title":{"text":"Erreurs manqu\u00e9es par la RF, selon la confiance et la nature du cas"},"xaxis":{"title":{"text":"Tranche de proba_rf (confiance de la RF en la baseline)"}},"yaxis":{"title":{"text":"Nombre de cas"}}},                        {"responsive": true}                    ).then(function(){
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.7.0.min.js" integrity="sha256-jvTGqxNp8AGWEcvNLVuKr+8j5dGe9Yw51LQkmDH+IYA=" crossorigin="anonymous"></script>                <div id="4d009dd4-973e-4e18-83c7-4ef988489d81" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script>                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("4d009dd4-973e-4e18-83c7-4ef988489d81")) {                    Plotly.newPlot(                        "4d009dd4-973e-4e18-83c7-4ef988489d81",                        [{"hoverinfo":"text","hovertext":["aucun cas","3990 : 05.6.1.1 (baseline: 01.1.9.4)","aucun cas","aucun cas","aucun cas"],"marker":{"color":"#2a78d6"},"name":"Erreur reelle","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AAEAAAA="},"type":"bar"},{"hoverinfo":"text","hovertext":["5554 : 01.1.7.1 (baseline: 01.1.1.5)\u003cbr\u003e3828 : 05.6.1.9 (baseline: 05.6.1.1)\u003cbr\u003e4595 : 05.4.0.3 (baseline: 13.1.2)\u003cbr\u003e5639 : 98.1.1 (baseline: 01.1.9.3)\u003cbr\u003e3318 : 01.1.3.3 (baseline: 01.1.9.1)\u003cbr\u003e5521 : 01.1.6.8 (baseline: 01.1.1.3)\u003cbr\u003e5211 : 98.1.1 (baseline: 98.1.2)\u003cbr\u003e5520 : 06.1.1 (baseline: 06.1.1.1)\u003cbr\u003e2424 : 01.1.9.1 (baseline: 01.1.1.1)\u003cbr\u003e416 : 11.1.1 (baseline: 11.1.1.1)\u003cbr\u003e3118 : 09.7.1 (baseline: 01.1.9.4)\u003cbr\u003e1284 : 01.1.3.3 (baseline: 01.1.9.1)\u003cbr\u003e1171 : 98.1.3 (baseline: 09.7.3)\u003cbr\u003e5537 : 05.6.1.9 (baseline: 09.7.4)\u003cbr\u003e641 : 98.2 (baseline: 99.2)\u003cbr\u003e856 : 01.1.4.5 (baseline: 01.1.1.3)\u003cbr\u003e3092 : 11.1.1.2 (baseline: 01.1.4.5)","2830 : 01.1.1.1 (baseline: 01.1.4.7)\u003cbr\u003e2948 : 98.2 (baseline: 13.2.9.1)\u003cbr\u003e785 : 01.1.2.5 (baseline: 01.1.2.3)\u003cbr\u003e3941 : 01.1.1.3 (baseline: 01.1.1.9)\u003cbr\u003e1706 : 11.1.1.2 (baseline: 11.1.1.1)\u003cbr\u003e3787 : 01.1.4.2 (baseline: 01.1.4.1)\u003cbr\u003e4294 : 01.1.7.9 (baseline: 01.1.9.3)\u003cbr\u003e5436 : 01.1.2.5 (baseline: 01.1.2.2)\u003cbr\u003e4988 : 07.2.3 (baseline: 07.2.1.1)\u003cbr\u003e4136 : 04.3.2 (baseline: 04.3.1.2)\u003cbr\u003e3764 : 01.1.2.3 (baseline: 01.1.2.2)\u003cbr\u003e3737 : 09.2.2.2 (baseline: 09.4.6.2)\u003cbr\u003e2427 : 09.7.1 (baseline: 13.1.2)\u003cbr\u003e4386 : 11.1.1.2 (baseline: 01.1.9.1)\u003cbr\u003e4390 : 01.1.1.5 (baseline: 01.1.9.1)","4607 : 01.1.8.5 (baseline: 01.1.1.3)\u003cbr\u003e3615 : 05.6.1.1 (baseline: 05.6.1.9)\u003cbr\u003e4942 : 01.1.5.9 (baseline: 01.1.9.3)\u003cbr\u003e951 : 01.1.6.4 (baseline: 01.1.8.6)\u003cbr\u003e3571 : 01.1.1.9 (baseline: 01.1.1.3)\u003cbr\u003e3776 : 04.3.1.1 (baseline: 05.5.2.2)\u003cbr\u003e669 : 01.1.3.3 (baseline: 01.1.9.1)\u003cbr\u003e992 : 11.1.1 (baseline: 11.1.1.1)\u003cbr\u003e4140 : 98.1.2 (baseline: 13.1.2)\u003cbr\u003e5482 : 01.1.8.2 (baseline: 01.1.9.9)","917 : 05.6.1.1 (baseline: 13.1.2)\u003cbr\u003e4523 : 11.1.1.1 (baseline: 01.1.1.3)\u003cbr\u003e5273 : 11.1.1.2 (baseline: 01.2.6)\u003cbr\u003e440 : 01.1.7.9 (baseline: 01.1.7.5)\u003cbr\u003e3840 : 01 (baseline: 13.1.2)\u003cbr\u003e2735 : 01.1.7.9 (baseline: 01.1.9.1)\u003cbr\u003e1107 : 01.1.6.9 (baseline: 01.1.1.3)\u003cbr\u003e1198 : 05.3.2 (baseline: 05.3.2.9)\u003cbr\u003e3403 : 04.4.1 (baseline: 01.2.5)\u003cbr\u003e2622 : 04.4.1 (baseline: 01.2.5)\u003cbr\u003e10 : 01.1.7.9 (baseline: 01.1.7.6)\u003cbr\u003e4955 : 05.6.1.1 (baseline: 13.1.2)","2806 : 09.4.7 (baseline: 01.1.8.9)\u003cbr\u003e1418 : 01.1.7.9 (baseline: 01.1.7.5)\u003cbr\u003e1759 : 03.1.2 (baseline: 03.1.3.1)\u003cbr\u003e3200 : 11.1.1.1 (baseline: 01.2.2)\u003cbr\u003e5362 : 01.1.2.3 (baseline: 01.1.2.2)"],"marker":{"color":"#eb6834"},"name":"Ambigu","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"EQ8KDAU="},"type":"bar"},{"hoverinfo":"text","hovertext":["aucun cas","aucun cas","aucun cas","aucun cas","aucun cas"],"marker":{"color":"#1baf7a"},"name":"Probleme de troncature","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AAAAAAA="},"type":"bar"},{"hoverinfo":"text","hovertext":["aucun cas","aucun cas","aucun cas","aucun cas","aucun cas"],"marker":{"color":"#eda100"},"name":"Erreur d'annotation","x":["(0.499, 0.6]","(0.6, 0.7]","(0.7, 0.8]","(0.8, 0.9]","(0.9, 1.0]"],"y":{"dtype":"i1","bdata":"AAAAAAA="},"type":"bar"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"legend":{"title":{"text":"Categorie"}},"barmode":"stack","title":{"text":"Erreurs manqu\u00e9es par la RF, selon la confiance et la nature du cas"},"xaxis":{"title":{"text":"Tranche de proba_rf (confiance de la RF en la baseline)"}},"yaxis":{"title":{"text":"Nombre de cas"}}},                        {"responsive": true}                    ).then(function(){
                             
-var gd = document.getElementById('5639cd17-4288-4d39-9f12-cf55eb567528');
+var gd = document.getElementById('4d009dd4-973e-4e18-83c7-4ef988489d81');
 var x = new MutationObserver(function (mutations, observer) {{
         var display = window.getComputedStyle(gd).display;
         if (!display || display === 'none') {{
@@ -1731,7 +2242,7 @@ if (outputEl) {{
 Sur les cas où la baseline a réellement tort, ce qu’elle a suivi (majorité ou TTC), et le rôle de RAG-ANN
 </summary>
 <p>Sur les seuls cas où la baseline a réellement tort (catégories <strong>Erreur réelle</strong> et <strong>Ambigu</strong> — les erreurs d’annotation et de troncature sont écartées puisque la baseline n’y est pour rien), on regarde ce qu’elle a concrètement suivi : un vote majoritaire entre les 4 classifieurs, ou TTC en tant qu’arbitre (égalité entre plusieurs codes, ou aucun vote possible). Quand c’est la majorité, on regarde en plus si RAG-ANN en faisait partie, ou s’il était le dissident (et ce qu’il répondait dans ce cas).</p>
-<div id="e30c4149" class="cell" data-execution_count="32">
+<div id="19f90562" class="cell" data-execution_count="32">
 <div class="cell-output cell-output-display" data-execution_count="32">
 <div>
 
@@ -1761,7 +2272,147 @@ Sur les cas où la baseline a réellement tort, ce qu’elle a suivi (majorité 
 </thead>
 <tbody>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">4845</th>
+<th data-quarto-table-cell-role="th">2806</th>
+<td>09.4.7</td>
+<td>01.1.8.9</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.8.9</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1418</th>
+<td>01.1.7.9</td>
+<td>01.1.7.5</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.7.5</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">1759</th>
+<td>03.1.2</td>
+<td>03.1.3.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>03.1.3.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3200</th>
+<td>11.1.1.1</td>
+<td>01.2.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.2.2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5362</th>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.2.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">917</th>
+<td>05.6.1.1</td>
+<td>13.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>13.1.2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4523</th>
+<td>11.1.1.1</td>
+<td>01.1.1.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.1.3</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5273</th>
+<td>11.1.1.2</td>
+<td>01.2.6</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.2.6</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">440</th>
+<td>01.1.7.9</td>
+<td>01.1.7.5</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.7.5</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3840</th>
+<td>01</td>
+<td>13.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>TTC (égalité)</td>
+<td>NaN</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2735</th>
+<td>01.1.7.9</td>
+<td>01.1.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1107</th>
+<td>01.1.6.9</td>
+<td>01.1.1.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.1.3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">1198</th>
+<td>05.3.2</td>
+<td>05.3.2.9</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>05.3.2.9</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3403</th>
+<td>04.4.1</td>
+<td>01.2.5</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.2.5</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2622</th>
 <td>04.4.1</td>
 <td>01.2.5</td>
 <td>NaN</td>
@@ -1771,274 +2422,454 @@ Sur les cas où la baseline a réellement tort, ce qu’elle a suivi (majorité 
 <td>01.2.5</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">3611</th>
-<td>01.2</td>
-<td>01.2.1</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.2</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">3853</th>
-<td>01.1.1.5</td>
-<td>01.1.9.1</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.1.1.5</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">367</th>
-<td>01.1.6.1</td>
-<td>01.1.6.7</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.1.6.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">3869</th>
-<td>01.1.7.4</td>
-<td>01.1.9.4</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.1.7.4</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">3707</th>
-<td>13.2.1.1</td>
-<td>13.1.3.2</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>13.2.1.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">5364</th>
-<td>01.1.9.1</td>
-<td>01.1.1.3</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.1.9.1</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">3153</th>
-<td>06.2</td>
-<td>13.9.0.9</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>06.2</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">2262</th>
-<td>04.3.1.1</td>
-<td>05.6.1.1</td>
-<td>04.3.1.1</td>
-<td>Erreur reelle</td>
-<td>Majorité</td>
-<td>False</td>
-<td>04.3.1.1</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">4121</th>
-<td>01.1.7.3</td>
+<th data-quarto-table-cell-role="th">10</th>
 <td>01.1.7.9</td>
+<td>01.1.7.6</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>False</td>
-<td>01.1.7.3</td>
+<td>01.1.7.9</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">62</th>
-<td>08.3.2</td>
-<td>08.3.9.2</td>
+<th data-quarto-table-cell-role="th">4955</th>
+<td>05.6.1.1</td>
+<td>13.1.2</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>True</td>
-<td>08.3.9.2</td>
+<td>13.1.2</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">1093</th>
-<td>04.3.1.1</td>
-<td>05.5.2.2</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>True</td>
-<td>05.5.2.2</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">3420</th>
-<td>07.2.2.2</td>
-<td>07.2.2</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>True</td>
-<td>07.2.2</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">3388</th>
+<th data-quarto-table-cell-role="th">4607</th>
+<td>01.1.8.5</td>
 <td>01.1.1.3</td>
-<td>05.6.1.9</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>True</td>
+<td>01.1.1.3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3615</th>
+<td>05.6.1.1</td>
 <td>05.6.1.9</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">2393</th>
-<td>01.1.3.3</td>
-<td>01.1.3.4</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.1.3.3</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">1896</th>
-<td>01.1.6.1</td>
-<td>01.1.6.9</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>01.1.6.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">2972</th>
-<td>07.2.3</td>
-<td>07.2.1.1</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>TTC (égalité)</td>
 <td>NaN</td>
-<td>07.2.3</td>
+<td>None</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">5388</th>
-<td>04.3.1.1</td>
-<td>05.6.1.9</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>04.3.1.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">185</th>
-<td>99.1</td>
-<td>09.7.4</td>
+<th data-quarto-table-cell-role="th">4942</th>
+<td>01.1.5.9</td>
+<td>01.1.9.3</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>True</td>
-<td>09.7.4</td>
+<td>01.1.9.3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">951</th>
+<td>01.1.6.4</td>
+<td>01.1.8.6</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.8.6</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">3000</th>
+<th data-quarto-table-cell-role="th">3571</th>
+<td>01.1.1.9</td>
 <td>01.1.1.3</td>
-<td>01.1.8.5</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.1.3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3776</th>
+<td>04.3.1.1</td>
+<td>05.5.2.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>05.5.2.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">669</th>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.1</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">992</th>
+<td>11.1.1</td>
+<td>11.1.1.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>11.1.1.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">4140</th>
+<td>98.1.2</td>
+<td>13.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>False</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5482</th>
+<td>01.1.8.2</td>
+<td>01.1.9.9</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>False</td>
+<td>01.1.8.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">2830</th>
+<td>01.1.1.1</td>
+<td>01.1.4.7</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.4.7</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2948</th>
+<td>98.2</td>
+<td>13.2.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>13.2.9.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">785</th>
+<td>01.1.2.5</td>
+<td>01.1.2.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.2.3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3941</th>
+<td>01.1.1.3</td>
+<td>01.1.1.9</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>False</td>
 <td>01.1.1.3</td>
 </tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1706</th>
+<td>11.1.1.2</td>
+<td>11.1.1.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>11.1.1.1</td>
+</tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3348</th>
+<th data-quarto-table-cell-role="th">3787</th>
+<td>01.1.4.2</td>
+<td>01.1.4.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>False</td>
+<td>01.1.4.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">4294</th>
+<td>01.1.7.9</td>
+<td>01.1.9.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5436</th>
+<td>01.1.2.5</td>
+<td>01.1.2.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.2.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">4988</th>
+<td>07.2.3</td>
+<td>07.2.1.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>False</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4136</th>
+<td>04.3.2</td>
+<td>04.3.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>04.3.1.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3764</th>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.2.2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3737</th>
+<td>09.2.2.2</td>
+<td>09.4.6.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>TTC (égalité)</td>
+<td>NaN</td>
+<td>13.2.9.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">2427</th>
+<td>09.7.1</td>
+<td>13.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>TTC (égalité)</td>
+<td>NaN</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4386</th>
+<td>11.1.1.2</td>
+<td>01.1.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">4390</th>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>False</td>
+<td>01.1.1.5</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3990</th>
+<td>05.6.1.1</td>
+<td>01.1.9.4</td>
+<td>05.2.1.2</td>
+<td>Erreur reelle</td>
+<td>Majorité</td>
+<td>False</td>
+<td>05.6.1.9</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5554</th>
+<td>01.1.7.1</td>
+<td>01.1.1.5</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>TTC (égalité)</td>
+<td>NaN</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3828</th>
+<td>05.6.1.9</td>
+<td>05.6.1.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>05.6.1.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">4595</th>
+<td>05.4.0.3</td>
+<td>13.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>13.1.2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5639</th>
+<td>98.1.1</td>
+<td>01.1.9.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.3</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3318</th>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.1</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5521</th>
+<td>01.1.6.8</td>
+<td>01.1.1.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>TTC (égalité)</td>
+<td>NaN</td>
+<td>01.1.1.9</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5211</th>
+<td>98.1.1</td>
+<td>98.1.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>TTC (égalité)</td>
+<td>NaN</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5520</th>
 <td>06.1.1</td>
 <td>06.1.1.1</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
-<td>False</td>
-<td>06.1.1</td>
+<td>True</td>
+<td>06.1.1.1</td>
 </tr>
 <tr class="even">
-<th data-quarto-table-cell-role="th">1951</th>
-<td>09.7.1</td>
-<td>09.7.1.9</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>09.7.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">1774</th>
-<td>07.2.3</td>
-<td>07.2.1.3</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>07.2.3</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">998</th>
-<td>01.1.2.5</td>
-<td>11.1.1.2</td>
+<th data-quarto-table-cell-role="th">2424</th>
+<td>01.1.9.1</td>
+<td>01.1.1.1</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>True</td>
-<td>11.1.1.2</td>
+<td>01.1.1.1</td>
 </tr>
 <tr class="odd">
-<th data-quarto-table-cell-role="th">3310</th>
-<td>05.6.1</td>
-<td>05.6.1.9</td>
-<td>NaN</td>
-<td>Ambigu</td>
-<td>Majorité</td>
-<td>False</td>
-<td>05.6.1</td>
-</tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">1836</th>
-<td>98.4</td>
-<td>01.1.9.1</td>
-<td>98.1</td>
-<td>Erreur reelle</td>
-<td>Majorité</td>
-<td>True</td>
-<td>01.1.9.1</td>
-</tr>
-<tr class="odd">
-<th data-quarto-table-cell-role="th">3461</th>
-<td>11.1.1.2</td>
+<th data-quarto-table-cell-role="th">416</th>
+<td>11.1.1</td>
 <td>11.1.1.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>11.1.1.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3118</th>
+<td>09.7.1</td>
+<td>01.1.9.4</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.9.4</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">1284</th>
+<td>01.1.3.3</td>
+<td>01.1.9.1</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>False</td>
+<td>01.1.3.1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1171</th>
+<td>98.1.3</td>
+<td>09.7.3</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>TTC (égalité)</td>
 <td>NaN</td>
-<td>11.1.1.2</td>
+<td>None</td>
 </tr>
-<tr class="even">
-<th data-quarto-table-cell-role="th">657</th>
-<td>13.2.9.1</td>
-<td>09.2.1.2</td>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">5537</th>
+<td>05.6.1.9</td>
+<td>09.7.4</td>
 <td>NaN</td>
 <td>Ambigu</td>
 <td>Majorité</td>
 <td>False</td>
-<td>13.2.9.1</td>
+<td>03.1.3.2</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">641</th>
+<td>98.2</td>
+<td>99.2</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>99.2</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">856</th>
+<td>01.1.4.5</td>
+<td>01.1.1.3</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.1.3</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3092</th>
+<td>11.1.1.2</td>
+<td>01.1.4.5</td>
+<td>NaN</td>
+<td>Ambigu</td>
+<td>Majorité</td>
+<td>True</td>
+<td>01.1.4.5</td>
 </tr>
 </tbody>
 </table>

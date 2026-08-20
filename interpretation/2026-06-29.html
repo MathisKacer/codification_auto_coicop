@@ -131,6 +131,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#performance-du-modèle" id="toc-performance-du-modèle" class="nav-link" data-scroll-target="#performance-du-modèle">Performance du modèle</a></li>
   <li><a href="#erreurs-manquées-par-le-modèle" id="toc-erreurs-manquées-par-le-modèle" class="nav-link" data-scroll-target="#erreurs-manquées-par-le-modèle">Erreurs manquées par le modèle</a></li>
   <li><a href="#compromis-précisionrappel" id="toc-compromis-précisionrappel" class="nav-link" data-scroll-target="#compromis-précisionrappel">Compromis précision/rappel</a></li>
+  <li><a href="#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants" id="toc-modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants" class="nav-link" data-scroll-target="#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">Modèle de re-ranking SIRUS : diagnostic de la baisse d’accuracy sur les runs suivants</a></li>
   </ul>
 </nav>
     </div>
@@ -188,6 +189,88 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Seuil 0.80</strong> : manque 6 erreurs (97.7 % détectées), pour 51 % du volume envoyé.</li>
 <li><strong>Seuil 0.50 (par défaut de <code>.predict()</code>)</strong> : le plus économique (31 % du volume envoyé), mais laisse passer 35 erreurs non détectées (13 % des erreurs de baseline), et parmi ce qu’on garde sans LLM, 4.3 % sont en réalité fausses (précision sur “correcte” = 95.7 %).</li>
 </ul>
+</section>
+<section id="modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants" class="level2">
+<h2 class="anchored" data-anchor-id="modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">Modèle de re-ranking SIRUS : diagnostic de la baisse d’accuracy sur les runs suivants</h2>
+<p>Cf. <a href="../modelisation/sirus.html">SIRUS — synthèse finale</a> pour le modèle de re-ranking candidat-level entraîné sur le run courant (sélection du meilleur candidat parmi les 4 classifieurs de base). Cette section documente un diagnostic fait a posteriori sur ce run-ci (<code>codif-vvkv9</code>) : pourquoi l’accuracy de ce modèle chute sur les deux runs suivants (<code>codif-8m8jn</code> du 2026-07-23, <code>codif-x98xl</code> du 2026-07-30), et pourquoi ce n’est pas un problème de généralisation du modèle SIRUS lui-même.</p>
+<p><strong>Comparaison de performance</strong> (modèle candidat-level, split 80/20 par produit, seed 42) :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Modèle</th>
+<th>Accuracy produit</th>
+<th>Borne haute</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Entraîné et testé sur ce run (test 20 %)</td>
+<td>96.7 %</td>
+<td>98.1 %</td>
+</tr>
+<tr class="even">
+<td>Entraîné sur ce run, testé sur <code>x98xl</code> (même split que réentraîné)</td>
+<td>77.8 %</td>
+<td>87.9 %</td>
+</tr>
+<tr class="odd">
+<td>Réentraîné directement sur <code>x98xl</code> (test 20 %)</td>
+<td>78.5 %</td>
+<td>87.9 %</td>
+</tr>
+</tbody>
+</table>
+<p>(Pour référence, accuracy du modèle entraîné sur ce run, appliqué à l’intégralité de <code>x98xl</code> [5881 produits] : 77.7 %. Recalage de <code>code_candidat_n1</code> sur les catégories connues de ce modèle : 0 % de candidats concernés, 0 % de produits entièrement recalés — le recalage ne biaise donc pas cette comparaison.)</p>
+<p><strong>Réentraîner n’aide quasiment pas</strong> (77.8 % vs 78.5 %, moins d’un point d’écart) : ce n’est donc pas un défaut de généralisation de SIRUS, mais une baisse de la <strong>borne haute</strong> elle-même (98.1 % ici, 87.9 % sur <code>x98xl</code>) — moins de bons candidats disponibles en amont, peu importe le modèle de choix utilisé derrière.</p>
+<p><strong>Diagnostic : quel classifieur décroche ?</strong> Taux de correspondance entre le code proposé par chaque classifieur de base et le vrai code (niveau 4) :</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Classifieur</th>
+<th>Ce run (2026-06-29)</th>
+<th>2026-07-23 (<code>8m8jn</code>)</th>
+<th>2026-07-30 (<code>x98xl</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lcs_code</code></td>
+<td>46.8 %</td>
+<td>45.8 %</td>
+<td>45.7 %</td>
+</tr>
+<tr class="even">
+<td><code>rag_code</code></td>
+<td>52.5 %</td>
+<td>52.6 %</td>
+<td>52.2 %</td>
+</tr>
+<tr class="odd">
+<td><code>ragann_code</code></td>
+<td><strong>97.0 %</strong></td>
+<td><strong>70.8 %</strong></td>
+<td><strong>70.3 %</strong></td>
+</tr>
+<tr class="even">
+<td><code>ttc_code_1</code></td>
+<td>74.3 %</td>
+<td>74.1 %</td>
+<td>74.2 %</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>ragann_code</code> (RAG-ANN) est le classifieur en cause</strong> : son taux de correspondance chute de 97.0 % à ~70 % sur les deux runs suivants, sans amélioration entre le 23 et le 30 juillet — régression toujours présente au 30 juillet. LCS, RAG et TTC restent stables. C’est cette régression qui explique la baisse de borne haute (et donc d’accuracy du re-ranking), pas un problème de modèle SIRUS ni de généralisation — la vraie correction est en amont (pipeline RAG-ANN), pas dans le re-ranking.</p>
 
 
 </section>

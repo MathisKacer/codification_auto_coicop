@@ -164,12 +164,10 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#pourquoi-sirus" id="toc-pourquoi-sirus" class="nav-link active" data-scroll-target="#pourquoi-sirus">1. Pourquoi SIRUS ?</a></li>
   <li><a href="#organisation-des-données-la-table-longue-candidat-level" id="toc-organisation-des-données-la-table-longue-candidat-level" class="nav-link" data-scroll-target="#organisation-des-données-la-table-longue-candidat-level">2. Organisation des données : la table longue candidat-level</a></li>
-  <li><a href="#modèle-principal-run-ancien-codif-vvkv9" id="toc-modèle-principal-run-ancien-codif-vvkv9" class="nav-link" data-scroll-target="#modèle-principal-run-ancien-codif-vvkv9">3. Modèle principal (run ancien, <code>codif-vvkv9</code>)</a></li>
+  <li><a href="#modèle-principal-run-courant" id="toc-modèle-principal-run-courant" class="nav-link" data-scroll-target="#modèle-principal-run-courant">3. Modèle principal (run courant)</a></li>
   <li><a href="#features-additionnelles-budget-shop_type_name-source" id="toc-features-additionnelles-budget-shop_type_name-source" class="nav-link" data-scroll-target="#features-additionnelles-budget-shop_type_name-source">4. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></a></li>
-  <li><a href="#généralisation-à-deux-nouveaux-runs" id="toc-généralisation-à-deux-nouveaux-runs" class="nav-link" data-scroll-target="#généralisation-à-deux-nouveaux-runs">5. Généralisation à deux nouveaux runs</a></li>
-  <li><a href="#hyperparamètres-sirus" id="toc-hyperparamètres-sirus" class="nav-link" data-scroll-target="#hyperparamètres-sirus">6. Hyperparamètres SIRUS</a></li>
-  <li><a href="#système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle" id="toc-système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle" class="nav-link" data-scroll-target="#système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle">7. Système à deux étages : SIRUS confiant → RF sur les incertains → reprise manuelle</a></li>
-  <li><a href="#synthèse-et-recommandations" id="toc-synthèse-et-recommandations" class="nav-link" data-scroll-target="#synthèse-et-recommandations">8. Synthèse et recommandations</a></li>
+  <li><a href="#hyperparamètres-sirus" id="toc-hyperparamètres-sirus" class="nav-link" data-scroll-target="#hyperparamètres-sirus">5. Hyperparamètres SIRUS</a></li>
+  <li><a href="#synthèse-et-recommandations" id="toc-synthèse-et-recommandations" class="nav-link" data-scroll-target="#synthèse-et-recommandations">6. Synthèse et recommandations</a></li>
   </ul>
 </nav>
     </div>
@@ -179,7 +177,7 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">SIRUS — synthèse finale</h1>
-<p class="subtitle lead">Pourquoi SIRUS, comment les données sont organisées, et tous les résultats obtenus (modèle, généralisation, hyperparamètres, cascade de décision), sans répétition</p>
+<p class="subtitle lead">Pourquoi SIRUS, comment les données sont organisées, et tous les résultats obtenus sur le run courant (modèle, hyperparamètres), sans répétition</p>
 </div>
 
 
@@ -211,22 +209,26 @@ synthese_bis.qmd, test.qmd, tentative_sirus.R et analyse_nouveau_run_x98xl.qmd :
    de regles metier simples
 2. Comment les donnees sont organisees (table longue candidat-level) pour
    alimenter ce modele
-3. Le modele principal (ancien run) et ses features
-4. La generalisation a deux nouveaux runs, et le diagnostic de la baisse
-   d'accuracy (regression RAG-ANN)
+3. Le modele principal (run courant)
+4. Les features additionnelles (budget, shop_type_name, source)
 5. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
-6. Le systeme de decision a 2 etages (SIRUS confiant -> RF sur les cas
-   incertains -> reprise manuelle), explore sur le premier nouveau run
+
+Ce document travaille sur un seul run a la fois (`objet_s3_courant`, en
+tete du chunk de setup) -- a mettre a jour ici quand un nouveau run complet
+(avec l'etape decide-coicop) est disponible. Le diagnostic historique de la
+regression RAG-ANN (comparaison entre plusieurs runs, qui a motive ce choix
+d'un seul run vivant ici) est documente une fois pour toutes, en dur, dans
+[interpretation/2026-06-29.qmd](../interpretation/2026-06-29.qmd).
 
 La gestion de la troncature des codes COICOP (retrait en cascade des "0"
 terminaux, cf. `src/coicop.py::tronquer_niveau`) est appliquee partout
 ci-dessous mais n'est pas re-detaillee sur ce site : elle a ete validee une
 fois pour toutes en amont et n'est plus un point d'attention actif.
 
-Certaines sections (hyperparametres via sirus.cv, cascade SIRUS+RF) sont
-couteuses en temps de calcul (plusieurs minutes) : leurs resultats sont
-rapportes tels qu'obtenus precedemment plutot que recalcules a chaque rendu,
-c'est signale explicitement a chaque fois.
+La section hyperparametres (`sirus.cv()`) est couteuse en temps de calcul
+(~8 min) mais est recalculee a chaque rendu sur le run courant -- le cache
+de freeze de Quarto evite de la relancer tant que ce document ne change
+pas.
 -->
 <section id="pourquoi-sirus" class="level2">
 <h2 class="anchored" data-anchor-id="pourquoi-sirus">1. Pourquoi SIRUS ?</h2>
@@ -254,28 +256,28 @@ c'est signale explicitement a chaque fois.
 </ul>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>5825 produits (run ancien) -&gt; 11658 lignes candidat-level (2.00 candidat distinct en moyenne par produit).</code></pre>
+<pre><code>5881 produits (run courant) -&gt; 11836 lignes candidat-level (2.01 candidat distinct en moyenne par produit).</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
 <col style="width: 2%">
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 4%">
 <col style="width: 4%">
 <col style="width: 5%">
-<col style="width: 3%">
-<col style="width: 3%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 4%">
 <col style="width: 4%">
 <col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 4%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 3%">
-<col style="width: 2%">
-<col style="width: 43%">
-<col style="width: 6%">
+<col style="width: 23%">
+<col style="width: 8%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -300,93 +302,93 @@ c'est signale explicitement a chaque fois.
 <tbody>
 <tr class="odd">
 <td style="text-align: right;">0</td>
-<td style="text-align: left;">07.4.1.1</td>
-<td style="text-align: left;">07</td>
+<td style="text-align: left;">01.1.4.5</td>
+<td style="text-align: left;">01</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">3</td>
-<td style="text-align: right;">-1.0</td>
+<td style="text-align: right;">-1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.6842105</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">0.96</td>
-<td style="text-align: right;">0.0000000</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">56.48</td>
-<td style="text-align: left;">Services publics (administrations, établissements scolaires et gardes d’enfants, organismes publics de logement (OPAC, HLM…))</td>
-<td style="text-align: left;">manual_from_app</td>
+<td style="text-align: right;">3.85</td>
+<td style="text-align: left;">Magasins maxi-discompte</td>
+<td style="text-align: left;">receipts_from_app</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1</td>
-<td style="text-align: left;">01.1.4.8</td>
+<td style="text-align: left;">11.1.1.1</td>
+<td style="text-align: left;">11</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">0.5882353</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">11.60</td>
+<td style="text-align: left;">Restauration classique</td>
+<td style="text-align: left;">manual_from_book</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">09.2.1.1</td>
+<td style="text-align: left;">09</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.0833333</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">338.00</td>
+<td style="text-align: left;">Hypermarchés</td>
+<td style="text-align: left;">manual_from_book</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">09.7.4</td>
+<td style="text-align: left;">09</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.95</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: right;">0.0000000</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">6.10</td>
+<td style="text-align: left;">Grande surface spécialisée Loisir, Culture et TIC</td>
+<td style="text-align: left;">manual_from_book</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">01.1.4.5</td>
 <td style="text-align: left;">01</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">1.0</td>
-<td style="text-align: right;">1</td>
 <td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.6000000</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">3.41</td>
-<td style="text-align: left;">Supermarchés, magasins multi-commerces</td>
-<td style="text-align: left;">receipts_from_app</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">2</td>
-<td style="text-align: left;">05.6.1.1</td>
-<td style="text-align: left;">05</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">3</td>
-<td style="text-align: right;">-1.0</td>
-<td style="text-align: right;">1</td>
 <td style="text-align: right;">1.00</td>
-<td style="text-align: right;">0.2500000</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">0.3500000</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">10.42</td>
-<td style="text-align: left;">INCONNU</td>
+<td style="text-align: right;">3.11</td>
+<td style="text-align: left;">site de drive ou de grande surface alimentaire</td>
 <td style="text-align: left;">receipts_from_app</td>
-</tr>
-<tr class="even">
-<td style="text-align: right;">3</td>
-<td style="text-align: left;">09.7.1</td>
-<td style="text-align: left;">09</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">-1.0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">-1.00</td>
-<td style="text-align: right;">0.1666667</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">25.00</td>
-<td style="text-align: left;">Grande surface spécialisée Loisir, Culture et TIC</td>
-<td style="text-align: left;">manual_from_app</td>
-</tr>
-<tr class="odd">
-<td style="text-align: right;">3</td>
-<td style="text-align: left;">09.7.1.9</td>
-<td style="text-align: left;">09</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.9</td>
-<td style="text-align: right;">-1</td>
-<td style="text-align: right;">-1.00</td>
-<td style="text-align: right;">1.5000000</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">25.00</td>
-<td style="text-align: left;">Grande surface spécialisée Loisir, Culture et TIC</td>
-<td style="text-align: left;">manual_from_app</td>
 </tr>
 </tbody>
 </table>
@@ -404,22 +406,22 @@ c'est signale explicitement a chaque fois.
 </ul>
 </section>
 </section>
-<section id="modèle-principal-run-ancien-codif-vvkv9" class="level2">
-<h2 class="anchored" data-anchor-id="modèle-principal-run-ancien-codif-vvkv9">3. Modèle principal (run ancien, <code>codif-vvkv9</code>)</h2>
+<section id="modèle-principal-run-courant" class="level2">
+<h2 class="anchored" data-anchor-id="modèle-principal-run-courant">3. Modèle principal (run courant)</h2>
 <p>La table longue construite ci-dessus (<code>table_long</code>) sert directement de base d’entraînement. Split 80/20 par produit (pas par ligne candidat, pour ne pas répartir les candidats d’un même produit entre train et test), seed 42.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "Proportion of class 1 = 0.489 - Sample size n = 9359"                          
- [2] "if vote_ragann &lt; 1 then 0.0121 (n=4716) else 0.974 (n=4643)"                   
- [3] "if conf_ragann &lt; 1 then 0.0542 (n=5037) else 0.996 (n=4322)"                   
- [4] "if vote_ragann &gt;= 1 &amp; conf_ragann &lt; 1 then 0.673 (n=321) else 0.483 (n=9038)"  
- [5] "if nb_votants &lt; 2 then 0.144 (n=5012) else 0.887 (n=4347)"                     
- [6] "if conf_ttc &lt; 0.77 then 0.254 (n=5618) else 0.842 (n=3741)"                    
- [7] "if vote_ragann &lt; 1 &amp; nb_votants &gt;= 2 then 0.0417 (n=432) else 0.511 (n=8927)"  
- [8] "if vote_ragann &lt; 1 &amp; vote_ttc &gt;= 1 then 0.0379 (n=1215) else 0.556 (n=8144)"   
- [9] "if nb_votants &lt; 2 &amp; conf_ragann &lt; 1 then 0.0275 (n=4408) else 0.9 (n=4951)"    
-[10] "if vote_ragann &gt;= 1 &amp; conf_ttc &gt;= 0.77 then 0.992 (n=3144) else 0.235 (n=6215)"
-[11] "if vote_ttc &lt; 1 then 0.239 (n=4699) else 0.741 (n=4660)"                       </code></pre>
+<pre><code> [1] "Proportion of class 1 = 0.442 - Sample size n = 9424"                            
+ [2] "if nb_votants &lt; 2 then 0.146 (n=5297) else 0.822 (n=4127)"                       
+ [3] "if conf_ttc &lt; 0.78 then 0.175 (n=5667) else 0.846 (n=3757)"                      
+ [4] "if vote_ragann &lt; 1 then 0.164 (n=5223) else 0.789 (n=4201)"                      
+ [5] "if conf_ragann &lt; 0.95 then 0.231 (n=6503) else 0.913 (n=2921)"                   
+ [6] "if nb_votants &lt; 2 &amp; conf_ttc &lt; 0.78 then 0.0992 (n=4677) else 0.78 (n=4747)"     
+ [7] "if vote_ragann &gt;= 1 &amp; conf_ttc &gt;= 0.78 then 0.955 (n=2713) else 0.235 (n=6711)"  
+ [8] "if nb_votants &gt;= 2 &amp; conf_ragann &lt; 0.95 then 0.606 (n=1423) else 0.413 (n=8001)" 
+ [9] "if conf_ragann &lt; 0.95 &amp; conf_ttc &lt; 0.78 then 0.106 (n=5014) else 0.825 (n=4410)" 
+[10] "if vote_ttc &lt; 1 then 0.144 (n=4719) else 0.742 (n=4705)"                         
+[11] "if conf_ragann &gt;= 0.7 &amp; conf_ttc &gt;= 0.78 then 0.957 (n=2689) else 0.237 (n=6735)"</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="kable-table">
@@ -433,15 +435,15 @@ c'est signale explicitement a chaque fois.
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Accuracy candidat-level</td>
-<td style="text-align: left;">97.7%</td>
+<td style="text-align: left;">86.2%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Accuracy produit-level</td>
-<td style="text-align: left;">96.7%</td>
+<td style="text-align: left;">78.5%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Borne haute</td>
-<td style="text-align: left;">98.1%</td>
+<td style="text-align: left;">87.9%</td>
 </tr>
 </tbody>
 </table>
@@ -465,196 +467,90 @@ c'est signale explicitement a chaque fois.
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">(0.2,0.3]</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: left;">0.0%</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: left;">30.2%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">(0.3,0.4]</td>
-<td style="text-align: right;">22</td>
-<td style="text-align: left;">50.0%</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: left;">48.1%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">(0.4,0.5]</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: left;">37.5%</td>
+<td style="text-align: right;">211</td>
+<td style="text-align: left;">51.2%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">(0.5,0.6]</td>
-<td style="text-align: right;">158</td>
-<td style="text-align: left;">96.2%</td>
+<td style="text-align: right;">195</td>
+<td style="text-align: left;">73.3%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">(0.6,0.7]</td>
-<td style="text-align: right;">164</td>
-<td style="text-align: left;">98.8%</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">100.0%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">(0.7,0.8]</td>
-<td style="text-align: right;">812</td>
-<td style="text-align: left;">98.3%</td>
+<td style="text-align: right;">111</td>
+<td style="text-align: left;">91.0%</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">(0.8,0.9]</td>
+<td style="text-align: right;">544</td>
+<td style="text-align: left;">97.4%</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p>Deux zones nettes : une zone fiable (confiance élevée, &gt;98 % correct) et une zone incertaine (confiance faible, ~60-65 % correct) — un seuil simple sur <code>proba_gagnant</code> est directement exploitable comme critère d’escalade vers une reprise manuelle ou un LLM-judge (cf.&nbsp;section 7).</p>
+<p>Deux zones nettes : une zone fiable (confiance élevée, &gt;98 % correct) et une zone incertaine (confiance faible, ~60-65 % correct) — un seuil simple sur <code>proba_gagnant</code> est directement exploitable comme critère d’escalade vers une reprise manuelle ou un LLM-judge.</p>
 </section>
 </section>
 <section id="features-additionnelles-budget-shop_type_name-source" class="level2">
 <h2 class="anchored" data-anchor-id="features-additionnelles-budget-shop_type_name-source">4. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></h2>
-<p>Même split train/test que le modèle principal. <code>budget</code> imputé par la médiane du train uniquement (pas de fuite) ; <code>shop_type_name</code> et <code>source</code> en facteurs avec niveaux cohérents train/test.</p>
+<p>Même split train/test que le modèle principal. <code>budget</code> imputé par la médiane du train uniquement (pas de fuite) ; <code>shop_type_name</code> et <code>source</code> en facteurs dont les niveaux sont dérivés de <code>table_long</code> complet (avant split), pour éviter qu’une catégorie présente seulement dans le test (donc absente des niveaux du train) ne devienne un <code>NA</code> que <code>sirus.predict()</code> refuse.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
 <thead>
 <tr class="header">
-<th style="text-align: left;">Run</th>
 <th style="text-align: left;">Modele</th>
 <th style="text-align: left;">Accuracy_produit</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">ancien</td>
 <td style="text-align: left;">SIRUS (features de base)</td>
-<td style="text-align: left;">96.7%</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">ancien</td>
-<td style="text-align: left;">SIRUS (+ budget/shop_type/source)</td>
-<td style="text-align: left;">96.9%</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<p><strong>Aucun gain</strong>, confirmé une seconde fois sur le run <code>x98xl</code> (où TTC et RAG-ANN sont pourtant proches en performance, hypothèse initiale que le contexte d’achat pourrait aider à arbitrer – infirmée aussi) : aucune des règles retenues par SIRUS n’utilise ces 3 variables, sur aucun des deux runs testés. Tout le signal utile est déjà dans les confiances des classifieurs eux-mêmes.</p>
-<p><em>Limite de portée</em> : ce test est fait à <code>profondeur_max = 2</code> (règles à au plus 2 conditions), donc SIRUS a peu de marge pour combiner ces variables avec les autres. Un gain à plus grande profondeur n’est pas exclu par ce résultat – non prioritaire vu le diagnostic de la section 5 (le plafond vient d’ailleurs), mais à garder en tête si <code>profondeur_max</code> est un jour augmenté.</p>
-</section>
-<section id="généralisation-à-deux-nouveaux-runs" class="level2">
-<h2 class="anchored" data-anchor-id="généralisation-à-deux-nouveaux-runs">5. Généralisation à deux nouveaux runs</h2>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>Candidats avec categorie n1 inconnue de l'ancien modele : 0 / 11836 (0.0%)</code></pre>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Produits ou TOUS les candidats sont dans ce cas (choix slice_max arbitraire) : 0 / 5881 (0.0%)</code></pre>
-</div>
-<div class="cell-output-display">
-<div class="kable-table">
-<table class="caption-top table table-sm table-striped small">
-<colgroup>
-<col style="width: 71%">
-<col style="width: 17%">
-<col style="width: 12%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Modele</th>
-<th style="text-align: left;">Accuracy_produit</th>
-<th style="text-align: left;">Borne_haute</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Entraîné ancien, testé ancien (test 20%)</td>
-<td style="text-align: left;">96.7%</td>
-<td style="text-align: left;">98.1%</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Entraîné ancien, testé sur x98xl (test 20%, même split que réentraîné)</td>
-<td style="text-align: left;">77.8%</td>
-<td style="text-align: left;">87.9%</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Entraîné directement sur x98xl (test 20%)</td>
 <td style="text-align: left;">78.5%</td>
-<td style="text-align: left;">87.9%</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<div class="cell-output cell-output-stdout">
-<pre><code>
-(Pour reference, accuracy du modele ancien sur l'integralite du run x98xl [5881 produits, pas seulement le test 20%] : 77.7%.)</code></pre>
-</div>
-</div>
-<p><strong>Réentraîner n’aide quasiment pas</strong> (cf.&nbsp;tableau ci-dessus, comparaison sur le même split test) : ce n’est pas un défaut de généralisation de SIRUS, mais une baisse de la <strong>borne haute</strong> (moins de bons candidats disponibles en amont).</p>
-<section id="diagnostic-quel-classifieur-décroche" class="level3">
-<h3 class="anchored" data-anchor-id="diagnostic-quel-classifieur-décroche">Diagnostic : quel classifieur décroche ?</h3>
-<div class="cell">
-<div class="cell-output-display">
-<div class="kable-table">
-<table class="caption-top table table-sm table-striped small">
-<colgroup>
-<col style="width: 13%">
-<col style="width: 21%">
-<col style="width: 32%">
-<col style="width: 32%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">classifieur</th>
-<th style="text-align: left;">ancien (2026-06-29)</th>
-<th style="text-align: left;">nouveau-1 (2026-07-23, 8m8jn)</th>
-<th style="text-align: left;">nouveau-2 (2026-07-30, x98xl)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">lcs_code</td>
-<td style="text-align: left;">46.8%</td>
-<td style="text-align: left;">45.8%</td>
-<td style="text-align: left;">45.7%</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">rag_code</td>
-<td style="text-align: left;">52.5%</td>
-<td style="text-align: left;">52.6%</td>
-<td style="text-align: left;">52.2%</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">ragann_code</td>
-<td style="text-align: left;">97.0%</td>
-<td style="text-align: left;">70.8%</td>
-<td style="text-align: left;">70.3%</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">ttc_code_1</td>
-<td style="text-align: left;">74.3%</td>
-<td style="text-align: left;">74.1%</td>
-<td style="text-align: left;">74.2%</td>
+<td style="text-align: left;">SIRUS (+ budget/shop_type/source)</td>
+<td style="text-align: left;">78.5%</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p><strong><code>ragann_code</code> (RAG-ANN) est le classifieur en cause</strong> : son taux de correspondance avec le vrai code chute de ~97 % (ancien run) à ~70 % sur les <strong>deux</strong> runs récents, sans amélioration entre le 23 et le 30 juillet. LCS, RAG et TTC restent stables. C’est cette régression qui explique la baisse de borne haute (et donc d’accuracy), pas un problème de modèle SIRUS ni de généralisation – la vraie correction est en amont (pipeline RAG-ANN), pas dans le re-ranking.</p>
-</section>
+<p><strong>Aucun gain</strong> sur le run courant, comme déjà observé sur le run ancien (où TTC et RAG-ANN sont pourtant proches en performance, hypothèse initiale que le contexte d’achat pourrait aider à arbitrer – infirmée aussi, cf. <a href="../interpretation/2026-06-29.html">interpretation/2026-06-29.qmd</a>) : aucune des règles retenues par SIRUS n’utilise ces 3 variables. Tout le signal utile est déjà dans les confiances des classifieurs eux-mêmes.</p>
+<p><em>Limite de portée</em> : ce test est fait à <code>profondeur_max = 2</code> (règles à au plus 2 conditions), donc SIRUS a peu de marge pour combiner ces variables avec les autres. Un gain à plus grande profondeur n’est pas exclu par ce résultat – non prioritaire vu que le facteur limitant est ailleurs (cf. <a href="../interpretation/2026-06-29.html#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">diagnostic RAG-ANN</a>), mais à garder en tête si <code>profondeur_max</code> est un jour augmenté.</p>
 </section>
 <section id="hyperparamètres-sirus" class="level2">
-<h2 class="anchored" data-anchor-id="hyperparamètres-sirus">6. Hyperparamètres SIRUS</h2>
+<h2 class="anchored" data-anchor-id="hyperparamètres-sirus">5. Hyperparamètres SIRUS</h2>
 <p><code>num_regles</code> (<code>num.rule</code>, défaut 10) et <code>profondeur_max</code> (<code>max.depth</code>, défaut/recommandé 2) sont paramétrables en tête de ce document pour tout retester en un seul endroit.</p>
-<p><strong><code>sirus.cv()</code> sur le train set <code>x98xl</code></strong> (nfold=10, ncv=10 – ~8 min de calcul, résultat obtenu précédemment, non relancé automatiquement ici) :</p>
+<p><code>sirus.cv()</code> estime le nombre de règles optimal par validation croisée (nfold=10, ncv=10 – ~8 min de calcul), sur le train set du run courant (<code>train</code>, section 3). Deux valeurs de <code>p0</code> en ressortent : <code>p0.pred</code> (minimise l’erreur, recommandé en classification) et <code>p0.stab</code> (compromis avec la stabilité) – chacune correspondant à un nombre de règles différent.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="caption-top table table-sm table-striped small">
-<colgroup>
-<col style="width: 52%">
-<col style="width: 14%">
-<col style="width: 33%">
-</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Modele</th>
 <th style="text-align: right;">Nb_regles</th>
-<th style="text-align: left;">Accuracy_produit_x98xl</th>
+<th style="text-align: left;">Accuracy_produit</th>
 </tr>
 </thead>
 <tbody>
@@ -664,61 +560,24 @@ c'est signale explicitement a chaque fois.
 <td style="text-align: left;">78.5%</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">p0.pred (18 règles, cross-validées)</td>
-<td style="text-align: right;">18</td>
-<td style="text-align: left;">78.6%</td>
+<td style="text-align: left;">p0.pred cross-validé (20 règles)</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: left;">79.2%</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </div>
-<p><strong>Conclusion</strong> : la cross-validation confirme que <code>num.rule = 10</code> était déjà quasi-optimal – ajouter des règles (jusqu’à 18) n’apporte rien de mesurable. Ça élimine le nombre de règles comme levier d’amélioration : le plafond de performance vient de la borne haute (RAG-ANN dégradé, section 5), pas d’un sous-ajustement de SIRUS. Pour la même raison, augmenter <code>profondeur_max</code> au-delà de 2 (règles à 3 conditions plutôt que 2) n’a pas été testé en priorité – le goulot d’étranglement n’est pas la capacité du modèle.</p>
-</section>
-<section id="système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle" class="level2">
-<h2 class="anchored" data-anchor-id="système-à-deux-étages-sirus-confiant-rf-sur-les-incertains-reprise-manuelle">7. Système à deux étages : SIRUS confiant → RF sur les incertains → reprise manuelle</h2>
-<p>Exploration menée dans <code>test.qmd</code> sur le run <code>codif-8m8jn</code> (premier nouveau run), non répétée depuis. Principe : sous le seuil <code>proba_gagnant = 0.6</code> (zone où SIRUS abandonne), un Random Forest entraîné spécifiquement sur ce sous-ensemble incertain rattrape une partie des cas (rappel 59.7 % contre 17.5 % pour SIRUS seul sur les mêmes lignes de test). Bilan du système à 2 étages, tel qu’obtenu dans <code>test.qmd</code> :</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Étape</th>
-<th>% volume total</th>
-<th>Fiabilité</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>SIRUS confiant (auto)</td>
-<td>~63 %</td>
-<td>~98 %</td>
-</tr>
-<tr class="even">
-<td>RF confiant sur incertains (auto)</td>
-<td>variable selon <code>seuil_rf</code></td>
-<td>variable</td>
-</tr>
-<tr class="odd">
-<td>Reprise manuelle / LLM</td>
-<td>le reste</td>
-<td>—</td>
-</tr>
-</tbody>
-</table>
-<p>Comparé à SIRUS seul au même seuil (80.1 % de fiabilité globale, 37.1 % de volume en reprise), la cascade à 2 étages réduit le volume de reprise nécessaire pour une fiabilité globale comparable ou meilleure – à confirmer sur un échantillon plus grand (le RF n’a été validé que sur 20 % de la zone incertaine). <strong>Non recalculé sur <code>x98xl</code></strong> : la zone incertaine et les performances du RF dépendraient de la régression RAG-ANN identifiée section 5, à ré-évaluer si cette piste est reprise.</p>
-<p><strong>Rappel du message le plus important</strong> de cette exploration : ce système optimise la décision <em>en aval</em>, avec les classifieurs de base tels qu’ils sont. Il ne corrige pas la régression RAG-ANN elle-même – aucun seuil, aucun second modèle ne peut récupérer les produits pour lesquels le bon code n’est proposé par aucun classifieur.</p>
+<p><strong>Conclusion</strong> : le modèle cross-validé (20 règles) obtient 79.2% d’accuracy produit sur le run courant, contre 78.5% pour le réglage actuel (<code>num.rule =</code> 10) – un écart de +0.7 point. Si cet écart reste de l’ordre du dixième de point, il confirme que <code>num_regles</code> était déjà quasi-optimal et que le nombre de règles n’est pas un levier d’amélioration ; un écart net inviterait au contraire à aligner <code>num_regles</code> sur 20 en tête de document. Pour la même raison, augmenter <code>profondeur_max</code> au-delà de 2 (règles à 3 conditions plutôt que 2) n’a pas été testé ici – à envisager seulement si ce réglage s’avère un jour être le facteur limitant plutôt que la borne haute (cf. <a href="../interpretation/2026-06-29.html#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">diagnostic RAG-ANN</a>).</p>
 </section>
 <section id="synthèse-et-recommandations" class="level2">
-<h2 class="anchored" data-anchor-id="synthèse-et-recommandations">8. Synthèse et recommandations</h2>
+<h2 class="anchored" data-anchor-id="synthèse-et-recommandations">6. Synthèse et recommandations</h2>
 <ul>
 <li><strong>SIRUS livre bien l’objectif visé</strong> (section 1) : une poignée de règles seuils lisibles (<code>sirus.print(modele)</code>, section 3), directement exploitables comme convention de codage, là où une Random Forest classique ne donnerait que des importances de features.</li>
-<li><strong>Le modèle SIRUS de base (10 règles, profondeur 2) est déjà quasi-optimal</strong> (section 6) : ni plus de règles, ni de features additionnelles (<code>budget</code>/<code>shop_type_name</code>/<code>source</code>, section 4) n’apportent de gain mesurable.</li>
-<li><strong>Le vrai facteur limitant est en amont</strong> : la régression RAG-ANN, présente depuis le 23 juillet et toujours non corrigée au 30 juillet (section 5), plafonne la borne haute à ~88 % contre ~98 % sur l’ancien run. Aucun réglage de SIRUS ne peut compenser un candidat qui n’est simplement pas proposé.</li>
-<li><strong>Prochaine étape recommandée</strong> : corriger RAG-ANN en amont plutôt que continuer à optimiser le re-ranking. En parallèle, le système à 2 étages (section 7) reste une option pour réduire le volume de reprise manuelle en attendant, à re-valider sur <code>x98xl</code> si retenu.</li>
+<li><strong>Le nombre de règles est confirmé par cross-validation</strong> (section 5) : ni ce réglage, ni les features additionnelles (<code>budget</code>/<code>shop_type_name</code>/<code>source</code>, section 4) n’apportent de gain mesurable au-delà du réglage actuel.</li>
+<li><strong>Le vrai facteur limitant est en amont</strong> : une régression du classifieur RAG-ANN, identifiée après le run du 2026-06-29 et toujours non corrigée à ce jour (cf. <a href="../interpretation/2026-06-29.html#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">diagnostic RAG-ANN</a>), plafonne la borne haute à 87.9% sur le run courant, contre 98.1 % sur le run du 2026-06-29. Aucun réglage de SIRUS ne peut compenser un candidat qui n’est simplement pas proposé.</li>
+<li><strong>Prochaine étape recommandée</strong> : corriger RAG-ANN en amont plutôt que continuer à optimiser le re-ranking.</li>
 </ul>
 
 
