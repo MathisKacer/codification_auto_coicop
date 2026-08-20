@@ -21,7 +21,7 @@ CHEMIN_S3_MODELISATION = (
 # rejoue sur un autre run via la variable d'environnement
 # CHEMIN_S3_STATS_DESCRIPTIVES plutot qu'en editant un fichier.
 CHEMIN_S3_STATS_DESCRIPTIVES = (
-    "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9"
+    "s3://projet-budget-famille/data/workflow_runs/2026-07-30/codif-x98xl"
     "/decide-coicop/predictions.parquet"
 )
 
