@@ -1,1 +1,3 @@
+-r requirements.txt
 jupyter
+plotly==6.9.0
