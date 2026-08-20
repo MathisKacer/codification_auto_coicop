@@ -1,6 +1,6 @@
 ---
 title: "Baseline+RF vs SIRUS"
-subtitle: "Comparaison directe sur les mêmes runs : qui choisit le meilleur code, et qui offre le meilleur compromis volume automatisé / fiabilité ?"
+subtitle: "Comparaison directe sur le même run : qui choisit le meilleur code, et qui offre le meilleur compromis volume automatisé / fiabilité ?"
 date: today
 engine: knitr
 format:
@@ -15,10 +15,10 @@ execute:
 
 Cette page compare directement les deux alternatives au LLM-as-a-judge
 développées pendant le stage — [la baseline (vote majoritaire) filtrée par
-une Random Forest](index.qmd) et [SIRUS](sirus.qmd) — sur les mêmes 3 runs
-labellisés (`codif-vvkv9`, `codif-8m8jn`, `codif-x98xl`), calculées ici
-même (pas des chiffres recopiés) pour que les deux résultats soient
-strictement comparables.
+une Random Forest](index.qmd) et [SIRUS](sirus.qmd) — sur le même run
+courant (`codif-x98xl`, cf. [sirus.qmd](sirus.qmd)), calculées ici même
+(pas des chiffres recopiés) pour que les deux résultats soient strictement
+comparables.
 
 **Ce que les deux modèles ont en commun** : ils partent tous les deux des
 mêmes 4 classifieurs de base, et rendent tous les deux une probabilité de
@@ -40,17 +40,15 @@ library(sirus)
 library(reticulate)
 
 niveau <- 4
-num_regles <- 10
+num_regles <- 20     # cross-valide dans sirus.qmd, section 5
 profondeur_max <- 2
 seed_split <- 42
 
 bucket_s3   <- "projet-budget-famille"
 endpoint_s3 <- "minio.lab.sspcloud.fr"
-runs_labellises <- c(
-  "data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet",
-  "data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
-  "data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
-)
+# Meme run que sirus.qmd (`objet_s3_courant` la-bas) -- a mettre a jour ici
+# en meme temps que la-bas quand un nouveau run complet est disponible.
+objet_s3_courant <- "data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
 
 tronquer_niveau_un <- function(code, niveau = 4) {
   if (is.na(code)) return(NA_character_)
@@ -136,37 +134,15 @@ FEATURES_SIRUS <- c(
   "conf_rag", "conf_ragann", "conf_ttc", "dist_lcs", "code_candidat_n1"
 )
 
-runs_r <- lapply(runs_labellises, charger_run)
+df_run <- charger_run(objet_s3_courant)
 
-# Les runs doivent porter des observations disjointes (sinon accuracy
-# biaisee / fuite train-test) -- verifie via `id` (UUID stable par produit,
-# independant de `ligne` qui n'est qu'un indice relatif au run).
-if (all(vapply(runs_r, function(df) "id" %in% names(df), logical(1)))) {
-  tous_ids <- unlist(lapply(runs_r, function(df) df$id))
-  if (any(duplicated(tous_ids))) {
-    stop("Des id sont dupliqués entre les runs labellisés -- les runs ne sont plus disjoints.")
-  }
-}
+table_long <- construire_table_long(df_run, niveau) %>% mutate(code_candidat_n1 = as.factor(code_candidat_n1))
 
-tables_long <- lapply(seq_along(runs_r), function(i) {
-  tl <- construire_table_long(runs_r[[i]], niveau)
-  tl$ligne <- paste0("run", i, "_", tl$ligne)
-  tl
-})
-table_long <- bind_rows(tables_long) %>% mutate(code_candidat_n1 = as.factor(code_candidat_n1))
-
-# Correspondance ligne <-> id (UUID), pour pouvoir aligner plus bas le split
-# train/test de SIRUS sur exactement le meme decoupage que celui fait cote
-# Python (necessaire pour comparer les deux modeles sur les memes produits,
-# ex. test de McNemar). `runs_r[[i]]$ligne` est encore l'indice brut
-# (0-indexe, avant prefixe) a ce stade -- meme construction que ci-dessus.
-id_map <- bind_rows(lapply(seq_along(runs_r), function(i) {
-  data.frame(
-    ligne = paste0("run", i, "_", runs_r[[i]]$ligne),
-    id = runs_r[[i]]$id,
-    stringsAsFactors = FALSE
-  )
-}))
+# Correspondance ligne <-> id (UUID stable par produit), pour pouvoir aligner
+# plus bas le split train/test de SIRUS sur exactement le meme decoupage que
+# celui fait cote Python (necessaire pour comparer les deux modeles sur les
+# memes produits, ex. test de McNemar).
+id_map <- data.frame(ligne = df_run$ligne, id = df_run$id, stringsAsFactors = FALSE)
 ```
 
 ```{python}
@@ -186,34 +162,18 @@ NIVEAU = 4
 SEED_SPLIT = 42
 BUCKET_S3 = "projet-budget-famille"
 ENDPOINT_S3 = "https://minio.lab.sspcloud.fr"
-RUNS_LABELLISES = [
-    f"{BUCKET_S3}/data/workflow_runs/2026-06-29/codif-vvkv9/decide-coicop/predictions.parquet",
-    f"{BUCKET_S3}/data/workflow_runs/2026-07-23/codif-8m8jn/decide-coicop/predictions.parquet",
-    f"{BUCKET_S3}/data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet",
-]
+# Meme run que le chunk R ci-dessus (`objet_s3_courant`) -- a mettre a jour
+# aux deux endroits a la fois quand un nouveau run complet est disponible.
+OBJET_S3_COURANT = f"{BUCKET_S3}/data/workflow_runs/2026-07-30/codif-x98xl/decide-coicop/predictions.parquet"
 
 fs = s3fs.S3FileSystem(client_kwargs={"endpoint_url": ENDPOINT_S3})
-runs_py = []
-for i, objet in enumerate(RUNS_LABELLISES):
-    df = pd.read_parquet(objet, filesystem=fs)
-    if "ligne" not in df.columns:
-        df["ligne"] = range(len(df))
-    if "code_lvl4" in df.columns:
-        df["vrai_n4"] = df["code_lvl4"]
-    else:
-        df["vrai_n4"] = df["code"].map(lambda x: tronquer_niveau(x, NIVEAU))
-    df["ligne"] = [f"run{i}_{ident}" for ident in df["ligne"]]
-    runs_py.append(df)
-df_total = pd.concat(runs_py, ignore_index=True)
-
-# Les runs doivent porter des observations disjointes (sinon accuracy
-# biaisee / fuite train-test) -- verifie via `id` (UUID stable par produit,
-# independant de `ligne` qui n'est qu'un indice relatif au run).
-if "id" in df_total.columns and df_total["id"].duplicated().any():
-    raise ValueError(
-        "Des id sont dupliqués entre les runs labellisés -- "
-        "les runs ne sont plus disjoints."
-    )
+df_total = pd.read_parquet(OBJET_S3_COURANT, filesystem=fs)
+if "ligne" not in df_total.columns:
+    df_total["ligne"] = range(len(df_total))
+if "code_lvl4" in df_total.columns:
+    df_total["vrai_n4"] = df_total["code_lvl4"]
+else:
+    df_total["vrai_n4"] = df_total["code"].map(lambda x: tronquer_niveau(x, NIVEAU))
 
 cols_classifieurs = ["lcs_code", "rag_code", "ragann_code", "ttc_code_1"]
 y_pred_baseline = baseline_majorite_ttc(df_total, cols_classifieurs, "ttc_code_1", niveau=NIVEAU)
@@ -353,8 +313,8 @@ majoritaire).
 
 ```{r tableau-precision}
 # Accuracy de la baseline restreinte au même test set que SIRUS (pas sur
-# l'ensemble des 17 540 lignes) : condition pour une comparaison équitable
-# des deux "Accuracy produit-level" ci-dessous.
+# l'ensemble du run) : condition pour une comparaison équitable des deux
+# "Accuracy produit-level" ci-dessous.
 acc_baseline_r <- mean(as.integer(py$correct_baseline_test_liste))
 recap_baseline <- data.frame(
   Modele = "Baseline (vote majoritaire)",

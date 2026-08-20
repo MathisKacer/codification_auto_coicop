@@ -474,7 +474,10 @@ erreur.
 
 ```{python}
 with redirect_stdout(io.StringIO()):
-    df_seuils = courbe_precision_rappel(res["y_test"], res["y_proba"])
+    df_seuils = courbe_precision_rappel(
+        res["y_test"], res["y_proba"],
+        seuils=(0.99, 0.95, 0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.0),
+    )
 
 n_test = len(res["y_test"])
 recap_seuils = pd.DataFrame({
@@ -491,6 +494,23 @@ On a ainsi un nombre d'erreur manqué qui dépend du seuil fixé.
 Les annotations ayant été faites à la main, il est possible qu'il reste quelques coquilles dans l'annotation (`code_vrai`). Les erreurs indiquées ici peuvent donc ne pas en être.
 
 ## Réannotation manuelle des cas manqués
+
+::: {.callout-warning}
+**Réannotation figée sur le run `2026-06-29` (`codif-vvkv9`), pas sur le run affiché ci-dessus.**
+
+Les 35 lignes codées à la main plus bas ont été identifiées sur les données
+du run `2026-06-29`. Elles sont recollées aux données courantes via
+`ligne`, qui n'est qu'un numéro de position dans le parquet du run — cet
+indice ne désigne pas le même produit d'un run à l'autre. Depuis que
+`CHEMIN_S3_MODELISATION` pointe vers un run plus récent, ce recollage
+associe donc la plupart du temps chaque annotation à un produit
+**sans rapport** avec celui réellement réannoté : le tableau et les
+graphiques qui suivent ne sont pas valides pour le run affiché plus haut
+sur cette page, et ne doivent être lus que comme témoin de la méthode.
+
+Voir [Interprétation — run du 2026-06-29](../interpretation/2026-06-29.qmd)
+pour le contexte d'origine de cette réannotation.
+:::
 
 Les 35 cas manqués par la RF au seuil par défaut (0.5, cf. section
 [Analyse des erreurs manquées par le modèle](#analyse-des-erreurs-manquées-par-le-modèle))

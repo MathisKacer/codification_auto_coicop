@@ -23,7 +23,7 @@ source("fonctions_sirus.R")
 
 # --- Parametres ---------------------------------------------------------------
 niveau         <- 4
-num_regles     <- 10   # nombre de regles SIRUS (num.rule) -- cf. resultats_sirus_final.qmd section 5 (deja quasi-optimal)
+num_regles     <- 20   # nombre de regles SIRUS (num.rule) -- cross-valide dans site/modelisation/sirus.qmd, section 5
 profondeur_max <- 2    # profondeur max des arbres (max.depth)
 seed_split     <- 42
 

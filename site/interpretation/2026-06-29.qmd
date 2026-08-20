@@ -84,3 +84,52 @@ ne passent inaperçues.
   du volume envoyé), mais laisse passer 35 erreurs non détectées (13 %
   des erreurs de baseline), et parmi ce qu'on garde sans LLM, 4.3 % sont
   en réalité fausses (précision sur "correcte" = 95.7 %).
+
+## Modèle de re-ranking SIRUS : diagnostic de la baisse d'accuracy sur les runs suivants
+
+Cf. [SIRUS — synthèse finale](../modelisation/sirus.qmd) pour le modèle de
+re-ranking candidat-level entraîné sur le run courant (sélection du
+meilleur candidat parmi les 4 classifieurs de base). Cette section
+documente un diagnostic fait a posteriori sur ce run-ci (`codif-vvkv9`) :
+pourquoi l'accuracy de ce modèle chute sur les deux runs suivants
+(`codif-8m8jn` du 2026-07-23, `codif-x98xl` du 2026-07-30), et pourquoi ce
+n'est pas un problème de généralisation du modèle SIRUS lui-même.
+
+**Comparaison de performance** (modèle candidat-level, split 80/20 par
+produit, seed 42) :
+
+| Modèle | Accuracy produit | Borne haute |
+|---|---|---|
+| Entraîné et testé sur ce run (test 20 %) | 96.7 % | 98.1 % |
+| Entraîné sur ce run, testé sur `x98xl` (même split que réentraîné) | 77.8 % | 87.9 % |
+| Réentraîné directement sur `x98xl` (test 20 %) | 78.5 % | 87.9 % |
+
+(Pour référence, accuracy du modèle entraîné sur ce run, appliqué à
+l'intégralité de `x98xl` [5881 produits] : 77.7 %. Recalage de
+`code_candidat_n1` sur les catégories connues de ce modèle : 0 % de
+candidats concernés, 0 % de produits entièrement recalés — le recalage ne
+biaise donc pas cette comparaison.)
+
+**Réentraîner n'aide quasiment pas** (77.8 % vs 78.5 %, moins d'un point
+d'écart) : ce n'est donc pas un défaut de généralisation de SIRUS, mais une
+baisse de la **borne haute** elle-même (98.1 % ici, 87.9 % sur `x98xl`) —
+moins de bons candidats disponibles en amont, peu importe le modèle de
+choix utilisé derrière.
+
+**Diagnostic : quel classifieur décroche ?** Taux de correspondance entre
+le code proposé par chaque classifieur de base et le vrai code (niveau 4) :
+
+| Classifieur | Ce run (2026-06-29) | 2026-07-23 (`8m8jn`) | 2026-07-30 (`x98xl`) |
+|---|---|---|---|
+| `lcs_code` | 46.8 % | 45.8 % | 45.7 % |
+| `rag_code` | 52.5 % | 52.6 % | 52.2 % |
+| `ragann_code` | **97.0 %** | **70.8 %** | **70.3 %** |
+| `ttc_code_1` | 74.3 % | 74.1 % | 74.2 % |
+
+**`ragann_code` (RAG-ANN) est le classifieur en cause** : son taux de
+correspondance chute de 97.0 % à ~70 % sur les deux runs suivants, sans
+amélioration entre le 23 et le 30 juillet — régression toujours présente
+au 30 juillet. LCS, RAG et TTC restent stables. C'est cette régression qui
+explique la baisse de borne haute (et donc d'accuracy du re-ranking), pas
+un problème de modèle SIRUS ni de généralisation — la vraie correction est
+en amont (pipeline RAG-ANN), pas dans le re-ranking.

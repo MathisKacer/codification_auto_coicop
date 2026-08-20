@@ -7,7 +7,7 @@ ENDPOINT_URL = "https://minio.lab.sspcloud.fr"
 # Run utilise par modelisation.qmd et ses notebooks miroir (baseline_rf,
 # explo_baseline_ttc). Changer cette valeur ne touche pas les stats descriptives.
 CHEMIN_S3_MODELISATION = (
-    "s3://projet-budget-famille/data/workflow_runs/2026-06-29/codif-vvkv9"
+    "s3://projet-budget-famille/data/workflow_runs/2026-07-30/codif-x98xl"
     "/decide-coicop/predictions.parquet"
 )
 
