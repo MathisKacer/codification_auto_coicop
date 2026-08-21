@@ -164,10 +164,11 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#pourquoi-sirus" id="toc-pourquoi-sirus" class="nav-link active" data-scroll-target="#pourquoi-sirus">1. Pourquoi SIRUS ?</a></li>
   <li><a href="#organisation-des-données-la-table-longue-candidat-level" id="toc-organisation-des-données-la-table-longue-candidat-level" class="nav-link" data-scroll-target="#organisation-des-données-la-table-longue-candidat-level">2. Organisation des données : la table longue candidat-level</a></li>
-  <li><a href="#modèle-principal-run-courant" id="toc-modèle-principal-run-courant" class="nav-link" data-scroll-target="#modèle-principal-run-courant">3. Modèle principal (run courant)</a></li>
+  <li><a href="#modèle-principal" id="toc-modèle-principal" class="nav-link" data-scroll-target="#modèle-principal">3. Modèle principal</a></li>
   <li><a href="#features-additionnelles-budget-shop_type_name-source" id="toc-features-additionnelles-budget-shop_type_name-source" class="nav-link" data-scroll-target="#features-additionnelles-budget-shop_type_name-source">4. Features additionnelles : <code>budget</code>, <code>shop_type_name</code>, <code>source</code></a></li>
   <li><a href="#hyperparamètres-sirus" id="toc-hyperparamètres-sirus" class="nav-link" data-scroll-target="#hyperparamètres-sirus">5. Hyperparamètres SIRUS</a></li>
-  <li><a href="#synthèse-et-recommandations" id="toc-synthèse-et-recommandations" class="nav-link" data-scroll-target="#synthèse-et-recommandations">6. Synthèse et recommandations</a></li>
+  <li><a href="#modèle-final" id="toc-modèle-final" class="nav-link" data-scroll-target="#modèle-final">6. Modèle final</a></li>
+  <li><a href="#synthèse-et-recommandations" id="toc-synthèse-et-recommandations" class="nav-link" data-scroll-target="#synthèse-et-recommandations">7. Synthèse et recommandations</a></li>
   </ul>
 </nav>
     </div>
@@ -209,9 +210,10 @@ synthese_bis.qmd, test.qmd, tentative_sirus.R et analyse_nouveau_run_x98xl.qmd :
    de regles metier simples
 2. Comment les donnees sont organisees (table longue candidat-level) pour
    alimenter ce modele
-3. Le modele principal (run courant)
+3. Le modele principal
 4. Les features additionnelles (budget, shop_type_name, source)
 5. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
+6. Le modele final retenu (cross-valide), avec ses regles completes
 
 Ce document travaille sur un seul run a la fois (`objet_s3_courant`, en
 tete du chunk de setup) -- a mettre a jour ici quand un nouveau run complet
@@ -406,8 +408,8 @@ pas.
 </ul>
 </section>
 </section>
-<section id="modèle-principal-run-courant" class="level2">
-<h2 class="anchored" data-anchor-id="modèle-principal-run-courant">3. Modèle principal (run courant)</h2>
+<section id="modèle-principal" class="level2">
+<h2 class="anchored" data-anchor-id="modèle-principal">3. Modèle principal</h2>
 <p>La table longue construite ci-dessus (<code>table_long</code>) sert directement de base d’entraînement. Split 80/20 par produit (pas par ligne candidat, pour ne pas répartir les candidats d’un même produit entre train et test), seed 42.</p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
@@ -572,10 +574,39 @@ pas.
 </div>
 <p><strong>Conclusion</strong> : le modèle cross-validé (20 règles) obtient 79.2% d’accuracy produit sur le run courant, contre 78.5% pour le réglage actuel (<code>num.rule =</code> 10) – un écart de +0.7 point. Si cet écart reste de l’ordre du dixième de point, il confirme que <code>num_regles</code> était déjà quasi-optimal et que le nombre de règles n’est pas un levier d’amélioration ; un écart net inviterait au contraire à aligner <code>num_regles</code> sur 20 en tête de document. Pour la même raison, augmenter <code>profondeur_max</code> au-delà de 2 (règles à 3 conditions plutôt que 2) n’a pas été testé ici – à envisager seulement si ce réglage s’avère un jour être le facteur limitant plutôt que la borne haute (cf. <a href="../interpretation/2026-06-29.html#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">diagnostic RAG-ANN</a>).</p>
 </section>
+<section id="modèle-final" class="level2">
+<h2 class="anchored" data-anchor-id="modèle-final">6. Modèle final</h2>
+<p>Le modèle retenu pour la suite (déjà entraîné à la section précédente, <code>modele_cv</code>) est donc celui cross-validé, avec 20 règles plutôt que les 10 par défaut – ses règles complètes, dans le même format que la section 3 :</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Proportion of class 1 = 0.442 - Sample size n = 9424"                            
+ [2] "if nb_votants &lt; 2 then 0.146 (n=5297) else 0.822 (n=4127)"                       
+ [3] "if conf_ttc &lt; 0.78 then 0.175 (n=5667) else 0.846 (n=3757)"                      
+ [4] "if vote_ragann &lt; 1 then 0.164 (n=5223) else 0.789 (n=4201)"                      
+ [5] "if conf_ragann &lt; 0.95 then 0.231 (n=6503) else 0.913 (n=2921)"                   
+ [6] "if nb_votants &lt; 2 &amp; conf_ttc &gt;= 0.78 then 0.502 (n=620) else 0.438 (n=8804)"     
+ [7] "if nb_votants &gt;= 2 &amp; conf_ragann &lt; 0.95 then 0.606 (n=1423) else 0.413 (n=8001)" 
+ [8] "if conf_ragann &lt; 0.95 &amp; conf_ttc &lt; 0.78 then 0.106 (n=5014) else 0.825 (n=4410)" 
+ [9] "if vote_ragann &gt;= 1 &amp; conf_ttc &gt;= 0.78 then 0.955 (n=2713) else 0.235 (n=6711)"  
+[10] "if vote_ttc &lt; 1 then 0.144 (n=4719) else 0.742 (n=4705)"                         
+[11] "if vote_ragann &gt;= 1 &amp; vote_ttc &gt;= 1 then 0.938 (n=2947) else 0.217 (n=6477)"     
+[12] "if conf_ragann &gt;= 0.7 &amp; conf_ttc &gt;= 0.78 then 0.957 (n=2689) else 0.237 (n=6735)"
+[13] "if vote_lcs &lt; 1 &amp; nb_votants &lt; 2 then 0.233 (n=3187) else 0.549 (n=6237)"        
+[14] "if nb_votants &lt; 2 &amp; dist_lcs &lt; 1.5 then 0.0147 (n=2110) else 0.566 (n=7314)"     
+[15] "if vote_ttc &lt; 1 &amp; conf_ragann &gt;= 0.95 then 0.673 (n=513) else 0.429 (n=8911)"    
+[16] "if vote_ttc &lt; 1 &amp; nb_votants &gt;= 2 then 0.501 (n=617) else 0.438 (n=8807)"        
+[17] "if vote_ragann &lt; 1 &amp; nb_votants &gt;= 2 then 0.518 (n=655) else 0.437 (n=8769)"     
+[18] "if conf_ragann &lt; 0.7 then 0.167 (n=5320) else 0.799 (n=4104)"                    
+[19] "if conf_rag &lt; 0.95 then 0.309 (n=6987) else 0.825 (n=2437)"                      
+[20] "if nb_votants &gt;= 2 &amp; nb_votants &lt; 3 then 0.619 (n=1392) else 0.412 (n=8032)"     
+[21] "if conf_rag &lt; 1 &amp; conf_ttc &lt; 0.78 then 0.156 (n=5405) else 0.827 (n=4019)"       </code></pre>
+</div>
+</div>
+</section>
 <section id="synthèse-et-recommandations" class="level2">
-<h2 class="anchored" data-anchor-id="synthèse-et-recommandations">6. Synthèse et recommandations</h2>
+<h2 class="anchored" data-anchor-id="synthèse-et-recommandations">7. Synthèse et recommandations</h2>
 <ul>
-<li><strong>SIRUS livre bien l’objectif visé</strong> (section 1) : une poignée de règles seuils lisibles (<code>sirus.print(modele)</code>, section 3), directement exploitables comme convention de codage, là où une Random Forest classique ne donnerait que des importances de features.</li>
+<li><strong>SIRUS livre bien l’objectif visé</strong> (section 1) : une poignée de règles seuils lisibles (<code>sirus.print(modele_cv)</code>, section 6 – modèle final), directement exploitables comme convention de codage, là où une Random Forest classique ne donnerait que des importances de features.</li>
 <li><strong>Le nombre de règles est confirmé par cross-validation</strong> (section 5) : ni ce réglage, ni les features additionnelles (<code>budget</code>/<code>shop_type_name</code>/<code>source</code>, section 4) n’apportent de gain mesurable au-delà du réglage actuel.</li>
 <li><strong>Le vrai facteur limitant est en amont</strong> : une régression du classifieur RAG-ANN, identifiée après le run du 2026-06-29 et toujours non corrigée à ce jour (cf. <a href="../interpretation/2026-06-29.html#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">diagnostic RAG-ANN</a>), plafonne la borne haute à 87.9% sur le run courant, contre 98.1 % sur le run du 2026-06-29. Aucun réglage de SIRUS ne peut compenser un candidat qui n’est simplement pas proposé.</li>
 <li><strong>Prochaine étape recommandée</strong> : corriger RAG-ANN en amont plutôt que continuer à optimiser le re-ranking.</li>
