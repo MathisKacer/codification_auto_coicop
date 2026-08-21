@@ -24,6 +24,19 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements-ci.txt
 
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - name: Install R dependencies
+        run: |
+          Rscript -e 'install.packages(c("arrow", "dplyr", "tidyr", "randomForest", "aws.s3", "reticulate", "tibble"), repos = "https://cloud.r-project.org")'
+          Rscript -e 'install.packages("sirus_stage/sirus_0.3.3_patched.tar.gz", repos = NULL, type = "source")'
+
+      - name: Point reticulate to the CI Python
+        run: echo "RETICULATE_PYTHON=$(which python)" >> "$GITHUB_ENV"
+
       - name: Render and Publish
         uses: quarto-dev/quarto-actions/publish@v2
         with:
@@ -31,3 +44,7 @@ jobs:
           path: site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
