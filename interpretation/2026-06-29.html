@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-20">
+<meta name="dcterms.date" content="2026-08-21">
 
 <title>Interprétation — run du 2026-06-29 – Codification automatique COICOP</title>
 <style>
@@ -130,6 +130,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#analyse-des-erreurs-de-la-baseline" id="toc-analyse-des-erreurs-de-la-baseline" class="nav-link active" data-scroll-target="#analyse-des-erreurs-de-la-baseline">Analyse des erreurs de la baseline</a></li>
   <li><a href="#performance-du-modèle" id="toc-performance-du-modèle" class="nav-link" data-scroll-target="#performance-du-modèle">Performance du modèle</a></li>
   <li><a href="#erreurs-manquées-par-le-modèle" id="toc-erreurs-manquées-par-le-modèle" class="nav-link" data-scroll-target="#erreurs-manquées-par-le-modèle">Erreurs manquées par le modèle</a></li>
+  <li><a href="#réannotation-manuelle-de-35-cas-manqués-par-la-rf" id="toc-réannotation-manuelle-de-35-cas-manqués-par-la-rf" class="nav-link" data-scroll-target="#réannotation-manuelle-de-35-cas-manqués-par-la-rf">Réannotation manuelle de 35 cas manqués par la RF</a></li>
   <li><a href="#compromis-précisionrappel" id="toc-compromis-précisionrappel" class="nav-link" data-scroll-target="#compromis-précisionrappel">Compromis précision/rappel</a></li>
   <li><a href="#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants" id="toc-modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants" class="nav-link" data-scroll-target="#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants">Modèle de re-ranking SIRUS : diagnostic de la baisse d’accuracy sur les runs suivants</a></li>
   </ul>
@@ -152,7 +153,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 20, 2026</p>
+      <p class="date">August 21, 2026</p>
     </div>
   </div>
   
@@ -179,6 +180,226 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Le signal le plus trompeur : la confiance de TTC.</strong> La médiane de <code>ttc_conf_1</code> est nettement plus haute pour les erreurs manquées (0.99) que pour celles bien détectées (0.78) : dans les cas manqués, TTC (l’arbitre de la baseline) est confiant <em>à tort</em>, et cette confiance abusive contamine la probabilité prédite par la RF — cohérent avec le fait que <code>ttc_conf_1</code> soit la 2ᵉ feature la plus importante du modèle. <code>nb_accords_max</code> suit la même logique, dans une moindre mesure (médiane 2 vs 1.5) : même un accord entre deux classifieurs, quand il est fortuit, suffit à faire pencher le modèle vers “correcte” à tort. <code>rag_confidence</code>, <code>ragann_confidence</code> et <code>budget</code> ne distinguent en revanche pas les deux groupes.</p>
 <p><strong>Par division COICOP</strong>, la division 01 (Alimentation, boissons) concentre 20 des 35 erreurs manquées (57 %), avec un taux de erreurs manquées parmi ses propres erreurs (20 %) supérieur à la moyenne globale (13.3 %). Cet effet reste cependant surtout un effet de volume : la division 01 représente déjà 38 % de toutes les erreurs de baseline du test. Aucune autre division ne se détache nettement, la plupart affichant des taux comparables ou nuls, souvent sur de faibles effectifs.</p>
 <p><strong>Limite du modèle actuel.</strong> Ces cas manqués partagent un profil commun : un signal de confiance élevé (accord entre classifieurs et/ou confiance TTC) qui s’avère malgré tout faux. Le modèle actuel n’a pas accès à d’information capable de distinguer un consensus fiable d’un consensus biaisé — améliorer sa détection nécessiterait probablement une feature capturant <em>pourquoi</em> les classifieurs sont d’accord (ex. proximité lexicale du texte à coder avec des cas ambigus connus), plutôt qu’un simple comptage d’accords.</p>
+</section>
+<section id="réannotation-manuelle-de-35-cas-manqués-par-la-rf" class="level2">
+<h2 class="anchored" data-anchor-id="réannotation-manuelle-de-35-cas-manqués-par-la-rf">Réannotation manuelle de 35 cas manqués par la RF</h2>
+<p>35 cas manqués par la RF sur ce run ont été réannotés manuellement (par Mathis) pour distinguer une vraie erreur de la baseline d’un problème d’annotation ou de troncature :</p>
+<ul>
+<li><strong>Erreur réelle</strong> : la baseline a bien tort, confirmé par la relecture.</li>
+<li><strong>Ambigu</strong> : la baseline a tort, mais la réponse reste litigieuse (presque acceptable).</li>
+<li><strong>Problème de troncature</strong> : la baseline a raison, la comparaison brute au niveau 4 ne le détectait pas à cause d’un souci de troncature du code.</li>
+<li><strong>Erreur d’annotation</strong> : la baseline a raison, mais le code du jeu de données (<code>code_vrai</code>) semble lui-même erroné.</li>
+</ul>
+<p><strong>Note de méthode.</strong> Ce tableau recolle les 35 lignes annotées aux cas “manqués” évalués par validation croisée à 5 folds sur l’ensemble du run (<code>entrainer_evaluer_cv</code>), pas au split 80/20 utilisé par la page <a href="../modelisation/index.html">Modélisation</a> : ce dernier ne couvre que 20 % du run, alors que les 35 lignes ont été choisies à l’origine sur l’ensemble du run — la plupart n’apparaîtraient donc jamais dans ce split réduit. Avec la validation croisée, <strong>24 des 35 lignes annotées</strong> retombent bien en cas manqué. Les 11 restantes s’expliquent entièrement : 5 sont les cas marqués “problème de troncature” par Mathis (la comparaison brute niveau 4 les montrait à tort comme des erreurs à l’époque ; le bug de troncature identifié a depuis été corrigé, ce ne sont donc plus des erreurs manquées aujourd’hui), et 6 sont désormais correctement détectées par le modèle (donc plus “manquées”).</p>
+<p><strong>Répartition des 24 cas retrouvés :</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Catégorie</th>
+<th>n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Erreur réelle</td>
+<td>10</td>
+</tr>
+<tr class="even">
+<td>Erreur d’annotation</td>
+<td>9</td>
+</tr>
+<tr class="odd">
+<td>Ambigu</td>
+<td>5</td>
+</tr>
+<tr class="even">
+<td>Problème de troncature</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Ligne</th>
+<th>Code vrai</th>
+<th>Code baseline</th>
+<th>Code (Mathis)</th>
+<th>Catégorie</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>143</td>
+<td>09.3.2.2</td>
+<td>01.1.3.1</td>
+<td>09.3.2.2</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="even">
+<td>242</td>
+<td>01.1.3</td>
+<td>01.1.3.4</td>
+<td>01.1.3</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="odd">
+<td>525</td>
+<td>07.4.1</td>
+<td>07.4.1.1</td>
+<td>07.4.1</td>
+<td>Ambigu</td>
+</tr>
+<tr class="even">
+<td>566</td>
+<td>01.1.1.3</td>
+<td>01.1.7.9</td>
+<td>01.1.7.9</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="odd">
+<td>592</td>
+<td>01.1.3.3</td>
+<td>01.1.3.4</td>
+<td>01.1.3.4</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="even">
+<td>880</td>
+<td>01.1.9.1</td>
+<td>01.1.1.3</td>
+<td>01.1.9.1</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="odd">
+<td>973</td>
+<td>11.1.1</td>
+<td>11.1.1.1</td>
+<td>11.1.1</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="even">
+<td>1266</td>
+<td>09.7.1</td>
+<td>99.1</td>
+<td>99.1</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="odd">
+<td>1836</td>
+<td>98.4</td>
+<td>01.1.9.1</td>
+<td>98.1</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="even">
+<td>2262</td>
+<td>04.3.1.1</td>
+<td>05.6.1.1</td>
+<td>04.3.1.1</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="odd">
+<td>2307</td>
+<td>01.1.3.3</td>
+<td>01.1.3.4</td>
+<td>01.1.3.4</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="even">
+<td>2740</td>
+<td>01.1.2.2</td>
+<td>01.1.9.1</td>
+<td>98.1</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="odd">
+<td>3086</td>
+<td>09.2.2.2</td>
+<td>09.2.2.1</td>
+<td>09.2.2.2</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="even">
+<td>3147</td>
+<td>01.1.7.5</td>
+<td>01.1.7.9</td>
+<td>01.1.7.9</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="odd">
+<td>3326</td>
+<td>03.1.2</td>
+<td>05.6.1.9</td>
+<td>99.1</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="even">
+<td>3990</td>
+<td>05.6.2.9</td>
+<td>05.2.1.2</td>
+<td>05.2.1.2</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="odd">
+<td>4565</td>
+<td>05.3.2</td>
+<td>05.3.2.9</td>
+<td>05.3.2.9</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="even">
+<td>4718</td>
+<td>01.1.2.2</td>
+<td>01.1.2.5</td>
+<td>98.1</td>
+<td>Ambigu</td>
+</tr>
+<tr class="odd">
+<td>4965</td>
+<td>01</td>
+<td>01.1.1.3</td>
+<td>01</td>
+<td>Erreur réelle</td>
+</tr>
+<tr class="even">
+<td>5117</td>
+<td>01.1.9.1</td>
+<td>01.1.1.5</td>
+<td>01.1.9.1</td>
+<td>Ambigu</td>
+</tr>
+<tr class="odd">
+<td>5336</td>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>01.1.2.3</td>
+<td>Ambigu</td>
+</tr>
+<tr class="even">
+<td>5360</td>
+<td>01.1.3.1</td>
+<td>01.1.3.3</td>
+<td>01.1.3.3</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="odd">
+<td>5505</td>
+<td>04.3.1.1</td>
+<td>05.5.2.1</td>
+<td>05.5.2.1</td>
+<td>Erreur d’annotation</td>
+</tr>
+<tr class="even">
+<td>5534</td>
+<td>01.1.2.3</td>
+<td>01.1.2.2</td>
+<td>01.1.2.3</td>
+<td>Ambigu</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Sur les 15 vraies erreurs confirmées</strong> (Erreur réelle + Ambigu), ce que la baseline a suivi : le vote majoritaire dans 14 cas, TTC arbitrant une égalité dans le dernier (ligne 5117). Quand c’est la majorité, RAG-ANN en faisait partie dans 5 cas sur 14 (donc contribuait à l’erreur), et était le dissident (minoritaire, donc pas en cause) dans les 9 autres — échantillon trop restreint pour en tirer une conclusion générale, mais cohérent avec le diagnostic plus haut : RAG-ANN n’est pas plus souvent responsable des erreurs de la baseline que les autres classifieurs sur ce run (sa régression documentée plus bas n’apparaît que sur les runs suivants).</p>
 </section>
 <section id="compromis-précisionrappel" class="level2">
 <h2 class="anchored" data-anchor-id="compromis-précisionrappel">Compromis précision/rappel</h2>

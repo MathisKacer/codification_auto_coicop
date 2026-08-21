@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-20">
+<meta name="dcterms.date" content="2026-08-21">
 
 <title>Codification automatique de la nomenclature COICOP – Codification automatique COICOP</title>
 <style>
@@ -152,7 +152,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 20, 2026</p>
+      <p class="date">August 21, 2026</p>
     </div>
   </div>
   
@@ -194,15 +194,17 @@ ul.task-list li input[type="checkbox"] {
 <ol type="1">
 <li><strong>Une baseline simple</strong> : le vote majoritaire des 4 classifieurs de base, TTC arbitrant les égalités — rapide et sans coût additionnel, mais pas toujours correcte (cf.&nbsp;<a href="./stats-descriptives/index.html">Fiabilité des classifieurs</a>).</li>
 <li><strong>Un modèle pour savoir quand lui faire confiance</strong> : une Random Forest entraînée à prédire si cette baseline a trouvé le bon code, à partir de caractéristiques disponibles sans appel au LLM (accords entre classifieurs, scores de confiance…) — cf.&nbsp;<a href="./modelisation/index.html">Modélisation</a>.</li>
+<li><strong>SIRUS, une alternative qui choisit directement le code</strong> : plutôt que de seulement juger la baseline, ce modèle reclasse lui-même les candidats des 4 classifieurs, sous forme d’une poignée de règles lisibles et auditables (pas une boîte noire) — cf. <a href="./modelisation/sirus.html">SIRUS</a> et sa <a href="./modelisation/comparaison.html">comparaison directe avec la baseline+RF</a>.</li>
 <li><strong>Une analyse de fiabilité pour en tirer des règles métier</strong> : repérer des situations où un classifieur (ou un type d’accord/désaccord entre eux) est quasi systématiquement fiable ou au contraire à risque, selon la division COICOP ou le cas de figure — pour coder directement ces cas par une règle simple, sans passer par le LLM — cf. <a href="./stats-descriptives/index.html">Fiabilité des classifieurs</a>.</li>
 </ol>
 </section>
 <section id="contenu-de-ce-site" class="level2">
 <h2 class="anchored" data-anchor-id="contenu-de-ce-site">Contenu de ce site</h2>
-<p>Ce site présente l’avancement des travaux en deux temps :</p>
+<p>Ce site présente l’avancement des travaux en trois temps :</p>
 <ul>
 <li><strong><a href="./stats-descriptives/index.html">Fiabilité des classifieurs</a></strong> : à partir de l’accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN, TTC) et de l’apport du LLM-judge — taux d’accord, faux positifs, cas de désaccord — identifie où l’on peut leur faire confiance, selon le niveau de granularité de la nomenclature COICOP (division à sous-classe).</li>
-<li><strong><a href="./modelisation/index.html">Modélisation</a></strong> : mise en place et évaluation de la baseline (vote majoritaire + TTC), puis d’une Random Forest visant à prédire quand lui faire confiance plutôt que de solliciter le LLM-judge.</li>
+<li><strong><a href="./modelisation/index.html">Modélisation</a></strong> : mise en place et évaluation de la baseline (vote majoritaire + TTC) et d’une Random Forest visant à prédire quand lui faire confiance, puis de <a href="./modelisation/sirus.html">SIRUS</a>, une alternative interprétable qui reclasse directement les candidats — et leur <a href="./modelisation/comparaison.html">comparaison directe</a>.</li>
+<li><strong><a href="./interpretation/index.html">Interprétation</a></strong> : lecture détaillée des résultats, run par run, en pages figées mises à jour à la main (dont le diagnostic de la régression RAG-ANN qui explique la baisse d’accuracy observée depuis fin juin).</li>
 </ul>
 <blockquote class="blockquote">
 <p>Pour la documentation complète du pipeline de codification (au-delà de ce travail de stage), voir <a href="https://inseefrlab.github.io/codif-coicop-bdf/">inseefrlab.github.io/codif-coicop-bdf</a>.</p>
