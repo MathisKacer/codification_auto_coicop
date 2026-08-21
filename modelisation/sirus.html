@@ -450,6 +450,7 @@ pas.
 </div>
 </div>
 </div>
+<p><strong>Candidat-level vs produit-level</strong> : la première mesure juge chaque ligne de <code>test</code> indépendamment (<code>proba &gt; 0.5</code> correspond-elle à <code>correcte</code> ?), sans tenir compte du fait que plusieurs lignes peuvent concurrentiser pour le même produit. La seconde ne garde, par produit, que le candidat de plus haute probabilité (<code>slice_max</code>) et regarde si <em>celui-là</em> est le bon code – c’est la métrique qui compte réellement, puisqu’au final un seul code est retenu par produit. Les deux peuvent diverger : un modèle peut juger correctement chaque candidat pris isolément tout en choisissant, pour un produit donné, un mauvais candidat plutôt que le bon qui était pourtant proposé par un autre classifieur.</p>
 <p>La borne haute borne toute amélioration possible du re-ranking : au-delà, il faudrait un meilleur candidat en amont (classifieurs de base), pas un meilleur modèle de choix.</p>
 <section id="calibration-de-la-confiance" class="level3">
 <h3 class="anchored" data-anchor-id="calibration-de-la-confiance">Calibration de la confiance</h3>
