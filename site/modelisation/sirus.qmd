@@ -22,9 +22,10 @@ synthese_bis.qmd, test.qmd, tentative_sirus.R et analyse_nouveau_run_x98xl.qmd :
    de regles metier simples
 2. Comment les donnees sont organisees (table longue candidat-level) pour
    alimenter ce modele
-3. Le modele principal (run courant)
+3. Le modele principal
 4. Les features additionnelles (budget, shop_type_name, source)
 5. Le reglage des hyperparametres SIRUS (num_regles, profondeur_max)
+6. Le modele final retenu (cross-valide), avec ses regles completes
 
 Ce document travaille sur un seul run a la fois (`objet_s3_courant`, en
 tete du chunk de setup) -- a mettre a jour ici quand un nouveau run complet
@@ -270,7 +271,7 @@ confiances, bornées `[0, 1]` en pratique ; `1.5` pour `lcs_distance`, bornée
   voté (code non manquant) mais avec une confiance `NA` -- le `coalesce()`
   de secours ne se déclenche jamais actuellement.
 
-## 3. Modèle principal (run courant)
+## 3. Modèle principal
 
 La table longue construite ci-dessus (`table_long`) sert directement de
 base d'entraînement. Split 80/20 par produit (pas par ligne candidat, pour
@@ -445,12 +446,23 @@ augmenter `profondeur_max` au-delà de 2 (règles à 3 conditions plutôt que
 jour être le facteur limitant plutôt que la borne haute (cf.
 [diagnostic RAG-ANN](../interpretation/2026-06-29.qmd#modèle-de-re-ranking-sirus-diagnostic-de-la-baisse-daccuracy-sur-les-runs-suivants)).
 
-## 6. Synthèse et recommandations
+## 6. Modèle final
+
+Le modèle retenu pour la suite (déjà entraîné à la section précédente,
+`modele_cv`) est donc celui cross-validé, avec `r nb_regles_cv` règles
+plutôt que les `r num_regles` par défaut -- ses règles complètes, dans le
+même format que la section 3 :
+
+```{r modele-final}
+sirus.print(modele_cv)
+```
+
+## 7. Synthèse et recommandations
 
 - **SIRUS livre bien l'objectif visé** (section 1) : une poignée de règles
-  seuils lisibles (`sirus.print(modele)`, section 3), directement
-  exploitables comme convention de codage, là où une Random Forest
-  classique ne donnerait que des importances de features.
+  seuils lisibles (`sirus.print(modele_cv)`, section 6 -- modèle final),
+  directement exploitables comme convention de codage, là où une Random
+  Forest classique ne donnerait que des importances de features.
 - **Le nombre de règles est confirmé par cross-validation** (section 5) :
   ni ce réglage, ni les features additionnelles
   (`budget`/`shop_type_name`/`source`, section 4) n'apportent de gain
