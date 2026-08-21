@@ -10,6 +10,12 @@ Un nouveau classifieur simple a été mis en place, avec comme objectif de compl
 
 Le but est ensuite d'en étudier les performances, notamment via une Random Forest, afin d'établir des cas où ce classifieur simple est assez efficace, ne nécessitant pas forcément l'intervention du LLM-as-a-judge, étant plus économe en temps et en ressources.
 
+Une alternative à cette approche (juger la baseline plutôt que choisir
+directement un code) est explorée dans [SIRUS](sirus.qmd), qui reclasse
+directement les candidats des 4 classifieurs sous forme de règles
+lisibles et auditables — cf. leur [comparaison
+directe](comparaison.qmd).
+
 
 
 
@@ -20,7 +26,6 @@ import sys, os
 sys.path.append(os.path.abspath("../.."))
 
 import io
-from collections import Counter
 from contextlib import redirect_stdout
 
 import numpy as np
@@ -28,8 +33,6 @@ import pandas as pd
 from IPython.display import display, Markdown
 
 from sklearn.metrics import classification_report
-
-import plotly.graph_objects as go
 
 from data.load_data import charger_donnees, CHEMIN_S3_MODELISATION
 from src.coicop import tronquer_niveau, libelle_division
@@ -277,11 +280,16 @@ recherche est faite **uniquement sur le train** (même split que ci-dessus,
 sert qu'à choisir les hyperparamètres, l'écart avec le score annoncé plus
 haut se lit sur le même test set, sans fuite.
 
-Le scoring optimisé n'est **pas** le ROC AUC (métrique de classement globale,
-insensible au déséquilibre des classes) mais l'**average precision sur la
-classe "baseline_fausse"** (aire sous la courbe précision/rappel tracée plus
-bas) : c'est la classe qui compte opérationnellement, puisqu'une "baseline
-fausse" non détectée est une erreur silencieuse qui ne part jamais au LLM.
+Le scoring optimisé n'est **pas** le ROC AUC, ni l'average precision (aire
+sous la courbe précision/rappel) : ce sont des métriques de *classement*,
+indépendantes du seuil de décision, qui peuvent donc sélectionner des
+hyperparamètres mal calibrés précisément au seuil 0.5 réellement utilisé par
+`.predict()` en aval, sans que la métrique optimisée ne le détecte. Le
+scoring utilisé ici est le **rappel sur la classe "baseline_fausse" au seuil
+0.5** : c'est la classe qui compte opérationnellement, puisqu'une "baseline
+fausse" non détectée est une erreur silencieuse qui ne part jamais au LLM —
+et ce scorer vise directement, au seuil où le modèle est réellement déployé,
+à minimiser ce nombre de faux positifs sur "correcte".
 
 ```{python}
 with redirect_stdout(io.StringIO()):
@@ -289,7 +297,7 @@ with redirect_stdout(io.StringIO()):
 
 display(Markdown(
     f"**Meilleurs hyperparamètres** : `{res_tune['best_params']}`\n\n"
-    f"**Score CV (average precision, classe \"baseline_fausse\") pendant la "
+    f"**Score CV (rappel sur \"baseline_fausse\" au seuil 0.5) pendant la "
     f"recherche** : {res_tune['best_score_cv']:.3f}"
 ))
 ```
@@ -329,6 +337,7 @@ LLM-judge.
 
 ```{python}
 vrai0 = res["y_test"] == 0
+vrai1 = ~vrai0
 n_err = int(vrai0.sum())
 det_defaut = int(((res["y_pred"] == 0) & vrai0).sum())
 det_tune = int(((res_tune["y_pred"] == 0) & vrai0).sum())
@@ -336,6 +345,8 @@ rappel_defaut = det_defaut / n_err
 rappel_tune = det_tune / n_err
 cw_defaut = res["pipeline"].named_steps["rf"].class_weight
 cw_tune = res_tune["pipeline"].named_steps["rf"].class_weight
+fp_defaut = int(((res["y_pred"] == 0) & vrai1).sum())
+fp_tune = int(((res_tune["y_pred"] == 0) & vrai1).sum())
 
 display(Markdown(
     f"Sur les **{n_err}** vraies erreurs de baseline du test (seuil par défaut "
@@ -345,18 +356,21 @@ display(Markdown(
 ))
 ```
 
-Optimiser directement l'average precision sur la classe "baseline_fausse"
-plutôt que le ROC AUC ne change pas la conclusion : le rappel du RF tuné au
-seuil par défaut (0.5) reste inférieur à celui du RF par défaut. L'average
-precision est une métrique indépendante du seuil (elle juge le classement sur
-toute la plage des seuils possibles), donc l'améliorer ne garantit rien sur la
-performance à un seuil fixe précis — et `class_weight=None` continue de
-produire des probabilités tassées vers "correcte", peu adaptées à un seuil
-figé à 0.5.
-**C'est pourquoi le modèle utilisé pour la suite de cette page (section
-[Compromis précision/rappel](#compromis-précisionrappel)) reste le RF par
-défaut (`res`), pas le RF tuné : quel que soit le critère d'optimisation
-essayé, le gain de tuning ne s'est pas montré utilisable pour cet usage.**
+```{python}
+display(Markdown(
+    f"**Optimiser directement le rappel sur \"baseline_fausse\" au seuil réel "
+    f"(0.5), plutôt que l'average precision, confirme le diagnostic** : le RF "
+    f"tuné ne retient plus `class_weight=None`, mais `class_weight={cw_tune!r}`, "
+    f"et rattrape exactement le rappel du RF par défaut ({rappel_tune:.1%} "
+    f"contre {rappel_defaut:.1%}, {det_tune}/{n_err} cas) — à ce seuil précis, "
+    f"pile 0.5, à rappel égal, il envoie même inutilement au LLM davantage de "
+    f"baselines réellement correctes ({fp_tune} cas contre {fp_defaut}).\n\n"
+    f"Mais 0.5 n'est qu'un seuil parmi d'autres, et rien ne garantit que "
+    f"l'égalité observée ici s'y maintienne : cf. la comparaison des deux "
+    f"modèles sur toute la plage de seuils, section [Compromis "
+    f"précision/rappel](#compromis-précisionrappel)."
+))
+```
 
 ```{python}
 (res_tune["importances"] * 100).round(1).to_frame("Importance (%)")
@@ -472,224 +486,74 @@ erreur.
 - un seuil plus **haut** limite le volume envoyé au LLM (économie), mais
   laisse passer davantage d'erreurs de baseline non détectées
 
+À seuil 0.5 pile, le RF tuné (section précédente) égalait le RF par
+défaut sans faire mieux. Mais leurs probabilités ne sont pas calibrées de
+la même façon (`class_weight` différent), donc leurs courbes
+précision/rappel peuvent se croiser ailleurs : les deux modèles semblent
+donc intéressants à comparer sur toute la plage de seuils, pas seulement
+à 0.5.
+
 ```{python}
 with redirect_stdout(io.StringIO()):
-    df_seuils = courbe_precision_rappel(
+    df_seuils_defaut = courbe_precision_rappel(
         res["y_test"], res["y_proba"],
         seuils=(0.99, 0.95, 0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.0),
     )
+    df_seuils_tune = courbe_precision_rappel(
+        res_tune["y_test"], res_tune["y_proba"],
+        seuils=(0.99, 0.95, 0.90, 0.80, 0.70, 0.60, 0.50, 0.40, 0.30, 0.20, 0.10, 0.0),
+    )
 
-n_test = len(res["y_test"])
-recap_seuils = pd.DataFrame({
-    "Envoyés au LLM (n)": df_seuils["n_envoi_llm"],
-    "% du volume envoyé au LLM": (df_seuils["n_envoi_llm"] / n_test).map(lambda x: f"{x:.0%}"),
-    "Erreurs manquées (n)": df_seuils["erreurs_manquees"],
-    "% erreurs détectées": df_seuils["recall_fausse"].map(lambda x: f"{x:.1%}"),
-    "Fiabilité de ce qu'on garde": df_seuils["precision_correcte"].map(lambda x: f"{x:.1%}"),
+n_test_defaut = len(res["y_test"])
+n_test_tune = len(res_tune["y_test"])
+ecart = df_seuils_tune["erreurs_manquees"] - df_seuils_defaut["erreurs_manquees"]
+
+comparaison_seuils = pd.DataFrame({
+    "Volume LLM (défaut)": (df_seuils_defaut["n_envoi_llm"] / n_test_defaut).map(lambda x: f"{x:.0%}"),
+    "Volume LLM (tuné)": (df_seuils_tune["n_envoi_llm"] / n_test_tune).map(lambda x: f"{x:.0%}"),
+    "Erreurs manquées (défaut)": df_seuils_defaut["erreurs_manquees"],
+    "Erreurs manquées (tuné)": df_seuils_tune["erreurs_manquees"],
+    "% détectées (défaut)": df_seuils_defaut["recall_fausse"].map(lambda x: f"{x:.1%}"),
+    "% détectées (tuné)": df_seuils_tune["recall_fausse"].map(lambda x: f"{x:.1%}"),
+    "Écart (tuné − défaut)": ecart,
 })
-recap_seuils
+comparaison_seuils
 ```
 
-On a ainsi un nombre d'erreur manqué qui dépend du seuil fixé.
+```{python}
+meilleur_tune = ecart[ecart < 0]
+egalite_tune = ecart[ecart == 0]
+pire_tune = ecart[ecart > 0]
+depth_defaut = res["pipeline"].named_steps["rf"].max_depth
+depth_tune = res_tune["pipeline"].named_steps["rf"].max_depth
+
+display(Markdown(
+    f"**Les deux modèles valent la peine d'être comparés au-delà du seuil "
+    f"0.5** : le RF tuné manque moins d'erreurs à {len(meilleur_tune)} seuils "
+    f"({', '.join(str(s) for s in meilleur_tune.index)}), à égalité à "
+    f"{len(egalite_tune)} ({', '.join(str(s) for s in egalite_tune.index)}), "
+    f"et seulement pire à {len(pire_tune)} ({', '.join(str(s) for s in pire_tune.index)}) "
+    f"— surtout aux seuils très bas (≤ 0.2), où ses probabilités, plus "
+    f"resserrées (`max_depth={depth_tune!r}` contre `{depth_defaut!r}` pour "
+    f"le défaut), descendent rarement. **Sur la plage de seuils réellement "
+    f"envisageable (0.3 à 0.9), le RF tuné peut donc être une alternative "
+    f"intéressante au RF par défaut**, selon le volume qu'on est prêt à "
+    f"envoyer au LLM — les deux valent la peine d'être gardés sous le coude "
+    f"plutôt que d'en écarter un d'office."
+))
+```
+
+On a ainsi un nombre d'erreur manqué qui dépend du seuil fixé et du modèle choisi.
 Les annotations ayant été faites à la main, il est possible qu'il reste quelques coquilles dans l'annotation (`code_vrai`). Les erreurs indiquées ici peuvent donc ne pas en être.
 
 ## Réannotation manuelle des cas manqués
 
-::: {.callout-warning}
-**Réannotation figée sur le run `2026-06-29` (`codif-vvkv9`), pas sur le run affiché ci-dessus.**
-
-Les 35 lignes codées à la main plus bas ont été identifiées sur les données
-du run `2026-06-29`. Elles sont recollées aux données courantes via
-`ligne`, qui n'est qu'un numéro de position dans le parquet du run — cet
-indice ne désigne pas le même produit d'un run à l'autre. Depuis que
-`CHEMIN_S3_MODELISATION` pointe vers un run plus récent, ce recollage
-associe donc la plupart du temps chaque annotation à un produit
-**sans rapport** avec celui réellement réannoté : le tableau et les
-graphiques qui suivent ne sont pas valides pour le run affiché plus haut
-sur cette page, et ne doivent être lus que comme témoin de la méthode.
-
-Voir [Interprétation — run du 2026-06-29](../interpretation/2026-06-29.qmd)
-pour le contexte d'origine de cette réannotation.
-:::
-
-Les 35 cas manqués par la RF au seuil par défaut (0.5, cf. section
-[Analyse des erreurs manquées par le modèle](#analyse-des-erreurs-manquées-par-le-modèle))
-ont été réannoté manuellement (par moi-même) pour distinguer une vraie erreur de la
-baseline d'une fausse (problème d'annotation inital). Quatre catégories en résultent :
-
-- **Erreur réelle** : la baseline a bien tort, confirmé par la relecture.
-- **Ambigu** : la baseline a tort, mais la réponse reste litigieuse (presque
-  acceptable).
-- **Problème de troncature** : la baseline a raison, la
-  comparaison brute au niveau 4 ne le détecte pas à cause d'un souci de
-  troncature du code.
-- **Erreur d'annotation** : la baseline a raison, mais le code du jeu de
-  données (`code_vrai`) semble lui-même erroné.
-
-```{python}
-annotation_mathis = pd.DataFrame(
-    [
-        (5505, "05.5.2.1", False, False),
-        (5534, "01.1.2.3", True, False),
-        (2262, "04.3.1.1", False, False),
-        (5336, "01.1.2.3", True, False),
-        (3990, "05.2.1.2", False, False),
-        (5360, "01.1.3.3", False, False),
-        (3086, "09.2.2.2", False, False),
-        (525, "07.4.1", True, False),
-        (4565, "05.3.2.9", False, False),
-        (973, "11.1.1", False, False),
-        (592, "01.1.3.4", False, False),
-        (2307, "01.1.3.4", False, False),
-        (4965, "01", False, False),
-        (4718, "98.1", True, False),
-        (3496, "01.2.9", False, True),
-        (2740, "98.1", False, False),
-        (5117, "01.1.9.1", True, False),
-        (755, "01.2.5", False, True),
-        (1836, "98.1", False, False),
-        (5157, "01", False, False),
-        (3147, "01.1.7.9", False, False),
-        (1266, "99.1", False, False),
-        (1821, "99.1", True, False),
-        (880, "01.1.9.1", False, False),
-        (2543, "03.1.2.2", False, False),
-        (465, "13.1.2", False, True),
-        (2918, "01.1.9.1", True, False),
-        (87, "01.1.1.3", False, False),
-        (143, "09.3.2.2", False, False),
-        (242, "01.1.3", False, False),
-        (566, "01.1.7.9", False, False),
-        (3065, "01.2.9", False, True),
-        (3898, "01.1.2.2", False, False),
-        (3326, "99.1", False, False),
-        (2956, "06.4.2", False, True),
-    ],
-    columns=["ligne", "code_mathis", "ambigu", "probleme_troncature"],
-).set_index("ligne")
-
-table_annotee = table_manquees.set_index("ligne").join(annotation_mathis)
-
-
-def categoriser(row):
-    if row["ambigu"]:
-        return "Ambigu"
-    if row["probleme_troncature"]:
-        return "Probleme de troncature"
-    if row["code_mathis"] == row["code_baseline"]:
-        return "Erreur d'annotation"
-    return "Erreur reelle"
-
-
-table_annotee["categorie"] = table_annotee.apply(categoriser, axis=1)
-```
-
-Pour affiner ces recherches, j'étudie donc les erreurs manqués selon
-la probabilité donnée par la RF.
-
-```{python}
-bornes = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-table_annotee["tranche_confiance"] = pd.cut(
-    table_annotee["proba_rf"], bins=bornes, include_lowest=True,
-)
-
-ordre_categories = ["Erreur reelle", "Ambigu", "Probleme de troncature", "Erreur d'annotation"]
-repartition = (
-    table_annotee.groupby(["tranche_confiance", "categorie"], observed=True)
-    .size()
-    .unstack(fill_value=0)
-    .reindex(columns=ordre_categories, fill_value=0)
-)
-
-couleurs = {
-    "Erreur reelle": "#2a78d6",
-    "Ambigu": "#eb6834",
-    "Probleme de troncature": "#1baf7a",
-    "Erreur d'annotation": "#eda100",
-}
-
-
-def formatter_cas(sous_table):
-    lignes = [
-        f"{ligne} : {row['code_vrai']} (baseline: {row['code_baseline']})"
-        for ligne, row in sous_table.iterrows()
-    ]
-    return "<br>".join(lignes) if lignes else "aucun cas"
-
-
-hover_par_cellule = table_annotee.groupby(
-    ["tranche_confiance", "categorie"], observed=True
-).apply(formatter_cas)
-
-fig_interactif = go.Figure()
-for cat in ordre_categories:
-    hovertext = [
-        hover_par_cellule.get((tranche, cat), "aucun cas") for tranche in repartition.index
-    ]
-    fig_interactif.add_bar(
-        x=repartition.index.astype(str), y=repartition[cat],
-        name=cat, marker_color=couleurs[cat],
-        hovertext=hovertext, hoverinfo="text",
-    )
-
-fig_interactif.update_layout(
-    barmode="stack",
-    title="Erreurs manquées par la RF, selon la confiance et la nature du cas",
-    xaxis_title="Tranche de proba_rf (confiance de la RF en la baseline)",
-    yaxis_title="Nombre de cas",
-    legend_title_text="Categorie",
-)
-fig_interactif.show()
-```
-
-<details>
-<summary>Sur les cas où la baseline a réellement tort, ce qu'elle a suivi
-(majorité ou TTC), et le rôle de RAG-ANN</summary>
-
-Sur les seuls cas où la baseline a réellement tort (catégories **Erreur
-réelle** et **Ambigu** — les erreurs d'annotation et de troncature sont
-écartées puisque la baseline n'y est pour rien), on regarde ce qu'elle a
-concrètement suivi : un vote majoritaire entre les 4 classifieurs, ou TTC en
-tant qu'arbitre (égalité entre plusieurs codes, ou aucun vote possible).
-Quand c'est la majorité, on regarde en plus si RAG-ANN en faisait partie, ou
-s'il était le dissident (et ce qu'il répondait dans ce cas).
-
-```{python}
-votants_tronq = df[cols_base].apply(lambda col: col.map(lambda x: tronquer_niveau(x, niveau=4)))
-
-
-def analyser_mecanisme(idx):
-    votes = [v for v in votants_tronq.loc[idx] if pd.notna(v)]
-    if not votes:
-        return "TTC (aucun vote)", np.nan
-    compteur = Counter(votes)
-    max_count = max(compteur.values())
-    codes_majoritaires = [code for code, n in compteur.items() if n == max_count]
-    if len(codes_majoritaires) > 1:
-        return "TTC (égalité)", np.nan
-    ragann_code_row = votants_tronq.loc[idx, "ragann_code"]
-    ragann_dans_majorite = pd.notna(ragann_code_row) and ragann_code_row == codes_majoritaires[0]
-    return "Majorité", ragann_dans_majorite
-
-
-erreurs_confirmees_idx = table_annotee[
-    table_annotee["categorie"].isin(["Erreur reelle", "Ambigu"])
-].index
-
-mecanisme, ragann_dans_majorite = zip(
-    *[analyser_mecanisme(idx) for idx in erreurs_confirmees_idx]
-)
-
-table_mecanisme = pd.DataFrame({
-    "code_vrai": table_annotee.loc[erreurs_confirmees_idx, "code_vrai"],
-    "code_baseline": table_annotee.loc[erreurs_confirmees_idx, "code_baseline"],
-    "code_mathis": table_annotee.loc[erreurs_confirmees_idx, "code_mathis"],
-    "categorie": table_annotee.loc[erreurs_confirmees_idx, "categorie"],
-    "mecanisme": mecanisme,
-    "ragann_dans_majorite": ragann_dans_majorite,
-    "ragann_code": votants_tronq.loc[erreurs_confirmees_idx, "ragann_code"],
-})
-table_mecanisme
-```
-
-</details>
+35 cas manqués par la RF ont été réannotés manuellement pour distinguer
+une vraie erreur de la baseline d'un problème d'annotation ou de
+troncature. Cette réannotation a été faite sur le run `2026-06-29`
+(`codif-vvkv9`) : elle n'est pas recalculée en direct ici, puisqu'elle ne
+se transpose pas à un run différent (`ligne` n'est qu'un indice de
+position dans le parquet, pas un identifiant stable de produit d'un run à
+l'autre). Résultat figé, avec la répartition par catégorie et l'analyse du
+mécanisme suivi par la baseline sur les vraies erreurs confirmées : voir
+[Interprétation — run du 2026-06-29](../interpretation/2026-06-29.qmd#réannotation-manuelle-de-35-cas-manqués-par-la-rf).

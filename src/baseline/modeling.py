@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
     accuracy_score, average_precision_score, classification_report, confusion_matrix,
-    precision_recall_curve, roc_auc_score, roc_curve,
+    precision_recall_curve, recall_score, roc_auc_score, roc_curve,
 )
 from sklearn.model_selection import (
     RandomizedSearchCV, StratifiedKFold, cross_val_predict, cross_validate, train_test_split,
@@ -181,16 +181,39 @@ def _average_precision_fausse(estimator, X, y):
     (0), la classe qui compte operationnellement (rater une baseline fausse = un
     faux positif silencieux sur "correcte", pas detecte, jamais envoye au LLM).
     Contrairement au ROC AUC, sensible au fait que "fausse" est la classe
-    minoritaire (~23%) et directement alignee avec le seuil variable utilise
-    en aval (`courbe_precision_rappel`), plutot qu'un seuil fixe a 0.5.
+    minoritaire (~23%). Mais reste independant du seuil (juge le classement sur
+    toute la plage de probabilites) : peut selectionner des hyperparametres
+    excellents en classement mais mal calibres au seuil 0.5 reellement utilise
+    par `.predict()` en aval -- cf. `_recall_fausse_seuil_05`, le scorer par
+    defaut, qui evite ce probleme.
     """
     proba_correcte = estimator.predict_proba(X)[:, 1]
     return average_precision_score(y, 1 - proba_correcte, pos_label=0)
 
 
+def _recall_fausse_seuil_05(estimator, X, y):
+    """
+    Scorer : rappel sur la classe "baseline_fausse" (0) au seuil de decision
+    REEL (0.5, celui utilise par `.predict()` en aval, pas un seuil variable).
+    Objectif : minimiser le nombre de faux positifs sur "correcte" -- une
+    "baseline fausse" que le modele laisse passer a tort, erreur silencieuse
+    qui ne part jamais au LLM.
+
+    Prefere a `_average_precision_fausse` (independante du seuil) : un
+    hyperparametre comme `class_weight` peut fortement ameliorer le classement
+    sur toute la plage de seuils (donc l'average precision) tout en degradant
+    la calibration au seuil 0.5 precis (probabilites tassees vers "correcte"
+    sans reequilibrage des classes) -- ce que l'average precision ne peut pas
+    detecter, mais que ce scorer, aligne sur l'usage reel du modele, detecte
+    directement.
+    """
+    y_pred = estimator.predict(X)
+    return recall_score(y, y_pred, pos_label=0)
+
+
 def tuner_hyperparametres(
     X, y, test_size=0.2, random_state=42, n_iter=60, n_splits=5,
-    scoring=_average_precision_fausse,
+    scoring=_recall_fausse_seuil_05,
 ):
     """
     RandomizedSearchCV sur les hyperparametres du RF, fitte uniquement sur le train
@@ -198,12 +221,17 @@ def tuner_hyperparametres(
     resultats directement comparables) pour ne pas biaiser l'evaluation finale
     sur le test.
 
-    Par defaut, optimise `_average_precision_fausse` (aire sous la courbe
-    precision/rappel de la classe "baseline_fausse") plutot que le ROC AUC :
-    ce dernier est une metrique de classement globale insensible au
-    desequilibre des classes, et n'a donc aucune raison de privilegier les
-    hyperparametres qui detectent le mieux les vraies erreurs de baseline.
-    Passer `scoring="roc_auc"` pour retrouver l'ancien comportement.
+    Par defaut, optimise `_recall_fausse_seuil_05` (rappel de la classe
+    "baseline_fausse" au seuil de decision reel 0.5) plutot que le ROC AUC ou
+    l'average precision : ces deux dernieres sont des metriques de classement,
+    insensibles a l'endroit ou tombe le seuil de decision reellement utilise
+    par `.predict()` en aval -- elles peuvent donc selectionner des
+    hyperparametres qui degradent la calibration au seuil 0.5 (probabilites
+    tassees vers "correcte") sans que la metrique optimisee ne le detecte.
+    Objectif explicitement vise : minimiser le nombre de faux positifs sur "correcte"
+    (une "baseline fausse" non detectee), au seuil ou le modele est reellement
+    deploye. Passer `scoring="roc_auc"` ou `scoring=_average_precision_fausse`
+    pour retrouver un comportement anterieur.
 
     Returns
     -------

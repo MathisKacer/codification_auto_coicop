@@ -60,7 +60,13 @@ lorsque c'est vraiment nécessaire.
    entraînée à prédire si cette baseline a trouvé le bon code, à partir de
    caractéristiques disponibles sans appel au LLM (accords entre
    classifieurs, scores de confiance...) — cf. [Modélisation](modelisation/index.qmd).
-3. **Une analyse de fiabilité pour en tirer des règles métier** : repérer
+3. **SIRUS, une alternative qui choisit directement le code** : plutôt que
+   de seulement juger la baseline, ce modèle reclasse lui-même les
+   candidats des 4 classifieurs, sous forme d'une poignée de règles
+   lisibles et auditables (pas une boîte noire) — cf.
+   [SIRUS](modelisation/sirus.qmd) et sa
+   [comparaison directe avec la baseline+RF](modelisation/comparaison.qmd).
+4. **Une analyse de fiabilité pour en tirer des règles métier** : repérer
    des situations où un classifieur (ou un type d'accord/désaccord entre
    eux) est quasi systématiquement fiable ou au contraire à risque, selon
    la division COICOP ou le cas de figure — pour coder directement ces cas
@@ -70,7 +76,7 @@ lorsque c'est vraiment nécessaire.
 
 ## Contenu de ce site
 
-Ce site présente l'avancement des travaux en deux temps :
+Ce site présente l'avancement des travaux en trois temps :
 
 - **[Fiabilité des classifieurs](stats-descriptives/index.qmd)** : à partir
   de l'accord entre les quatre classifieurs de base (LCS, RAG, RAG-ANN,
@@ -78,8 +84,14 @@ Ce site présente l'avancement des travaux en deux temps :
   désaccord — identifie où l'on peut leur faire confiance, selon le niveau
   de granularité de la nomenclature COICOP (division à sous-classe).
 - **[Modélisation](modelisation/index.qmd)** : mise en place et évaluation de la
-  baseline (vote majoritaire + TTC), puis d'une Random Forest visant à
-  prédire quand lui faire confiance plutôt que de solliciter le LLM-judge.
+  baseline (vote majoritaire + TTC) et d'une Random Forest visant à
+  prédire quand lui faire confiance, puis de [SIRUS](modelisation/sirus.qmd),
+  une alternative interprétable qui reclasse directement les candidats —
+  et leur [comparaison directe](modelisation/comparaison.qmd).
+- **[Interprétation](interpretation/index.qmd)** : lecture détaillée des
+  résultats, run par run, en pages figées mises à jour à la main (dont le
+  diagnostic de la régression RAG-ANN qui explique la baisse d'accuracy
+  observée depuis fin juin).
 
 > Pour la documentation complète du pipeline de codification (au-delà de
 > ce travail de stage), voir
