@@ -464,3 +464,4 @@ jour être le facteur limitant plutôt que la borne haute (cf.
   SIRUS ne peut compenser un candidat qui n'est simplement pas proposé.
 - **Prochaine étape recommandée** : corriger RAG-ANN en amont plutôt que
   continuer à optimiser le re-ranking.
+
