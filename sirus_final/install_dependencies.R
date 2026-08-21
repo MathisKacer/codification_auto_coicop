@@ -5,7 +5,7 @@
 # environnement / service SSP Cloud -- ces packages ne sont pas installes par
 # defaut et ne persistent generalement pas entre deux relances du service.
 #
-# Usage : Rscript install_dependencies.R   (depuis le dossier stage/)
+# Usage : Rscript install_dependencies.R   (depuis le dossier sirus_final/)
 # ============================================================================
 
 options(repos = c(CRAN = "https://cloud.r-project.org"))
@@ -44,7 +44,7 @@ if (!"sirus" %in% rownames(installed.packages())) {
   chemin_tarball <- "sirus_0.3.3_patched.tar.gz"
   if (!file.exists(chemin_tarball)) {
     stop(sprintf(
-      "%s introuvable dans le dossier courant -- executer ce script depuis stage/.",
+      "%s introuvable dans le dossier courant -- executer ce script depuis sirus_final/.",
       chemin_tarball
     ))
   }

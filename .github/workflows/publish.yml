@@ -33,7 +33,7 @@ jobs:
       - name: Install R dependencies
         run: |
           Rscript -e 'install.packages(c("arrow", "dplyr", "tidyr", "randomForest", "aws.s3", "reticulate", "tibble"))'
-          Rscript -e 'install.packages("sirus_stage/sirus_0.3.3_patched.tar.gz", repos = NULL, type = "source")'
+          Rscript -e 'install.packages("sirus_final/sirus_0.3.3_patched.tar.gz", repos = NULL, type = "source")'
 
       - name: Point reticulate to the CI Python
         run: echo "RETICULATE_PYTHON=$(which python)" >> "$GITHUB_ENV"

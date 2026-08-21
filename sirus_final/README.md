@@ -114,7 +114,7 @@ puis `quarto render resultats_sirus_final.qmd`.)
 ## Démarrage rapide
 
 ```bash
-cd stage/
+cd sirus_final/
 Rscript install_dependencies.R   # une fois par environnement/service (voir ci-dessus)
 Rscript evaluation_sirus.R       # mesure l'accuracy + sauvegarde le modèle de prod
 Rscript production_sirus.R data/workflow_runs/<date>/codif-xxxxx/decide-coicop/predictions.parquet
@@ -130,7 +130,7 @@ Rscript production_sirus.R data/workflow_runs/<date>/codif-xxxxx/decide-coicop/p
 | `production_sirus.R` | Charge `modele_sirus_production.rds` et l'applique à un nouveau run (vrai code inconnu). Produit un CSV de décisions. |
 | `modele_sirus_production.rds` | Modèle actuellement en production (généré par `evaluation_sirus.R`). Ne pas éditer à la main — relancer `evaluation_sirus.R` pour le régénérer. |
 | `sirus_0.3.3_patched.tar.gz` | Source du package `sirus` corrigée pour compiler avec les toolchains R/gcc récents (voir "Installation"). C'est le seul tarball du dossier — c'est celui-ci qu'il faut installer. |
-| `stage.Rproj` | Projet RStudio, pour ouvrir le dossier directement dans RStudio. |
+| `sirus_final.Rproj` | Projet RStudio, pour ouvrir le dossier directement dans RStudio. |
 | `resultats_sirus_final.qmd` / `.html` | Document de référence unique : résultats obtenus et démarche méthodologique complète (modèle, généralisation à plusieurs runs, hyperparamètres, régression RAG-ANN, état actuel du pipeline de production). Ouvrir le `.html` pour lire sans avoir besoin de R. À consulter si une décision du pipeline semble surprenante — la raison y est probablement déjà documentée. Pas nécessaire pour l'usage courant (évaluer/coder un run). |
 
 ## Utilisation courante

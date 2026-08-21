@@ -74,7 +74,7 @@ pip install -r requirements.txt
 ## Démarrage rapide
 
 ```bash
-cd baseline_stage/
+cd baseline_final/
 pip install -r requirements.txt
 python evaluation_baseline.py     # mesure la performance + sauvegarde le modèle de prod
 python production_baseline.py data/workflow_runs/<date>/codif-xxxxx/decide-coicop/predictions.parquet

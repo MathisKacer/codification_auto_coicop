@@ -11,7 +11,7 @@
 # changement (nouveau run labellise...), (b) pour rafraichir le modele de
 # production avec de nouvelles donnees labellisees.
 #
-# Usage : python evaluation_baseline.py   (depuis le dossier baseline_stage/)
+# Usage : python evaluation_baseline.py   (depuis le dossier baseline_final/)
 # ==============================================================================
 from datetime import date
 
@@ -43,7 +43,7 @@ ENDPOINT_S3 = "https://minio.lab.sspcloud.fr"
 # Runs labellises disponibles (vrai code connu) -- ajouter ici toute nouvelle
 # donnee labellisee au fur et a mesure qu'elle devient disponible, puis
 # relancer ce script pour rafraichir le modele de production. Memes runs que
-# ceux utilises pour SIRUS (sirus_stage/evaluation_sirus.R), pour des
+# ceux utilises pour SIRUS (sirus_final/evaluation_sirus.R), pour des
 # resultats directement comparables entre les deux modeles.
 #
 # Pour l'instant, entrainement sur un seul run -- les deux autres restent
@@ -67,7 +67,7 @@ def charger_run_labellise(objet_s3, fs):
         raise ValueError(f"{objet_s3} : pas de colonne `code` (run non labellisé, inattendu ici).")
     # Vrai code : `code_lvl4` si present (calcule en amont depuis 2026-07-30,
     # deja tronque/elague au niveau 4), sinon troncature manuelle avec cascade
-    # -- memes conventions que sirus_stage (verifiees equivalentes a 100%).
+    # -- memes conventions que sirus_final (verifiees equivalentes a 100%).
     if "code_lvl4" in df.columns:
         df["vrai_n4"] = df["code_lvl4"]
     else:

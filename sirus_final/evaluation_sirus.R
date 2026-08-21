@@ -10,7 +10,7 @@
 # changement (nouveau run labellise, hyperparametres...), (b) pour
 # rafraichir le modele de production avec de nouvelles donnees labellisees.
 #
-# Usage : Rscript evaluation_sirus.R   (depuis le dossier stage/)
+# Usage : Rscript evaluation_sirus.R   (depuis le dossier sirus_final/)
 # ============================================================================
 
 suppressPackageStartupMessages({
